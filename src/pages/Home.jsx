@@ -45,10 +45,7 @@ export default function Home() {
     return <RiderDashboard user={user} />;
   }
 
-  if (role === "admin" || role === "operator") {
-    window.location.replace(createPageUrl("Dashboard"));
-    return null;
-  }
+  // Admin/operator also land on customer home for now
 
   // Default: customer app (role === "user" or any unrecognized role)
   return <CustomerHome user={user} />;
