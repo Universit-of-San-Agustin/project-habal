@@ -143,11 +143,18 @@ export default function DispatcherDashboard({ user }) {
                   {b.fare_estimate && <div className="text-sm font-bold" style={{ color: PRIMARY }}>₱{b.fare_estimate}</div>}
                   {b.zone && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium">{b.zone}</span>}
                   {b.rider_name && (
-                    <button onClick={() => setChatBooking(b)}
-                      className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full text-white"
-                      style={{ background: PRIMARY }}>
-                      <MessageCircle className="w-3 h-3" /> Chat
-                    </button>
+                    <div className="flex gap-1">
+                      <button onClick={() => setTrackingBooking(b)}
+                        className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full text-white"
+                        style={{ background: "#10b981" }}>
+                        📍 Track
+                      </button>
+                      <button onClick={() => setChatBooking(b)}
+                        className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full text-white"
+                        style={{ background: PRIMARY }}>
+                        <MessageCircle className="w-3 h-3" /> Chat
+                      </button>
+                    </div>
                   )}
                 </div>
                 {/* Assign to rider */}
