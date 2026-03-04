@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { createPageUrl } from "@/utils";
 import SplashScreen from "../components/home/SplashScreen";
 import LoginScreen from "../components/home/LoginScreen";
 import CustomerHome from "../components/home/CustomerHome";
@@ -10,13 +11,13 @@ export default function Home() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Show splash for 2.8s, then check auth
     const timer = setTimeout(async () => {
       try {
         const me = await base44.auth.me();
         setUser(me);
         setPhase("app");
       } catch {
+        // Not logged in — show login screen
         setPhase("login");
       }
     }, 2800);
@@ -24,19 +25,14 @@ export default function Home() {
   }, []);
 
   const handleLogin = async (demoUser) => {
-    // If a demo user object is passed directly, use it
+    // Demo role shortcut (pass a fake user object)
     if (demoUser?.id) {
       setUser(demoUser);
       setPhase("app");
       return;
     }
-    try {
-      const me = await base44.auth.me();
-      setUser(me);
-      setPhase("app");
-    } catch {
-      base44.auth.redirectToLogin(window.location.href);
-    }
+    // Real auth — redirect to platform login
+    base44.auth.redirectToLogin(window.location.href);
   };
 
   if (phase === "splash") return <SplashScreen />;
@@ -44,11 +40,16 @@ export default function Home() {
 
   // Route by role
   const role = user?.role;
-  if (role === "rider" || role === "dispatcher") return <RiderDashboard user={user} />;
+
+  if (role === "rider" || role === "dispatcher") {
+    return <RiderDashboard user={user} />;
+  }
+
   if (role === "admin" || role === "operator") {
-    // Redirect to admin dashboard
-    window.location.href = "/Dashboard";
+    window.location.replace(createPageUrl("Dashboard"));
     return null;
   }
+
+  // Default: customer app (role === "user" or any unrecognized role)
   return <CustomerHome user={user} />;
 }

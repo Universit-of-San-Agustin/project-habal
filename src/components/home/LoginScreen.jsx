@@ -97,10 +97,9 @@ export default function LoginScreen({ onLogin }) {
         </p>
 
         {/* Demo mode */}
-        <div className="w-full mt-8 border border-amber-200 bg-amber-50 rounded-2xl p-4">
+        <div className="w-full mt-8 border border-gray-200 bg-gray-50 rounded-2xl p-4">
           <div className="flex items-center justify-center gap-2 mb-3">
-            <span className="text-amber-500 text-xs">⚠</span>
-            <span className="text-xs text-amber-600 font-semibold uppercase tracking-widest">Demo Mode — Remove Before Production</span>
+            <span className="text-xs text-gray-400 font-semibold uppercase tracking-widest">Try a Demo Role</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             {DEMO_ROLES.map(role => (
