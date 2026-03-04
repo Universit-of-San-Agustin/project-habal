@@ -49,12 +49,14 @@
  */
 import Dashboard from './pages/Dashboard';
 import Bookings from './pages/Bookings';
+import Networks from './pages/Networks';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "Dashboard": Dashboard,
     "Bookings": Bookings,
+    "Networks": Networks,
 }
 
 export const pagesConfig = {
