@@ -34,6 +34,8 @@ function estimateFare() {
 export default function CustomerHome({ user }) {
   const [screen, setScreen] = useState("map");
   const [bookings, setBookings] = useState([]);
+  const { toasts, addToast, dismiss } = useToast();
+  const prevStatusRef = useRef(null);
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
   const [dropoffInput, setDropoffInput] = useState("");
@@ -66,6 +68,20 @@ export default function CustomerHome({ user }) {
       const rows = await base44.entities.Booking.filter({ booking_id: activeRide.booking_id }, "-created_date", 1);
       const updated = rows?.[0];
       if (!updated) return;
+      // Fire toast on status change
+      if (prevStatusRef.current && prevStatusRef.current !== updated.status) {
+        const msgs = {
+          assigned:    { type: "rider",    title: "Rider Assigned! 🏍", message: `${updated.rider_name} is on the way` },
+          otw:         { type: "rider",    title: "Rider On The Way", message: `${updated.rider_name} is heading to you` },
+          arrived:     { type: "location", title: "Rider Arrived! 📍", message: "Your rider is waiting at pickup" },
+          in_progress: { type: "info",     title: "Trip Started 🚀", message: "Enjoy your ride!" },
+          completed:   { type: "success",  title: "Trip Completed ✅", message: "Please rate your rider" },
+          cancelled:   { type: "alert",    title: "Ride Cancelled", message: "Your booking was cancelled" },
+        };
+        if (msgs[updated.status]) addToast(msgs[updated.status]);
+      }
+      prevStatusRef.current = updated.status;
+
       setActiveRide(updated);
       if (updated.status === "completed") { setScreen("rate"); clearInterval(interval); }
       if (updated.status === "cancelled") { setActiveRide(null); setScreen("map"); clearInterval(interval); }
