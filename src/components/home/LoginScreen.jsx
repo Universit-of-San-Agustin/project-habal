@@ -2,7 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Eye, EyeOff } from "lucide-react";
 
-const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/7b2fe69a3_Habal.png";
+const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/fe9d5d17d_habal.png";
 
 const DEMO_ROLES = ["Customer", "Rider", "Dispatcher", "Operator", "Admin"];
 const ROLE_MAP = {
@@ -238,7 +238,7 @@ function AuthShell({ children }) {
 function LogoHeader() {
   return (
     <div className="flex flex-col items-center mb-6">
-      <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/7b2fe69a3_Habal.png"
+      <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/fe9d5d17d_habal.png"
         alt="Habal" className="w-16 h-16 object-contain mb-2"
         onError={e => { e.target.style.display="none"; }} />
     </div>

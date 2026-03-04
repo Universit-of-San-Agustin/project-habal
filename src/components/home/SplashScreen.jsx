@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/7b2fe69a3_Habal.png";
+const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/fe9d5d17d_habal.png";
 
 export default function SplashScreen() {
   const [phase, setPhase] = useState("in"); // in | out
