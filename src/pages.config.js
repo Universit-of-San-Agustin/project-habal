@@ -54,6 +54,7 @@ import Riders from './pages/Riders';
 import Zones from './pages/Zones';
 import AuditLog from './pages/AuditLog';
 import Enforcement from './pages/Enforcement';
+import Home from './pages/Home';
 import __Layout from './Layout.jsx';
 
 
@@ -65,6 +66,7 @@ export const PAGES = {
     "Zones": Zones,
     "AuditLog": AuditLog,
     "Enforcement": Enforcement,
+    "Home": Home,
 }
 
 export const pagesConfig = {
