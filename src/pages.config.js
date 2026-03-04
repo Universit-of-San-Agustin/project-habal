@@ -51,6 +51,9 @@ import Dashboard from './pages/Dashboard';
 import Bookings from './pages/Bookings';
 import Networks from './pages/Networks';
 import Riders from './pages/Riders';
+import Zones from './pages/Zones';
+import AuditLog from './pages/AuditLog';
+import Enforcement from './pages/Enforcement';
 import __Layout from './Layout.jsx';
 
 
@@ -59,6 +62,9 @@ export const PAGES = {
     "Bookings": Bookings,
     "Networks": Networks,
     "Riders": Riders,
+    "Zones": Zones,
+    "AuditLog": AuditLog,
+    "Enforcement": Enforcement,
 }
 
 export const pagesConfig = {
