@@ -2,7 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Eye, EyeOff } from "lucide-react";
 
-const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/810dc0395_LOGOMAINBLUEBLACKWHITE.png";
+const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/7b2fe69a3_Habal.png";
 
 const DEMO_ROLES = ["Customer", "Rider", "Dispatcher", "Operator", "Admin"];
 const ROLE_MAP = {
@@ -108,7 +108,7 @@ export default function LoginScreen({ onLogin }) {
                 if (e.target.value && i < 5) document.getElementById(`otp-${i+1}`)?.focus();
               }}
               id={`otp-${i}`}
-              className="w-10 h-12 text-center text-white text-xl font-bold bg-white/10 border border-white/30 rounded-xl focus:outline-none focus:border-[#4DC8F0]" 
+              className="w-10 h-12 text-center text-white text-xl font-bold bg-white/10 border border-white/30 rounded-xl focus:outline-none focus:border-[#4DC8F0]"
             />
           ))}
         </div>
@@ -238,7 +238,7 @@ function AuthShell({ children }) {
 function LogoHeader() {
   return (
     <div className="flex flex-col items-center mb-6">
-      <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/810dc0395_LOGOMAINBLUEBLACKWHITE.png"
+      <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/7b2fe69a3_Habal.png"
         alt="Habal" className="w-16 h-16 object-contain mb-2"
         onError={e => { e.target.style.display="none"; }} />
     </div>
