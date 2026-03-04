@@ -7,15 +7,7 @@ import {
   Activity
 } from "lucide-react";
 
-const navItems = [
-  { label: "Dashboard", page: "Dashboard", icon: LayoutDashboard },
-  { label: "Bookings", page: "Bookings", icon: BookOpen },
-  { label: "Networks", page: "Networks", icon: Users },
-  { label: "Riders", page: "Riders", icon: Bike },
-  { label: "Zones", page: "Zones", icon: MapPin },
-  { label: "Audit Log", page: "AuditLog", icon: Activity },
-  { label: "Enforcement", page: "Enforcement", icon: ShieldAlert },
-];
+const navItems = [];
 
 export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
