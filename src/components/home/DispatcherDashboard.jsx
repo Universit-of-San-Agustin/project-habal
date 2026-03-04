@@ -7,19 +7,31 @@ const PRIMARY = "#4DC8F0";
 const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/fe9d5d17d_habal.png";
 
 export default function DispatcherDashboard({ user }) {
-  const [tab, setTab] = useState("inbox"); // inbox | riders | stats
+  const [tab, setTab] = useState("inbox");
   const [bookings, setBookings] = useState([]);
   const [riders, setRiders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(null);
   const pollRef = useRef(null);
+  const knownBookingIds = useRef(new Set());
+  const { toasts, addToast, dismiss } = useToast();
 
   const load = async () => {
     const [bks, rdrs] = await Promise.all([
       base44.entities.Booking.filter({ status: "pending" }, "-created_date", 20).catch(() => []),
       base44.entities.Rider.filter({ online_status: "online" }, "-updated_date", 50).catch(() => []),
     ]);
-    setBookings(bks || []);
+    const newBks = bks || [];
+    // Detect truly new bookings after first load
+    if (knownBookingIds.current.size > 0) {
+      newBks.forEach(b => {
+        if (!knownBookingIds.current.has(b.id)) {
+          addToast({ type: "rider", title: "New Booking!", message: `${b.customer_name} · ${b.pickup_address?.slice(0,30)}...` });
+        }
+      });
+    }
+    newBks.forEach(b => knownBookingIds.current.add(b.id));
+    setBookings(newBks);
     setRiders(rdrs || []);
     setLoading(false);
   };
@@ -45,6 +57,7 @@ export default function DispatcherDashboard({ user }) {
       actor_id: user?.id, timestamp: new Date().toISOString(),
     });
     setAssigning(null);
+    addToast({ type: "success", title: "Rider Assigned", message: `${rider.full_name} assigned to booking` });
     load();
   };
 
@@ -57,6 +70,7 @@ export default function DispatcherDashboard({ user }) {
   return (
     <div className="fixed inset-0 bg-white flex flex-col max-w-md mx-auto overflow-hidden" style={{ fontFamily: "'Poppins', sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');`}</style>
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
 
       {/* Header */}
       <div className="bg-white border-b border-gray-100 px-4 pt-10 pb-3 flex items-center justify-between"
