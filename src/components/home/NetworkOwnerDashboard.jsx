@@ -12,6 +12,10 @@ export default function NetworkOwnerDashboard({ user }) {
   const [riders, setRiders] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const knownBookingIds = useRef(new Set());
+  const knownAssignments = useRef(new Set());
+  const pollRef = useRef(null);
+  const { toasts, addToast, dismiss } = useToast();
 
   const load = async () => {
     const nets = await base44.entities.Network.filter({ owner_email: user?.email }, "-created_date", 1).catch(() => []);
@@ -22,13 +26,31 @@ export default function NetworkOwnerDashboard({ user }) {
         base44.entities.Rider.filter({ network_id: net.id }, "-created_date", 50).catch(() => []),
         base44.entities.Booking.filter({ network_id: net.id }, "-created_date", 30).catch(() => []),
       ]);
+      const newBks = bks || [];
+      if (knownBookingIds.current.size > 0) {
+        newBks.forEach(b => {
+          if (!knownBookingIds.current.has(b.id)) {
+            addToast({ type: "rider", title: "New Booking", message: `${b.customer_name} needs a rider` });
+          }
+          // Detect new rider assignments
+          if (b.rider_name && !knownAssignments.current.has(b.id)) {
+            knownAssignments.current.add(b.id);
+            addToast({ type: "success", title: "Rider Assigned", message: `${b.rider_name} assigned to ${b.customer_name}` });
+          }
+        });
+      }
+      newBks.forEach(b => { knownBookingIds.current.add(b.id); if (b.rider_name) knownAssignments.current.add(b.id); });
       setRiders(rdrs || []);
-      setBookings(bks || []);
+      setBookings(newBks);
     }
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => {
+    load();
+    pollRef.current = setInterval(load, 8000);
+    return () => clearInterval(pollRef.current);
+  }, [user]);
 
   const tabs = [
     { id: "bookings", label: "Bookings", icon: <Send className="w-4 h-4" /> },
@@ -46,6 +68,7 @@ export default function NetworkOwnerDashboard({ user }) {
   return (
     <div className="fixed inset-0 bg-white flex flex-col max-w-md mx-auto overflow-hidden" style={{ fontFamily: "'Poppins', sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');`}</style>
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
 
       {/* Header */}
       <div className="bg-white border-b border-gray-100 px-4 pt-10 pb-3" style={{ boxShadow: `0 2px 20px rgba(77,200,240,0.12)` }}>
