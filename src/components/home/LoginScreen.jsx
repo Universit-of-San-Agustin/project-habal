@@ -106,7 +106,7 @@ export default function LoginScreen({ onLogin }) {
             {DEMO_ROLES.map(role => (
               <button
                 key={role}
-                onClick={handleSignIn}
+                onClick={() => handleDemoRole(role)}
                 className={`py-2 rounded-xl border border-amber-200 text-sm font-medium text-amber-700 bg-white hover:bg-amber-50 transition-colors ${role === "Admin" ? "col-span-2" : ""}`}
               >
                 {role}
