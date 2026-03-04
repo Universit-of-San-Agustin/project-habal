@@ -53,6 +53,8 @@ export default function NetworkOwnerDashboard({ user }) {
     return () => clearInterval(pollRef.current);
   }, [user]);
 
+  const [chatBooking, setChatBooking] = useState(null);
+
   const tabs = [
     { id: "bookings", label: "Bookings", icon: <Send className="w-4 h-4" /> },
     { id: "roster", label: "Roster", icon: <Users className="w-4 h-4" /> },
@@ -70,6 +72,7 @@ export default function NetworkOwnerDashboard({ user }) {
     <div className="fixed inset-0 bg-white flex flex-col max-w-md mx-auto overflow-hidden" style={{ fontFamily: "'Poppins', sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');`}</style>
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
+      {chatBooking && <ChatPanel bookingId={chatBooking.booking_id || chatBooking.id} currentUser={user} senderRole="network_owner" onClose={() => setChatBooking(null)} />}
 
       {/* Header */}
       <div className="bg-white border-b border-gray-100 px-4 pt-10 pb-3" style={{ boxShadow: `0 2px 20px rgba(77,200,240,0.12)` }}>
@@ -135,9 +138,19 @@ export default function NetworkOwnerDashboard({ user }) {
                 <div className="text-sm font-semibold text-gray-900 mb-1">{b.customer_name}</div>
                 <div className="text-xs text-gray-400 truncate mb-0.5">📍 {b.pickup_address}</div>
                 <div className="text-xs text-gray-400 truncate mb-2">→ {b.dropoff_address}</div>
-                <div className="flex justify-between text-xs text-gray-400">
+                <div className="flex justify-between items-center text-xs text-gray-400">
                   <span>{b.rider_name || "Unassigned"}</span>
-                  {b.fare_estimate && <span className="font-bold text-gray-700">₱{b.fare_estimate}</span>}
+                  <div className="flex items-center gap-2">
+                    {b.zone && <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium">{b.zone}</span>}
+                    {b.fare_estimate && <span className="font-bold text-gray-700">₱{b.fare_estimate}</span>}
+                    {b.rider_name && (
+                      <button onClick={() => setChatBooking(b)}
+                        className="flex items-center gap-1 font-semibold px-2 py-0.5 rounded-full text-white text-[10px]"
+                        style={{ background: PRIMARY }}>
+                        <MessageCircle className="w-3 h-3" /> Chat
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
