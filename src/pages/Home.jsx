@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { createPageUrl } from "@/utils";
 import SplashScreen from "../components/home/SplashScreen";
 import LoginScreen from "../components/home/LoginScreen";
 import CustomerHome from "../components/home/CustomerHome";
 import RiderDashboard from "../components/home/RiderDashboard";
+import DispatcherDashboard from "../components/home/DispatcherDashboard";
+import NetworkOwnerDashboard from "../components/home/NetworkOwnerDashboard";
+import AdminDashboard from "../components/home/AdminDashboard";
 
 export default function Home() {
   const [phase, setPhase] = useState("splash"); // splash | login | app
@@ -17,36 +19,38 @@ export default function Home() {
         setUser(me);
         setPhase("app");
       } catch {
-        // Not logged in — show login screen
         setPhase("login");
       }
     }, 2800);
     return () => clearTimeout(timer);
   }, []);
 
-  const handleLogin = async (demoUser) => {
-    // Demo role shortcut (pass a fake user object)
+  const handleLogin = (demoUser) => {
     if (demoUser?.id) {
       setUser(demoUser);
       setPhase("app");
       return;
     }
-    // Real auth — redirect to platform login
     base44.auth.redirectToLogin(window.location.href);
   };
 
   if (phase === "splash") return <SplashScreen />;
   if (phase === "login") return <LoginScreen onLogin={handleLogin} />;
 
-  // Route by role
   const role = user?.role;
 
-  if (role === "rider" || role === "dispatcher") {
-    return <RiderDashboard user={user} />;
-  }
+  // Rider: go online/offline, accept assignments, update trip statuses
+  if (role === "rider") return <RiderDashboard user={user} />;
 
-  // Admin/operator also land on customer home for now
+  // Dispatcher: assign/reassign bookings, broadcast to riders, view logs
+  if (role === "dispatcher") return <DispatcherDashboard user={user} />;
 
-  // Default: customer app (role === "user" or any unrecognized role)
+  // Network Owner (operator): full roster management, analytics, compliance
+  if (role === "operator" || role === "network_owner") return <NetworkOwnerDashboard user={user} />;
+
+  // Admin: approve networks, verify riders, enforce penalties, manage zones
+  if (role === "admin") return <AdminDashboard user={user} />;
+
+  // Default: Customer — book rides, track, history, wallet, ratings
   return <CustomerHome user={user} />;
 }
