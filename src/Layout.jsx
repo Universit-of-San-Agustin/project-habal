@@ -34,11 +34,9 @@ export default function Layout({ children, currentPageName }) {
         }`}
       >
         <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-800">
-          <div className="w-9 h-9 bg-orange-500 rounded-xl flex items-center justify-center">
-            <Bike className="w-5 h-5 text-white" />
-          </div>
+          <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/ae9f8141e_LOGOMAINBLUEBLACKWHITE.png" alt="Habal" className="w-9 h-9 object-contain bg-white rounded-lg p-0.5" />
           <div>
-            <div className="font-bold text-white text-sm leading-tight">Habal Moto</div>
+            <div className="font-bold text-white text-sm leading-tight">Habal</div>
             <div className="text-xs text-gray-400">Iloilo Rider Network</div>
           </div>
           <button
@@ -93,10 +91,8 @@ export default function Layout({ children, currentPageName }) {
           <button onClick={() => setSidebarOpen(true)} className="text-gray-400 hover:text-white">
             <Menu className="w-5 h-5" />
           </button>
-          <div className="w-7 h-7 bg-orange-500 rounded-lg flex items-center justify-center">
-            <Bike className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-bold text-sm">Habal Moto</span>
+          <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/ae9f8141e_LOGOMAINBLUEBLACKWHITE.png" alt="Habal" className="w-7 h-7 object-contain bg-white rounded p-0.5" />
+          <span className="font-bold text-sm">Habal</span>
         </header>
 
         <main className="flex-1 overflow-auto">
