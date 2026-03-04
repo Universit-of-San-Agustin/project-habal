@@ -137,6 +137,8 @@ export default function RiderDashboard({ user }) {
     });
     if (newStatus === "completed") {
       setActiveBooking(null);
+      // Set rider back to online after completing trip
+      if (riderData?.id) await base44.entities.Rider.update(riderData.id, { online_status: "online" }).catch(() => {});
       base44.entities.Booking.filter({ rider_phone: user?.email }, "-created_date", 30).then(setTripHistory);
       setScreen("online");
     } else {
