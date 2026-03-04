@@ -4,7 +4,7 @@ import { MapPin, X, ChevronLeft, ChevronRight, Bike, User, Clock, Wallet, Star, 
 import MapboxMap from "./MapboxMap";
 
 const MAPBOX_TOKEN = "pk.eyJ1IjoieWlrMzQzMDAiLCJhIjoiY21seWd1ZnlpMHl6MTNnc2dkbjcwZ2NmZCJ9.RRkFfU-zgGip8mt8af3MWg";
-const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/7b2fe69a3_Habal.png";
+const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/810dc0395_LOGOMAINBLUEBLACKWHITE.png";
 const PRIMARY = "#4DC8F0";
 
 // screens: map | search | confirm | searching | active | rate | history | wallet | ratings | profile
