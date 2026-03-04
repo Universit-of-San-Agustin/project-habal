@@ -21,6 +21,7 @@ export default function RiderDashboard({ user }) {
   const [processing, setProcessing] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   const [tripHistory, setTripHistory] = useState([]);
+  const [showChat, setShowChat] = useState(false);
   const [countdown, setCountdown] = useState(30);
   const seenBookingsRef = useRef(new Set());
   const timerRef = useRef(null);
