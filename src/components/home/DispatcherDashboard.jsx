@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { MapPin, Clock, Users, CheckCircle, XCircle, Send, RefreshCw, LogOut, BarChart2, MessageCircle } from "lucide-react";
 import { useToast, ToastContainer } from "./ToastNotification";
 import ChatPanel from "../chat/ChatPanel";
+import LiveRiderMap from "./LiveRiderMap";
 
 const PRIMARY = "#4DC8F0";
 const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/fe9d5d17d_habal.png";
