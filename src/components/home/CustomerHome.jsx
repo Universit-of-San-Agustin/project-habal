@@ -182,6 +182,8 @@ export default function CustomerHome({ user }) {
     });
     setActiveRide(b);
     setBooking(false);
+    // Set ETA target to pickup first
+    if (pickupCoords) etaTargetRef.current = pickupCoords;
     setScreen("searching");
     setTimeout(() => setScreen(prev => prev === "searching" ? "active" : prev), 5000);
   };
