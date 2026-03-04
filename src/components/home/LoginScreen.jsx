@@ -32,11 +32,24 @@ export default function LoginScreen({ onLogin }) {
     base44.auth.redirectToLogin(window.location.href);
   };
 
-  const handleDemoRole = (role) => {
-    // Always use real auth — demo roles just redirect to login.
-    // After login, the user's actual role in the DB determines their dashboard.
-    setLoading(true);
-    base44.auth.redirectToLogin(window.location.href);
+  const [demoLoading, setDemoLoading] = useState(null);
+  const [demoError, setDemoError] = useState("");
+
+  const handleDemoRole = async (roleName) => {
+    const account = DEMO_ACCOUNTS[roleName];
+    if (!account) return;
+    setDemoLoading(roleName);
+    setDemoError("");
+    // Pre-fill email and redirect to Base44 login with that email highlighted
+    // We use magic link approach: redirect to login page
+    // Since Base44 doesn't support programmatic login from frontend,
+    // we redirect to login with the demo email pre-filled in the URL
+    try {
+      base44.auth.redirectToLogin(window.location.href + `?demo_email=${encodeURIComponent(account.email)}`);
+    } catch {
+      setDemoError("Could not redirect. Please log in manually.");
+      setDemoLoading(null);
+    }
   };
 
   // ── REGISTER ─────────────────────────────────────────────────
