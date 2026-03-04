@@ -558,7 +558,12 @@ export default function CustomerHome({ user }) {
                     <div className="text-xs text-gray-400">{activeRide.rider_phone}</div>
                   </div>
                 </div>
-                {eta && <div className="text-right"><div className="text-xl font-black" style={{ color: PRIMARY }}>{eta}</div><div className="text-xs text-gray-400">min away</div></div>}
+                {eta && (
+                  <div className="text-right">
+                    <div className="text-xl font-black" style={{ color: PRIMARY }}>{eta.minutes} <span className="text-sm font-semibold">min</span></div>
+                    <div className="text-[10px] text-gray-400">{eta.label}</div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex items-center gap-3 bg-blue-50 rounded-2xl px-4 py-3">
