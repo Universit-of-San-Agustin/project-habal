@@ -70,6 +70,11 @@ export default function CustomerHome({ user }) {
       const rows = await base44.entities.Booking.filter({ booking_id: activeRide.booking_id }, "-created_date", 1);
       const updated = rows?.[0];
       if (!updated) return;
+      // Fetch rider GPS every poll tick
+      if (updated.rider_id) {
+        const locs = await base44.entities.RiderLocation.filter({ rider_id: updated.rider_id }, "-updated_date", 1).catch(() => []);
+        if (locs?.[0]) setRiderLocation({ lat: locs[0].lat, lng: locs[0].lng });
+      }
       // Fire toast on status change
       if (prevStatusRef.current && prevStatusRef.current !== updated.status) {
         const msgs = {
@@ -87,15 +92,9 @@ export default function CustomerHome({ user }) {
       setActiveRide(updated);
       if (updated.status === "completed") { setScreen("rate"); clearInterval(interval); }
       if (updated.status === "cancelled") { setActiveRide(null); setScreen("map"); clearInterval(interval); }
-      if (updated.rider_id) {
-        const locs = await base44.entities.RiderLocation.filter({ rider_id: updated.rider_id }, "-updated_date", 1);
-        if (locs?.[0]) {
-          setRiderLocation({ lat: locs[0].lat, lng: locs[0].lng });
-          if (["assigned", "otw"].includes(updated.status)) setEta(Math.floor(Math.random() * 5) + 2);
-          else setEta(null);
-        }
-      }
-    }, 5000);
+      if (["assigned", "otw"].includes(updated.status) && updated.rider_id) setEta(Math.floor(Math.random() * 5) + 2);
+      else setEta(null);
+    }, 4000);
     return () => clearInterval(interval);
   }, [activeRide?.id, activeRide?.status]);
 
