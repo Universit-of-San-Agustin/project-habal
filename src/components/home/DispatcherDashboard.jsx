@@ -62,6 +62,8 @@ export default function DispatcherDashboard({ user }) {
     load();
   };
 
+  const [chatBooking, setChatBooking] = useState(null);
+
   const tabs = [
     { id: "inbox", label: "Booking Inbox", icon: <Send className="w-4 h-4" /> },
     { id: "riders", label: "Online Riders", icon: <Users className="w-4 h-4" /> },
@@ -72,6 +74,7 @@ export default function DispatcherDashboard({ user }) {
     <div className="fixed inset-0 bg-white flex flex-col max-w-md mx-auto overflow-hidden" style={{ fontFamily: "'Poppins', sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');`}</style>
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
+      {chatBooking && <ChatPanel bookingId={chatBooking.booking_id || chatBooking.id} currentUser={user} senderRole="dispatcher" onClose={() => setChatBooking(null)} />}
 
       {/* Header */}
       <div className="bg-white border-b border-gray-100 px-4 pt-10 pb-3 flex items-center justify-between"
@@ -133,7 +136,17 @@ export default function DispatcherDashboard({ user }) {
                   <MapPin className="w-2.5 h-2.5 mt-0.5 flex-shrink-0" style={{ color: PRIMARY }} />
                   <span className="truncate">{b.dropoff_address}</span>
                 </div>
-                {b.fare_estimate && <div className="text-sm font-bold mb-3" style={{ color: PRIMARY }}>₱{b.fare_estimate}</div>}
+                <div className="flex items-center justify-between mb-3">
+                  {b.fare_estimate && <div className="text-sm font-bold" style={{ color: PRIMARY }}>₱{b.fare_estimate}</div>}
+                  {b.zone && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium">{b.zone}</span>}
+                  {b.rider_name && (
+                    <button onClick={() => setChatBooking(b)}
+                      className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full text-white"
+                      style={{ background: PRIMARY }}>
+                      <MessageCircle className="w-3 h-3" /> Chat
+                    </button>
+                  )}
+                </div>
                 {/* Assign to rider */}
                 {riders.length > 0 ? (
                   <div>
