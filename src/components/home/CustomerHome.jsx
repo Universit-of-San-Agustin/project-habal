@@ -83,11 +83,33 @@ export default function CustomerHome({ user }) {
       const rows = await base44.entities.Booking.filter({ booking_id: activeRide.booking_id }, "-created_date", 1);
       const updated = rows?.[0];
       if (!updated) return;
+
       // Fetch rider GPS every poll tick
       if (updated.rider_id) {
         const locs = await base44.entities.RiderLocation.filter({ rider_id: updated.rider_id }, "-updated_date", 1).catch(() => []);
-        if (locs?.[0]) setRiderLocation({ lat: locs[0].lat, lng: locs[0].lng });
+        if (locs?.[0]) {
+          const loc = { lat: locs[0].lat, lng: locs[0].lng };
+          setRiderLocation(loc);
+
+          // Determine ETA target: en-route to pickup → use pickupCoords; in_progress → use dropoffCoords
+          const isEnRoutePickup = ["assigned", "otw", "arrived"].includes(updated.status);
+          const isInProgress = updated.status === "in_progress";
+          const target = etaTargetRef.current;
+
+          if (target && (isEnRoutePickup || isInProgress)) {
+            const mins = await fetchETAMinutes(loc.lng, loc.lat, target.lng, target.lat);
+            if (mins != null) {
+              setEta({
+                minutes: mins,
+                label: isInProgress ? "to destination" : "to pickup",
+              });
+            }
+          } else if (!isEnRoutePickup && !isInProgress) {
+            setEta(null);
+          }
+        }
       }
+
       // Fire toast on status change
       if (prevStatusRef.current && prevStatusRef.current !== updated.status) {
         const msgs = {
@@ -99,14 +121,17 @@ export default function CustomerHome({ user }) {
           cancelled:   { type: "alert",    title: "Ride Cancelled", message: "Your booking was cancelled" },
         };
         if (msgs[updated.status]) addToast(msgs[updated.status]);
+
+        // Switch ETA target when trip starts
+        if (updated.status === "in_progress" && dropoffCoords) {
+          etaTargetRef.current = dropoffCoords;
+        }
       }
       prevStatusRef.current = updated.status;
 
       setActiveRide(updated);
       if (updated.status === "completed") { setScreen("rate"); clearInterval(interval); }
       if (updated.status === "cancelled") { setActiveRide(null); setScreen("map"); clearInterval(interval); }
-      if (["assigned", "otw"].includes(updated.status) && updated.rider_id) setEta(Math.floor(Math.random() * 5) + 2);
-      else setEta(null);
     }, 4000);
     return () => clearInterval(interval);
   }, [activeRide?.id, activeRide?.status]);
