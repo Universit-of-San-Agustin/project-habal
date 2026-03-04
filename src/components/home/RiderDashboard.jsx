@@ -152,6 +152,7 @@ export default function RiderDashboard({ user }) {
     setProcessing(true);
     await base44.entities.Booking.update(activeBooking.id, { status: "cancelled", cancelled_by: "rider", cancellation_reason: "Cancelled by rider" });
     await base44.entities.BookingEvent.create({ booking_id: activeBooking.id, event_type: "BOOKING_CANCELLED", actor_role: "rider", actor_name: user?.full_name, details: "Cancelled by rider", timestamp: new Date().toISOString() });
+    if (riderData?.id) await base44.entities.Rider.update(riderData.id, { online_status: "online" }).catch(() => {});
     setActiveBooking(null);
     setProcessing(false);
     setScreen("online");
