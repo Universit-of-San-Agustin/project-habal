@@ -61,7 +61,8 @@ export default function CustomerHome({ user }) {
   const [booking, setBooking] = useState(false);
   const [activeRide, setActiveRide] = useState(null);
   const [riderLocation, setRiderLocation] = useState(null);
-  const [eta, setEta] = useState(null);
+  const [eta, setEta] = useState(null); // { minutes, label } or null
+  const etaTargetRef = useRef(null); // coords to calculate ETA towards
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [rating, setRating] = useState(0);
   const [submittingRating, setSubmittingRating] = useState(false);
