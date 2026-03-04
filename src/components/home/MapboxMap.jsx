@@ -11,13 +11,15 @@ export default function MapboxMap({
   onGeolocate,
   pickupMarker,
   dropoffMarker,
-  riderMarker,   // { lat, lng, heading }
+  riderMarker,   // { lat, lng } - updates smoothly
+  followRider = false,  // if true, map pans to rider on every update
 }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const pickupMarkerRef = useRef(null);
   const dropoffMarkerRef = useRef(null);
   const riderMarkerRef = useRef(null);
+  const prevRiderPos = useRef(null);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -81,25 +83,64 @@ export default function MapboxMap({
     }
   }, [dropoffMarker]);
 
-  // Rider marker (live GPS)
+  // Rider marker — smooth real-time GPS updates
   useEffect(() => {
     if (!mapRef.current) return;
+
     if (!riderMarker) {
       if (riderMarkerRef.current) { riderMarkerRef.current.remove(); riderMarkerRef.current = null; }
+      prevRiderPos.current = null;
       return;
     }
+
+    const lngLat = [riderMarker.lng, riderMarker.lat];
+
     if (riderMarkerRef.current) {
-      riderMarkerRef.current.setLngLat([riderMarker.lng, riderMarker.lat]);
+      // Smoothly animate the existing marker to the new position
+      riderMarkerRef.current.setLngLat(lngLat);
     } else {
       const el = document.createElement("div");
-      el.innerHTML = `<div style="width:36px;height:36px;border-radius:50%;background:#10b981;border:3px solid white;box-shadow:0 4px 12px rgba(16,185,129,0.5);display:flex;align-items:center;justify-content:center;font-size:16px;">🏍</div>`;
+      el.innerHTML = `
+        <div style="
+          width:40px;height:40px;border-radius:50%;
+          background:linear-gradient(135deg,#10b981,#059669);
+          border:3px solid white;
+          box-shadow:0 4px 14px rgba(16,185,129,0.55);
+          display:flex;align-items:center;justify-content:center;
+          font-size:18px;
+          transition:transform 0.3s ease;
+        ">🏍</div>
+        <div style="
+          position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);
+          width:10px;height:10px;border-radius:50%;
+          background:rgba(16,185,129,0.25);
+          animation:ping 1.4s cubic-bezier(0,0,0.2,1) infinite;
+        "></div>
+      `;
       riderMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "center" })
-        .setLngLat([riderMarker.lng, riderMarker.lat])
-        .setPopup(new mapboxgl.Popup({ offset: 25, closeButton: false }).setHTML("<strong>Your Rider</strong>"))
+        .setLngLat(lngLat)
+        .setPopup(new mapboxgl.Popup({ offset: 28, closeButton: false }).setHTML("<strong style='font-size:12px'>Your Rider</strong>"))
         .addTo(mapRef.current);
     }
-    mapRef.current.easeTo({ center: [riderMarker.lng, riderMarker.lat], duration: 800 });
-  }, [riderMarker]);
 
-  return <div ref={containerRef} className={className} />;
+    if (followRider) {
+      mapRef.current.easeTo({ center: lngLat, duration: 1000 });
+    } else if (!prevRiderPos.current) {
+      // First time, fly to rider
+      mapRef.current.flyTo({ center: lngLat, zoom: 15, duration: 800 });
+    }
+
+    prevRiderPos.current = lngLat;
+  }, [riderMarker, followRider]);
+
+  return (
+    <>
+      <style>{`
+        @keyframes ping {
+          75%, 100% { transform: translateX(-50%) scale(2.5); opacity: 0; }
+        }
+      `}</style>
+      <div ref={containerRef} className={className} />
+    </>
+  );
 }
