@@ -224,15 +224,23 @@ export default function LoginScreen({ onLogin }) {
 
       {/* Demo roles */}
       <div className="mt-6 border border-white/20 rounded-2xl p-4">
-        <p className="text-center text-xs text-blue-300 font-medium uppercase tracking-widest mb-3">Try a Demo Role</p>
+        <p className="text-center text-xs text-blue-300 font-medium uppercase tracking-widest mb-1">Try a Demo Role</p>
+        <p className="text-center text-[10px] text-blue-400 mb-3">Click a role to log in as a demo account</p>
+        {demoError && <p className="text-center text-xs text-red-300 mb-2">{demoError}</p>}
         <div className="grid grid-cols-2 gap-2">
-          {DEMO_ROLES.map(role => (
-            <button key={role} onClick={() => handleDemoRole(role)}
-              className={`py-2 rounded-xl text-sm font-semibold text-white/80 border border-white/20 bg-white/10 hover:bg-white/20 transition-colors ${role === "Admin" ? "col-span-2" : ""}`}>
-              {role}
+          {Object.entries(DEMO_ACCOUNTS).map(([roleName, account]) => (
+            <button key={roleName} onClick={() => handleDemoRole(roleName)}
+              disabled={demoLoading === roleName}
+              className={`py-2.5 rounded-xl text-sm font-semibold text-white/90 border border-white/20 bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-60 ${roleName === "Admin" ? "col-span-2" : ""}`}>
+              {demoLoading === roleName
+                ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" />
+                : account.label}
             </button>
           ))}
         </div>
+        <p className="text-center text-[10px] text-blue-400 mt-3">
+          Password for all demo accounts: <span className="text-white font-mono font-bold">Demo@1234</span>
+        </p>
       </div>
     </AuthShell>
   );
