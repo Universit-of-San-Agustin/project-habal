@@ -185,6 +185,10 @@ export default function CustomerHome({ user }) {
     // Set ETA target to pickup first
     if (pickupCoords) etaTargetRef.current = pickupCoords;
     setScreen("searching");
+
+    // Trigger intelligent auto-match in background
+    base44.functions.invoke("matchRider", { booking_id: bookingId }).catch(() => {});
+
     setTimeout(() => setScreen(prev => prev === "searching" ? "active" : prev), 5000);
   };
 
