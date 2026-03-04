@@ -2,7 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { ChevronLeft } from "lucide-react";
 
-const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/0385c3251_image.png";
+const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/ae9f8141e_LOGOMAINBLUEBLACKWHITE.png";
 
 const DEMO_ROLES = ["Customer", "Rider", "Dispatcher", "Operator", "Admin"];
 
