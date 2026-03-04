@@ -64,6 +64,7 @@ export default function DispatcherDashboard({ user }) {
   };
 
   const [chatBooking, setChatBooking] = useState(null);
+  const [trackingBooking, setTrackingBooking] = useState(null);
 
   const tabs = [
     { id: "inbox", label: "Booking Inbox", icon: <Send className="w-4 h-4" /> },
@@ -76,6 +77,7 @@ export default function DispatcherDashboard({ user }) {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');`}</style>
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
       {chatBooking && <ChatPanel bookingId={chatBooking.booking_id || chatBooking.id} currentUser={user} senderRole="dispatcher" onClose={() => setChatBooking(null)} />}
+      {trackingBooking && <LiveRiderMap booking={trackingBooking} onClose={() => setTrackingBooking(null)} />}
 
       {/* Header */}
       <div className="bg-white border-b border-gray-100 px-4 pt-10 pb-3 flex items-center justify-between"
