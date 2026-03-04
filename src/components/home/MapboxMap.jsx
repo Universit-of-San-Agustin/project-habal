@@ -11,11 +11,13 @@ export default function MapboxMap({
   onGeolocate,
   pickupMarker,
   dropoffMarker,
+  riderMarker,   // { lat, lng, heading }
 }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const pickupMarkerRef = useRef(null);
   const dropoffMarkerRef = useRef(null);
+  const riderMarkerRef = useRef(null);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -52,7 +54,7 @@ export default function MapboxMap({
     };
   }, []);
 
-  // Update pickup marker
+  // Pickup marker
   useEffect(() => {
     if (!mapRef.current) return;
     if (pickupMarkerRef.current) { pickupMarkerRef.current.remove(); pickupMarkerRef.current = null; }
@@ -65,7 +67,7 @@ export default function MapboxMap({
     }
   }, [pickupMarker]);
 
-  // Update dropoff marker
+  // Dropoff marker
   useEffect(() => {
     if (!mapRef.current) return;
     if (dropoffMarkerRef.current) { dropoffMarkerRef.current.remove(); dropoffMarkerRef.current = null; }
@@ -78,6 +80,26 @@ export default function MapboxMap({
       mapRef.current.flyTo({ center: [dropoffMarker.lng, dropoffMarker.lat], zoom: 14, duration: 600 });
     }
   }, [dropoffMarker]);
+
+  // Rider marker (live GPS)
+  useEffect(() => {
+    if (!mapRef.current) return;
+    if (!riderMarker) {
+      if (riderMarkerRef.current) { riderMarkerRef.current.remove(); riderMarkerRef.current = null; }
+      return;
+    }
+    if (riderMarkerRef.current) {
+      riderMarkerRef.current.setLngLat([riderMarker.lng, riderMarker.lat]);
+    } else {
+      const el = document.createElement("div");
+      el.innerHTML = `<div style="width:36px;height:36px;border-radius:50%;background:#10b981;border:3px solid white;box-shadow:0 4px 12px rgba(16,185,129,0.5);display:flex;align-items:center;justify-content:center;font-size:16px;">🏍</div>`;
+      riderMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "center" })
+        .setLngLat([riderMarker.lng, riderMarker.lat])
+        .setPopup(new mapboxgl.Popup({ offset: 25, closeButton: false }).setHTML("<strong>Your Rider</strong>"))
+        .addTo(mapRef.current);
+    }
+    mapRef.current.easeTo({ center: [riderMarker.lng, riderMarker.lat], duration: 800 });
+  }, [riderMarker]);
 
   return <div ref={containerRef} className={className} />;
 }
