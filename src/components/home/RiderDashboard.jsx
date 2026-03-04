@@ -88,25 +88,36 @@ export default function RiderDashboard({ user }) {
     if (!incomingBooking) return;
     if (timerRef.current) clearTimeout(timerRef.current);
     setProcessing(true);
-    const updated = await base44.entities.Booking.update(incomingBooking.id, {
+    // Booking is already assigned to this rider by auto-match — just confirm it
+    await base44.entities.Booking.update(incomingBooking.id, {
       status: "assigned",
-      rider_id: riderData?.id || user?.id,
-      rider_name: user?.full_name,
-      rider_phone: user?.email,
       assigned_at: new Date().toISOString(),
     });
     await base44.entities.BookingEvent.create({
-      booking_id: incomingBooking.id, event_type: "RIDER_ASSIGNED",
+      booking_id: incomingBooking.id, event_type: "RIDER_ACCEPTED",
       actor_role: "rider", actor_name: user?.full_name, timestamp: new Date().toISOString(),
     });
-    setActiveBooking({ ...incomingBooking, status: "assigned", rider_name: user?.full_name });
+    await base44.entities.Rider.update(riderData.id, { online_status: "on_trip" }).catch(() => {});
+    setActiveBooking({ ...incomingBooking, status: "assigned" });
     setIncomingBooking(null);
     setProcessing(false);
     setScreen("active");
   };
 
-  const handleDecline = () => {
+  const handleDecline = async () => {
     if (timerRef.current) clearTimeout(timerRef.current);
+    // Release booking back to pending for re-matching
+    if (incomingBooking) {
+      await base44.entities.Booking.update(incomingBooking.id, {
+        status: "pending",
+        rider_id: null,
+        rider_name: null,
+        rider_phone: null,
+      }).catch(() => {});
+      await base44.entities.Rider.update(riderData.id, { online_status: "online" }).catch(() => {});
+      // Re-trigger auto-match for another rider
+      base44.functions.invoke("matchRider", { booking_id: incomingBooking.booking_id || incomingBooking.id }).catch(() => {});
+    }
     setIncomingBooking(null);
     setScreen("online");
   };
