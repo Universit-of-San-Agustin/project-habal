@@ -53,6 +53,29 @@ export default function RiderDashboard({ user }) {
     return () => navigator.geolocation?.clearWatch(watchId);
   }, [riderData?.id, isOnline]);
 
+  // Countdown timer for incoming booking
+  useEffect(() => {
+    if (screen !== "incoming" || !incomingBooking) {
+      setCountdown(30);
+      if (countdownRef.current) clearInterval(countdownRef.current);
+      return;
+    }
+    setCountdown(30);
+    countdownRef.current = setInterval(() => {
+      setCountdown(c => {
+        if (c <= 1) { clearInterval(countdownRef.current); return 0; }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(countdownRef.current);
+  }, [screen, incomingBooking?.id]);
+
+  // Update rider online_status in DB when toggle changes
+  useEffect(() => {
+    if (!riderData?.id) return;
+    base44.entities.Rider.update(riderData.id, { online_status: isOnline ? "online" : "offline" }).catch(() => {});
+  }, [isOnline, riderData?.id]);
+
   // Poll for bookings assigned to this rider by the auto-match system
   useEffect(() => {
     if (!riderData?.id || !isOnline || activeBooking || screen === "active") return;
