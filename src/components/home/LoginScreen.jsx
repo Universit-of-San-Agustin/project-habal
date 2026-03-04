@@ -6,12 +6,32 @@ const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/p
 
 const DEMO_ROLES = ["Customer", "Rider", "Dispatcher", "Operator", "Admin"];
 
+// Demo role → app role mapping
+const ROLE_MAP = {
+  Customer: "user",
+  Rider: "rider",
+  Dispatcher: "dispatcher",
+  Operator: "operator",
+  Admin: "admin",
+};
+
 export default function LoginScreen({ onLogin }) {
   const [loading, setLoading] = useState(false);
 
   const handleSignIn = () => {
     setLoading(true);
     base44.auth.redirectToLogin(window.location.href);
+  };
+
+  const handleDemoRole = (role) => {
+    // Simulate a demo user with that role and call onLogin with a fake user object
+    const demoUser = {
+      id: "demo-" + role.toLowerCase(),
+      full_name: "Demo " + role,
+      email: "demo." + role.toLowerCase() + "@habal.app",
+      role: ROLE_MAP[role] || "user",
+    };
+    onLogin(demoUser);
   };
 
   return (
