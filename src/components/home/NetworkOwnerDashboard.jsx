@@ -94,10 +94,14 @@ export default function NetworkOwnerDashboard({ user }) {
           </div>
         </div>
         {network && (
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className="text-sm font-bold text-gray-900">{network.name}</span>
             {network.verified_badge && <span className="text-xs px-2 py-0.5 rounded-full font-semibold text-white" style={{ background: PRIMARY }}>✓ Verified</span>}
-            <span className="text-xs text-gray-400">{network.zone}</span>
+            {network.zone && (
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-blue-50 text-blue-600 flex items-center gap-1">
+                <MapPin className="w-2.5 h-2.5" />{network.zone}
+              </span>
+            )}
           </div>
         )}
       </div>
