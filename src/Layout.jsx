@@ -20,6 +20,11 @@ const navItems = [
 export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Mobile customer app — no sidebar/nav
+  if (currentPageName === "Home") {
+    return <>{children}</>;
+  }
+
   return (
     <div className="min-h-screen bg-gray-950 text-white flex">
       {/* Sidebar */}
