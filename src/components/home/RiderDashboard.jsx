@@ -214,7 +214,7 @@ export default function RiderDashboard({ user }) {
                 <div className="w-3 h-3 rounded-full bg-emerald-500 animate-ping" />
                 <span className="font-bold text-emerald-600 text-sm uppercase tracking-wider">New Ride Request</span>
               </div>
-              <span className="text-xs text-gray-400">30s to accept</span>
+              <span className={`text-xs font-bold tabular-nums ${countdown <= 10 ? "text-red-500" : "text-gray-400"}`}>{countdown}s</span>
             </div>
             {/* Customer */}
             <div className="flex items-center gap-3 mb-5">
