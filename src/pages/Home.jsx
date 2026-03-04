@@ -23,7 +23,13 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleLogin = async () => {
+  const handleLogin = async (demoUser) => {
+    // If a demo user object is passed directly, use it
+    if (demoUser?.id) {
+      setUser(demoUser);
+      setPhase("app");
+      return;
+    }
     try {
       const me = await base44.auth.me();
       setUser(me);
@@ -35,7 +41,14 @@ export default function Home() {
 
   if (phase === "splash") return <SplashScreen />;
   if (phase === "login") return <LoginScreen onLogin={handleLogin} />;
-  // Route rider/dispatcher to rider dashboard
-  if (user?.role === "rider" || user?.role === "dispatcher") return <RiderDashboard user={user} />;
+
+  // Route by role
+  const role = user?.role;
+  if (role === "rider" || role === "dispatcher") return <RiderDashboard user={user} />;
+  if (role === "admin" || role === "operator") {
+    // Redirect to admin dashboard
+    window.location.href = "/Dashboard";
+    return null;
+  }
   return <CustomerHome user={user} />;
 }
