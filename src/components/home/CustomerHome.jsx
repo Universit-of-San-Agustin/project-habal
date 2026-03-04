@@ -53,6 +53,7 @@ export default function CustomerHome({ user }) {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [rating, setRating] = useState(0);
   const [submittingRating, setSubmittingRating] = useState(false);
+  const [showChat, setShowChat] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -536,8 +537,20 @@ export default function CustomerHome({ user }) {
                 <span className="truncate">{activeRide.dropoff_address}</span>
               </div>
             </div>
-            {["pending", "searching", "assigned", "otw"].includes(activeRide.status) && (
-              <button onClick={() => setShowCancelConfirm(true)} className="w-full py-2.5 border border-red-200 text-red-500 font-semibold rounded-xl text-sm">Cancel Ride</button>
+            <div className="flex gap-2">
+              {activeRide.rider_name && (
+                <button onClick={() => setShowChat(true)}
+                  className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center justify-center gap-1.5"
+                  style={{ background: PRIMARY }}>
+                  💬 Chat Rider
+                </button>
+              )}
+              {["pending", "searching", "assigned", "otw"].includes(activeRide.status) && (
+                <button onClick={() => setShowCancelConfirm(true)} className="flex-1 py-2.5 border border-red-200 text-red-500 font-semibold rounded-xl text-sm">Cancel Ride</button>
+              )}
+            </div>
+      {showChat && activeRide && (
+              <ChatPanel bookingId={activeRide.booking_id || activeRide.id} currentUser={user} senderRole="customer" onClose={() => setShowChat(false)} />
             )}
           </div>
           {showCancelConfirm && <CancelModal onCancel={handleCancelRide} onKeep={() => setShowCancelConfirm(false)} />}
