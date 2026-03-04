@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import SplashScreen from "../components/home/SplashScreen";
 import LoginScreen from "../components/home/LoginScreen";
 import CustomerHome from "../components/home/CustomerHome";
+import RiderDashboard from "../components/home/RiderDashboard";
 
 export default function Home() {
   const [phase, setPhase] = useState("splash"); // splash | login | app
