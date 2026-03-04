@@ -29,12 +29,10 @@ export default function LoginScreen({ onLogin }) {
   };
 
   const handleDemoRole = (role) => {
-    onLogin({
-      id: "demo-" + role.toLowerCase(),
-      full_name: "Demo " + role,
-      email: "demo." + role.toLowerCase() + "@habal.app",
-      role: ROLE_MAP[role] || "user",
-    });
+    // Always use real auth — demo roles just redirect to login.
+    // After login, the user's actual role in the DB determines their dashboard.
+    setLoading(true);
+    base44.auth.redirectToLogin(window.location.href);
   };
 
   // ── REGISTER ─────────────────────────────────────────────────
