@@ -51,27 +51,38 @@ export default function RiderDashboard({ user }) {
     return () => navigator.geolocation?.clearWatch(watchId);
   }, [riderData?.id, isOnline]);
 
-  // Poll for new pending bookings (only when online and no active booking)
+  // Poll for bookings assigned to this rider by the auto-match system
   useEffect(() => {
-    if (!isOnline || activeBooking || screen === "active") return;
+    if (!riderData?.id || !isOnline || activeBooking || screen === "active") return;
     const poll = async () => {
-      const rows = await base44.entities.Booking.filter({ status: "pending" }, "-created_date", 5);
+      // Check for newly assigned bookings directed at this rider
+      const rows = await base44.entities.Booking.filter(
+        { rider_id: riderData.id, status: "assigned" }, "-created_date", 3
+      );
       const fresh = rows?.find(b => !seenBookingsRef.current.has(b.id));
       if (fresh) {
         seenBookingsRef.current.add(fresh.id);
         setIncomingBooking(fresh);
         setScreen("incoming");
-        // Auto-decline after 30s
-        timerRef.current = setTimeout(() => {
+        // Auto-accept timeout: rider has 30s to respond, else release back
+        timerRef.current = setTimeout(async () => {
+          // Release the booking back to pending so another rider can be matched
+          await base44.entities.Booking.update(fresh.id, {
+            status: "pending",
+            rider_id: null,
+            rider_name: null,
+            rider_phone: null,
+          }).catch(() => {});
+          await base44.entities.Rider.update(riderData.id, { online_status: "online" }).catch(() => {});
           setIncomingBooking(null);
           setScreen("online");
         }, 30000);
       }
     };
     poll();
-    const interval = setInterval(poll, 6000);
+    const interval = setInterval(poll, 5000);
     return () => { clearInterval(interval); if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [isOnline, activeBooking, screen]);
+  }, [riderData?.id, isOnline, activeBooking, screen]);
 
   const handleAccept = async () => {
     if (!incomingBooking) return;
