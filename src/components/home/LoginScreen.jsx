@@ -4,10 +4,14 @@ import { Eye, EyeOff } from "lucide-react";
 
 const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/fe9d5d17d_habal.png";
 
-const DEMO_ROLES = ["Customer", "Rider", "Dispatcher", "Operator", "Admin"];
-const ROLE_MAP = {
-  Customer: "user", Rider: "rider", Dispatcher: "dispatcher",
-  Operator: "operator", Admin: "admin",
+// Demo accounts — invite these users once from the Base44 dashboard
+// Role is determined by their `role` field in the User entity
+const DEMO_ACCOUNTS = {
+  Customer:   { email: "demo.customer@habal.app",   label: "🚖 Customer" },
+  Rider:      { email: "demo.rider@habal.app",      label: "🏍 Rider" },
+  Dispatcher: { email: "demo.dispatcher@habal.app", label: "📋 Dispatcher" },
+  Operator:   { email: "demo.operator@habal.app",   label: "🏢 Operator" },
+  Admin:      { email: "demo.admin@habal.app",      label: "🛡 Admin" },
 };
 
 // screens: login | register | forgot | otp | otp_success | new_password
