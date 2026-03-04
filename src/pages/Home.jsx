@@ -35,5 +35,7 @@ export default function Home() {
 
   if (phase === "splash") return <SplashScreen />;
   if (phase === "login") return <LoginScreen onLogin={handleLogin} />;
+  // Route rider/dispatcher to rider dashboard
+  if (user?.role === "rider" || user?.role === "dispatcher") return <RiderDashboard user={user} />;
   return <CustomerHome user={user} />;
 }
