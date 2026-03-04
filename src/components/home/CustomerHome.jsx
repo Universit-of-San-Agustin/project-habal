@@ -326,6 +326,7 @@ export default function CustomerHome({ user }) {
   // ── MAP: map + search + confirm + searching + active ─────────
   return (
     <AppShell showNav={showNav} screen={screen} setScreen={setScreen} orderCount={orderCount} initials={initials} noScroll>
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
       {/* Map */}
       <div className="absolute inset-0" style={{ bottom: showNav ? 64 : 0 }}>
         <MapboxMap className="w-full h-full" onGeolocate={handleGeolocate}
