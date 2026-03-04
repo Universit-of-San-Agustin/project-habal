@@ -25,12 +25,7 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleLogin = (demoUser) => {
-    if (demoUser?.id) {
-      setUser(demoUser);
-      setPhase("app");
-      return;
-    }
+  const handleLogin = () => {
     base44.auth.redirectToLogin(window.location.href);
   };
 
