@@ -1,76 +1,104 @@
 import { useEffect, useState } from "react";
 
+// Habal official logo from their repo (white bg, teal icon)
+const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/0385c3251_image.png";
+
 export default function SplashScreen() {
-  const [progress, setProgress] = useState(0);
-  const [fadeOut, setFadeOut] = useState(false);
+  const [phase, setPhase] = useState("logo"); // logo | text | exit
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress(p => {
-        if (p >= 100) { clearInterval(interval); return 100; }
-        return p + 2.5;
-      });
-    }, 60);
-    const fadeTimer = setTimeout(() => setFadeOut(true), 2400);
-    return () => { clearInterval(interval); clearTimeout(fadeTimer); };
+    const t1 = setTimeout(() => setPhase("text"), 600);
+    const t2 = setTimeout(() => setPhase("exit"), 1800);
+    const t3 = setTimeout(() => setVisible(false), 2300);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
+
+  if (!visible) return null;
 
   return (
     <div
-      className={`fixed inset-0 flex flex-col items-center justify-center transition-opacity duration-500 ${fadeOut ? "opacity-0" : "opacity-100"}`}
-      style={{ background: "linear-gradient(160deg, #0f0f0f 0%, #1a0a00 50%, #0f0f0f 100%)" }}
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-white transition-opacity duration-500 ${phase === "exit" ? "opacity-0" : "opacity-100"}`}
     >
-      {/* Radial glow */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        background: "radial-gradient(ellipse 60% 40% at 50% 50%, rgba(249,115,22,0.15) 0%, transparent 70%)"
-      }} />
-
-      {/* Logo area */}
-      <div className="relative z-10 flex flex-col items-center gap-6">
-        {/* Logo icon */}
-        <div className="relative">
-          <div className="w-28 h-28 rounded-3xl overflow-hidden shadow-2xl"
-            style={{ boxShadow: "0 0 60px rgba(249,115,22,0.4)" }}>
-            <img
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/abd424dd4_generated_image.png"
-              alt="Habal Logo"
-              className="w-full h-full object-cover"
-            />
-          </div>
-          {/* Pulse ring */}
-          <div className="absolute inset-0 rounded-3xl animate-ping opacity-20"
-            style={{ background: "rgba(249,115,22,0.5)", animationDuration: "1.5s" }} />
-        </div>
-
-        {/* Brand name */}
-        <div className="text-center">
-          <h1 className="text-5xl font-black text-white tracking-tight" style={{ letterSpacing: "-1px" }}>
-            HABAL
-          </h1>
-          <p className="text-orange-400 text-sm font-medium tracking-widest uppercase mt-1">
-            Moto · Iloilo
-          </p>
-        </div>
-
-        {/* Tagline */}
-        <p className="text-gray-400 text-sm text-center max-w-xs px-6">
-          Verified riders. Safe rides. Every time.
-        </p>
+      {/* Ambient glow */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full"
+          style={{
+            background: "radial-gradient(ellipse, rgba(16,185,129,0.08) 0%, transparent 70%)",
+            transition: "opacity 1.2s",
+            opacity: phase === "logo" ? 0 : 1,
+          }}
+        />
       </div>
 
-      {/* Progress bar */}
-      <div className="absolute bottom-16 left-0 right-0 flex flex-col items-center gap-3">
-        <div className="w-48 h-1 bg-gray-800 rounded-full overflow-hidden">
+      {/* Logo */}
+      <div
+        className="relative z-10"
+        style={{
+          transform: phase === "logo" ? "scale(0.6) translateY(20px)" : "scale(1) translateY(0)",
+          opacity: phase === "logo" ? 0 : 1,
+          transition: "transform 0.6s cubic-bezier(0.16,1,0.3,1), opacity 0.6s",
+        }}
+      >
+        <div
+          className="absolute -inset-8 rounded-full"
+          style={{
+            background: "radial-gradient(ellipse, rgba(16,185,129,0.12) 0%, transparent 70%)",
+            filter: "blur(16px)",
+            opacity: phase !== "logo" ? 1 : 0,
+            transition: "opacity 0.8s 0.3s",
+          }}
+        />
+        <img
+          src={HABAL_LOGO}
+          alt="Habal"
+          className="relative w-24 h-24 object-contain drop-shadow-lg"
+          onError={e => {
+            e.target.style.display = "none";
+          }}
+        />
+      </div>
+
+      {/* Text */}
+      <div
+        className="relative z-10 mt-6 text-center"
+        style={{
+          opacity: phase === "text" || phase === "exit" ? 1 : 0,
+          transform: phase === "text" || phase === "exit" ? "translateY(0)" : "translateY(12px)",
+          transition: "opacity 0.4s, transform 0.4s cubic-bezier(0.16,1,0.3,1)",
+        }}
+      >
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Habal</h1>
+        <p className="mt-1 text-sm text-gray-400">Iloilo Verified Rider Network</p>
+      </div>
+
+      {/* Loading dots */}
+      <div
+        className="relative z-10 mt-8 flex gap-1.5"
+        style={{
+          opacity: phase === "text" ? 1 : 0,
+          transition: "opacity 0.3s 0.2s",
+        }}
+      >
+        {[0, 1, 2].map((i) => (
           <div
-            className="h-full bg-orange-500 rounded-full transition-all duration-75"
-            style={{ width: `${progress}%` }}
+            key={i}
+            className="w-1.5 h-1.5 rounded-full"
+            style={{
+              background: "#10b981",
+              animation: `bounce-dot 1s ease-in-out ${i * 0.15}s infinite`,
+            }}
           />
-        </div>
-        <p className="text-gray-600 text-xs">Loading platform...</p>
+        ))}
       </div>
 
-      {/* Version */}
-      <div className="absolute bottom-6 text-gray-700 text-xs">v1.0.0 · Built for Iloilo City 🇵🇭</div>
+      <style>{`
+        @keyframes bounce-dot {
+          0%, 100% { transform: scale(0.8); opacity: 0.3; }
+          50% { transform: scale(1.2); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }
