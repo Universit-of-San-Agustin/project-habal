@@ -32,6 +32,18 @@ function estimateFare() {
   return Math.round((Math.random() * 80 + 50) / 10) * 10;
 }
 
+// Returns ETA in minutes using Mapbox Directions API
+async function fetchETAMinutes(fromLng, fromLat, toLng, toLat) {
+  try {
+    const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${fromLng},${fromLat};${toLng},${toLat}?access_token=${MAPBOX_TOKEN}&overview=false`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const duration = data.routes?.[0]?.duration; // seconds
+    if (duration != null) return Math.max(1, Math.round(duration / 60));
+  } catch {}
+  return null;
+}
+
 export default function CustomerHome({ user }) {
   const [screen, setScreen] = useState("map");
   const [bookings, setBookings] = useState([]);
