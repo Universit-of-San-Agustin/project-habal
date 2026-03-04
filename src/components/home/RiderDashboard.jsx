@@ -367,6 +367,10 @@ export default function RiderDashboard({ user }) {
                   Complete Trip ✅
                 </button>
               )}
+              <button onClick={() => setShowChat(true)}
+                className="py-3.5 px-4 border-2 border-gray-200 text-gray-600 font-bold rounded-2xl text-sm flex items-center gap-1.5">
+                <MessageCircle className="w-4 h-4" /> Chat
+              </button>
               {["assigned", "otw"].includes(activeBooking.status) && (
                 <button onClick={handleCancelRide} disabled={processing}
                   className="py-3.5 px-4 border-2 border-red-200 text-red-500 font-bold rounded-2xl text-sm disabled:opacity-60">
@@ -375,6 +379,14 @@ export default function RiderDashboard({ user }) {
               )}
             </div>
           </div>
+        )}
+        {showChat && activeBooking && (
+          <ChatPanel
+            bookingId={activeBooking.booking_id || activeBooking.id}
+            currentUser={user}
+            senderRole="rider"
+            onClose={() => setShowChat(false)}
+          />
         )}
       </div>
 
