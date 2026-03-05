@@ -88,6 +88,7 @@ export default function RiderDashboard({ user }) {
   useEffect(() => {
     if (!riderData?.id || !isOnline || activeBooking) return;
     const poll = async () => {
+      // Re-fetch rider data to pick up any new assignment by dispatcher/operator
       const rows = await base44.entities.Booking.filter(
         { rider_id: riderData.id, status: "assigned" }, "-created_date", 3
       );
