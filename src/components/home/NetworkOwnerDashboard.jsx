@@ -173,6 +173,9 @@ export default function NetworkOwnerDashboard({ user }) {
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
       {chatBooking && <ChatPanel bookingId={chatBooking.booking_id || chatBooking.id} currentUser={user} senderRole="network_owner" onClose={() => setChatBooking(null)} />}
       {trackingBooking && <LiveRiderMap booking={trackingBooking} onClose={() => setTrackingBooking(null)} />}
+      {showLiveMap && network && (
+        <LiveMapMonitor onClose={() => setShowLiveMap(false)} networkId={network.id} />
+      )}
 
       {/* Assign Rider Modal */}
       {assigningBooking && (
