@@ -41,12 +41,12 @@ export default function WalletScreen({ user, bookings }) {
       {/* Quick Actions */}
       <div className="px-4 grid grid-cols-3 gap-3 mt-4 mb-5">
         {[
-          { icon: <Plus className="w-5 h-5" />, label: "Top Up" },
-          { icon: <ArrowUpRight className="w-5 h-5" />, label: "Send" },
-          { icon: <ArrowDownLeft className="w-5 h-5" />, label: "Receive" },
+          { icon: <Plus className="w-5 h-5" />, label: "Top Up", color: "#10b981" },
+          { icon: <ArrowUpRight className="w-5 h-5" />, label: "Send", color: PRIMARY },
+          { icon: <ArrowDownLeft className="w-5 h-5" />, label: "Receive", color: "#8b5cf6" },
         ].map(a => (
-          <button key={a.label} className="flex flex-col items-center gap-2 bg-white border border-gray-100 rounded-2xl py-4 shadow-sm">
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: PRIMARY_BG, color: PRIMARY }}>
+          <button key={a.label} className="flex flex-col items-center gap-2 bg-white border border-gray-100 rounded-2xl py-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: a.color + "15", color: a.color }}>
               {a.icon}
             </div>
             <span className="text-xs font-semibold text-gray-700">{a.label}</span>
