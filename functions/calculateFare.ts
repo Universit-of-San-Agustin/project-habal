@@ -11,8 +11,7 @@ const BOOKING_FEE = 5;         // ₱5 booking fee
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-
+    // No user auth needed — calculate fare purely via Mapbox
     const { pickup_address, dropoff_address, pickup_coords, dropoff_coords } = await req.json();
 
     if (!MAPBOX_TOKEN) {
