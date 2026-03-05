@@ -41,7 +41,7 @@ export default function NotificationsPanel({ user }) {
   );
 
   return (
-    <div className="flex-1 overflow-y-auto pb-24">
+    <div className="flex-1 overflow-y-auto pb-24 fade-in">
       <div className="flex items-center justify-between px-4 pt-4 pb-3">
         <div className="flex items-center gap-2">
           <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Notifications</p>
