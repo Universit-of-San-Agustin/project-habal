@@ -24,6 +24,8 @@ export default function RiderDashboard({ user }) {
   const [tripHistory, setTripHistory] = useState([]);
   const [showChat, setShowChat] = useState(false);
   const [countdown, setCountdown] = useState(30);
+  const [pickupCoords, setPickupCoords] = useState(null);
+  const [dropoffCoords, setDropoffCoords] = useState(null);
   const seenBookingsRef = useRef(new Set());
   const timerRef = useRef(null);
   const countdownRef = useRef(null);
