@@ -1129,8 +1129,8 @@ function BottomNav({ screen, setScreen, completedRides }) {
 function PrimaryBtn({ children, onClick, loading }) {
   return (
     <button onClick={onClick} disabled={loading}
-      className="w-full py-4 rounded-full font-bold text-white text-base disabled:opacity-60"
-      style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)`, boxShadow: `0 6px 24px rgba(77,200,240,0.38)` }}>
+      className="w-full py-3.5 rounded-xl font-bold text-white text-base disabled:opacity-60 transition-all"
+      style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)`, boxShadow: `0 4px 12px ${PRIMARY}35` }}>
       {loading
         ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" />
         : children}
@@ -1141,16 +1141,16 @@ function PrimaryBtn({ children, onClick, loading }) {
 // ── RideStatusBadge ───────────────────────────────────────────
 function RideStatusBadge({ status }) {
   const MAP = {
-    pending:     { label: "Finding your rider...", bg: "#FFF7ED", color: "#d97706", dot: "#f59e0b" },
-    searching:   { label: "Searching nearby riders...", bg: "#FFF7ED", color: "#d97706", dot: "#f59e0b" },
-    assigned:    { label: "Rider is on the way! 🏍", bg: PRIMARY_BG, color: PRIMARY_DARK, dot: PRIMARY },
+    pending:     { label: "Finding rider...", bg: "#FFF7ED", color: "#d97706", dot: "#f59e0b" },
+    searching:   { label: "Searching...", bg: "#FFF7ED", color: "#d97706", dot: "#f59e0b" },
+    assigned:    { label: "Rider on the way", bg: PRIMARY_BG, color: PRIMARY_DARK, dot: PRIMARY },
     otw:         { label: "Rider heading to you", bg: PRIMARY_BG, color: PRIMARY_DARK, dot: PRIMARY },
-    arrived:     { label: "Rider has arrived! 🎉", bg: "#F0FDF4", color: "#15803d", dot: "#22c55e" },
-    in_progress: { label: "You're on your way! 🚀", bg: "#EFF6FF", color: "#1d4ed8", dot: "#3b82f6" },
+    arrived:     { label: "Rider has arrived!", bg: "#F0FDF4", color: "#15803d", dot: "#22c55e" },
+    in_progress: { label: "Trip in progress", bg: "#EFF6FF", color: "#1d4ed8", dot: "#3b82f6" },
   };
   const cfg = MAP[status] || MAP.pending;
   return (
-    <div className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl text-sm font-semibold" style={{ background: cfg.bg, color: cfg.color }}>
+    <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold" style={{ background: cfg.bg, color: cfg.color }}>
       <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: cfg.dot }} />
       {cfg.label}
     </div>
@@ -1160,17 +1160,17 @@ function RideStatusBadge({ status }) {
 // ── StatusPill ────────────────────────────────────────────────
 function StatusPill({ status }) {
   const map = {
-    completed:   "bg-emerald-50 text-emerald-600",
-    cancelled:   "bg-red-50 text-red-500",
-    in_progress: "bg-blue-50 text-blue-600",
-    pending:     "bg-amber-50 text-amber-600",
-    searching:   "bg-amber-50 text-amber-600",
-    assigned:    "bg-sky-50 text-sky-600",
-    otw:         "bg-sky-50 text-sky-600",
-    arrived:     "bg-emerald-50 text-emerald-600",
+    completed:   "bg-emerald-100 text-emerald-700",
+    cancelled:   "bg-red-100 text-red-700",
+    in_progress: "bg-blue-100 text-blue-700",
+    pending:     "bg-amber-100 text-amber-700",
+    searching:   "bg-amber-100 text-amber-700",
+    assigned:    "bg-sky-100 text-sky-700",
+    otw:         "bg-sky-100 text-sky-700",
+    arrived:     "bg-emerald-100 text-emerald-700",
   };
   return (
-    <span className={`text-xs px-2.5 py-1 rounded-full font-semibold capitalize flex-shrink-0 ${map[status] || "bg-gray-100 text-gray-500"}`}>
+    <span className={`text-xs px-2.5 py-1.5 rounded-lg font-bold capitalize flex-shrink-0 ${map[status] || "bg-gray-100 text-gray-600"}`}>
       {status}
     </span>
   );
@@ -1179,21 +1179,21 @@ function StatusPill({ status }) {
 // ── ActiveRideStatusBanner ────────────────────────────────────
 function ActiveRideStatusBanner({ status, eta }) {
   const MAP = {
-    pending:     { label: "Finding your rider...",      bg: "#FFF7ED", color: "#d97706", dot: "#f59e0b", emoji: "🔍" },
-    searching:   { label: "Searching nearby riders...", bg: "#FFF7ED", color: "#d97706", dot: "#f59e0b", emoji: "🔍" },
-    assigned:    { label: "Rider is on the way! 🏍",    bg: PRIMARY_BG, color: PRIMARY_DARK, dot: PRIMARY, emoji: "🏍" },
-    otw:         { label: "Rider heading to you",       bg: PRIMARY_BG, color: PRIMARY_DARK, dot: PRIMARY, emoji: "🏍" },
-    arrived:     { label: "Rider has arrived! 🎉",      bg: "#F0FDF4", color: "#15803d", dot: "#22c55e", emoji: "📍" },
-    in_progress: { label: "You're on your way! 🚀",     bg: "#EFF6FF", color: "#1d4ed8", dot: "#3b82f6", emoji: "🚀" },
+    pending:     { label: "Finding your rider...",   bg: "#FFF7ED", color: "#d97706", dot: "#f59e0b", emoji: "🔍" },
+    searching:   { label: "Searching for riders...", bg: "#FFF7ED", color: "#d97706", dot: "#f59e0b", emoji: "🔍" },
+    assigned:    { label: "Rider is on the way",     bg: PRIMARY_BG, color: PRIMARY_DARK, dot: PRIMARY, emoji: "🏍" },
+    otw:         { label: "Rider heading to you",    bg: PRIMARY_BG, color: PRIMARY_DARK, dot: PRIMARY, emoji: "🏍" },
+    arrived:     { label: "Rider has arrived",       bg: "#F0FDF4", color: "#15803d", dot: "#22c55e", emoji: "📍" },
+    in_progress: { label: "Trip in progress",        bg: "#EFF6FF", color: "#1d4ed8", dot: "#3b82f6", emoji: "🚀" },
   };
   const cfg = MAP[status] || MAP.pending;
   return (
-    <div className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl"
+    <div className="w-full flex items-center gap-3 px-4 py-3 rounded-xl"
       style={{ background: cfg.bg }}>
       <span className="text-2xl flex-shrink-0">{cfg.emoji}</span>
       <div className="flex-1">
         <div className="font-bold text-sm" style={{ color: cfg.color }}>{cfg.label}</div>
-        {eta && <div className="text-xs mt-0.5" style={{ color: cfg.color }}>ETA: <span className="font-black">{eta.minutes} min</span> {eta.label}</div>}
+        {eta && <div className="text-xs mt-0.5 font-medium" style={{ color: cfg.color }}>ETA: {eta.minutes} min {eta.label}</div>}
       </div>
       <span className="w-2.5 h-2.5 rounded-full animate-pulse flex-shrink-0" style={{ background: cfg.dot }} />
     </div>
@@ -1207,18 +1207,18 @@ function CancelModal({ onCancel, onKeep }) {
       <div className="w-full bg-white rounded-t-3xl px-5 pt-6 pb-10 space-y-4">
         <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-2" />
         <div className="text-center">
-          <div className="text-3xl mb-3">😔</div>
+          <div className="text-4xl mb-3">⚠️</div>
           <h3 className="font-bold text-gray-900 text-lg">Cancel this ride?</h3>
-          <p className="text-sm text-gray-400 mt-1">Your rider may already be heading to you. Frequent cancellations may affect your account.</p>
+          <p className="text-sm text-gray-500 mt-2">Your rider may be on the way. Cancelling may affect your account.</p>
         </div>
         <div className="flex gap-3 pt-2">
           <button onClick={onKeep}
-            className="flex-1 py-3.5 border-2 border-gray-200 rounded-2xl font-bold text-gray-700">
+            className="flex-1 py-3.5 border-2 border-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-50 transition-colors">
             Keep Ride
           </button>
           <button onClick={onCancel}
-            className="flex-1 py-3.5 bg-red-500 text-white rounded-2xl font-bold">
-            Yes, Cancel
+            className="flex-1 py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-colors">
+            Cancel
           </button>
         </div>
       </div>
