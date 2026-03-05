@@ -71,12 +71,15 @@ export default function LoginScreen({ onLogin }) {
     if (!account) return;
     setDemoLoading(roleName);
     setDemoError("");
-    try {
-      base44.auth.redirectToLogin(window.location.href + `?demo_email=${encodeURIComponent(account.email)}`);
-    } catch {
-      setDemoError("Could not redirect. Please log in manually.");
-      setDemoLoading(null);
-    }
+    // Build a synthetic demo user that matches the expected shape
+    const demoUser = {
+      id: `demo-${roleName.toLowerCase()}`,
+      email: account.email,
+      full_name: `Demo ${roleName}`,
+      role: account.role,
+    };
+    // Small delay for UX feel
+    setTimeout(() => onLogin(demoUser), 400);
   };
 
   // ── REGISTER ─────────────────────────────────────────────────
