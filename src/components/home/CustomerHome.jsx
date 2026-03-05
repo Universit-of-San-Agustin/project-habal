@@ -534,40 +534,38 @@ export default function CustomerHome({ user }) {
       <Shell>
         <div className="flex-1 overflow-y-auto pb-20 fade-in">
           {/* Hero */}
-          <div className="px-4 pt-14 pb-6 relative" style={{ background: `linear-gradient(160deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)` }}>
+          <div className="px-4 pt-14 pb-8 relative" style={{ background: `linear-gradient(160deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)` }}>
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-white/20 border-2 border-white/30 flex items-center justify-center text-2xl font-bold text-white">
+              <div className="w-16 h-16 rounded-2xl bg-white/20 border-2 border-white/30 flex items-center justify-center text-3xl font-bold text-white shadow-lg">
                 {initials}
               </div>
               <div>
-                <div className="font-bold text-white text-lg leading-tight">{user?.full_name || "Customer"}</div>
+                <div className="font-bold text-white text-lg">{user?.full_name || "Customer"}</div>
                 <div className="text-blue-100 text-xs mt-0.5">{user?.email}</div>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className="px-2 py-0.5 bg-white/20 rounded-full text-white text-[10px] font-semibold">{completedRides} Rides</span>
-                  <span className="px-2 py-0.5 bg-white/20 rounded-full text-white text-[10px] font-semibold">⭐ Verified</span>
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-white text-[11px] font-semibold">{completedRides} Completed Rides</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Menu */}
-          <div className="px-4 py-4 space-y-2">
+          <div className="px-4 py-4 space-y-2.5">
             {[
-              { icon: "👤", label: "Personal Information", sub: "Name, phone, email", screen: null },
-              { icon: "📍", label: "Saved Locations", sub: "Home, work, favorites", screen: "saved" },
-              { icon: "🔔", label: "Notifications", sub: "Alerts & updates", screen: "notifications" },
-              { icon: "🛡", label: "Help & Support", sub: "FAQ, tickets, contact", screen: "support" },
-              { icon: "⭐", label: "My Ratings", sub: `${bookings.filter(b=>b.customer_rating).length} reviews given`, screen: null },
-              { icon: "⚙️", label: "Settings", sub: "App preferences", screen: null },
+              { icon: "👤", label: "Account Info", sub: "Personal details", screen: null },
+              { icon: "📍", label: "Saved Locations", sub: "Quick access places", screen: "saved" },
+              { icon: "🔔", label: "Notifications", sub: "Alerts & messages", screen: "notifications" },
+              { icon: "🛡", label: "Help & Support", sub: "Get assistance", screen: "support" },
+              { icon: "⭐", label: "My Ratings", sub: `${bookings.filter(b=>b.customer_rating).length} reviews`, screen: null },
             ].map((item, i) => (
               <button key={i} onClick={() => item.screen && setScreen(item.screen)}
-                className="w-full flex items-center gap-4 bg-white border border-gray-100 rounded-2xl px-4 py-3.5 shadow-sm hover:shadow-md transition-shadow text-left">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-xl" style={{ background: PRIMARY_BG }}>
+                className="w-full flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3.5 shadow-sm hover:shadow-md hover:border-gray-200 transition-all text-left">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-lg" style={{ background: PRIMARY_BG }}>
                   {item.icon}
                 </div>
-                <div className="flex-1">
-                  <div className="font-semibold text-gray-800 text-sm">{item.label}</div>
-                  <div className="text-xs text-gray-400 mt-0.5">{item.sub}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-gray-900 text-sm">{item.label}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">{item.sub}</div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
               </button>
@@ -576,8 +574,8 @@ export default function CustomerHome({ user }) {
 
           <div className="px-4 pb-4 space-y-2">
             <button onClick={() => base44.auth.logout(window.location.href)}
-              className="w-full py-3.5 rounded-full font-bold text-white text-sm flex items-center justify-center gap-2"
-              style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)`, boxShadow: "0 4px 18px rgba(77,200,240,0.35)" }}>
+              className="w-full py-3.5 rounded-xl font-bold text-white text-sm flex items-center justify-center gap-2 border-2 border-red-400"
+              style={{ background: "#ef4444" }}>
               <LogOut className="w-4 h-4" /> Sign Out
             </button>
           </div>
