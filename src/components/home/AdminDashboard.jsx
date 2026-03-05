@@ -50,6 +50,7 @@ export default function AdminDashboard({ user }) {
     { id: "riders", label: "Riders", icon: <Users className="w-4 h-4" /> },
     { id: "bookings", label: "Bookings", icon: <MapPin className="w-4 h-4" /> },
     { id: "zones", label: "Zones", icon: <MapPin className="w-4 h-4" /> },
+    { id: "analytics", label: "Analytics", icon: <BarChart2 className="w-4 h-4" /> },
     { id: "enforce", label: "Enforce", icon: <ShieldAlert className="w-4 h-4" /> },
   ];
 
