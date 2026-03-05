@@ -562,9 +562,9 @@ export default function AdminDashboard({ user }) {
           <SupportTicketsPanel />
         )}
 
-        {/* ── AUDIT LOG ── */}
+        {/* ── AUDIT LOG (SENSITIVE) ── */}
         {!loading && tab === "audit" && (
-          <AuditLogPanel />
+          <SensitiveLogsGate user={user} onBack={() => setTab("overview")} />
         )}
       </div>
     </div>
