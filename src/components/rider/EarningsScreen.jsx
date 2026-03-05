@@ -47,13 +47,13 @@ export default function EarningsScreen({ tripHistory, riderData, onBack }) {
 
       <div className="flex-1 overflow-y-auto pb-8">
         {/* Period tabs */}
-        <div className="flex gap-2 px-4 pt-4 mb-4">
+        <div className="flex gap-2 px-4 pt-4 mb-4 bg-white pb-3 border-b border-gray-50">
           {PERIODS.map(p => (
             <button key={p.id} onClick={() => setPeriod(p.id)}
-              className="flex-1 py-2 rounded-full text-xs font-bold transition-all"
+              className="flex-1 py-2.5 rounded-full text-xs font-bold transition-all"
               style={period === p.id
-                ? { background: PRIMARY, color: "#fff", boxShadow: "0 2px 10px rgba(77,200,240,0.3)" }
-                : { background: "#f1f5f9", color: "#64748b" }}>
+                ? { background: GREEN, color: "#fff", boxShadow: "0 4px 14px rgba(16,185,129,0.3)" }
+                : { background: "#f1f5f9", color: "#94a3b8" }}>
               {p.label}
             </button>
           ))}
