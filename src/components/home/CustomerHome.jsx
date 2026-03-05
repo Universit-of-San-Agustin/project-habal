@@ -91,7 +91,7 @@ export default function CustomerHome({ user }) {
   const [submittingRating, setSubmittingRating] = useState(false);
   const [showChat, setShowChat] = useState(false);
 
-  const [supportInput, setSupportInput] = useState("");
+
 
   // Saved locations
   const [savedLocations, setSavedLocations] = useState([
