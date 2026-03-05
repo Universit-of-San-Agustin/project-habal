@@ -215,8 +215,15 @@ export default function CustomerHome({ user }) {
       actor_role: "customer", actor_name: user?.full_name || "Passenger",
       timestamp: new Date().toISOString(),
     });
-    setActiveRide(b);
     setBooking(false);
+    setScheduledAt(null);
+    if (isScheduled) {
+      addToast({ type: "success", title: "Ride Scheduled! 🗓", message: "Your ride has been booked for later." });
+      setDropoff(""); setDropoffInput(""); setDropoffCoords(null);
+      setScreen("map");
+      return;
+    }
+    setActiveRide(b);
     if (pickupCoords) etaTargetRef.current = pickupCoords;
     setScreen("searching");
     base44.functions.invoke("matchRider", { booking_id: bookingId }).catch(() => {});
