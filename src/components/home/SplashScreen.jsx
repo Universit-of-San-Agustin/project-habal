@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 
 const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/fe9d5d17d_habal.png";
+const PRIMARY = "#4DC8F0";
 
 export default function SplashScreen() {
   const [phase, setPhase] = useState("in"); // in | show | out
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("show"), 300);
-    const t2 = setTimeout(() => setPhase("out"), 2200);
-    const t3 = setTimeout(() => setVisible(false), 2800);
+    const t1 = setTimeout(() => setPhase("show"), 200);
+    const t2 = setTimeout(() => setPhase("out"), 2400);
+    const t3 = setTimeout(() => setVisible(false), 3000);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
@@ -18,62 +19,51 @@ export default function SplashScreen() {
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white"
-      style={{
-        opacity: phase === "out" ? 0 : 1,
-        transition: "opacity 0.6s ease-in-out",
-      }}
+      style={{ opacity: phase === "out" ? 0 : 1, transition: "opacity 0.6s ease-in-out" }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
-        @keyframes pulse-ring-1 {
-          0% { transform: scale(0.85); opacity: 0.5; }
-          100% { transform: scale(1.35); opacity: 0; }
-        }
-        @keyframes pulse-ring-2 {
-          0% { transform: scale(0.85); opacity: 0.35; }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+
+        @keyframes ring-pulse {
+          0%   { transform: scale(0.9); opacity: 0.5; }
           100% { transform: scale(1.6); opacity: 0; }
         }
-        @keyframes splash-logo-in {
-          0% { transform: scale(0.6); opacity: 0; }
-          100% { transform: scale(1); opacity: 1; }
+        @keyframes logo-in {
+          0%   { transform: scale(0.55); opacity: 0; }
+          100% { transform: scale(1);    opacity: 1; }
         }
-        .splash-ring-1 { animation: pulse-ring-1 2s ease-out infinite; }
-        .splash-ring-2 { animation: pulse-ring-2 2s ease-out 0.4s infinite; }
-        .splash-logo { animation: splash-logo-in 0.55s cubic-bezier(0.16,1,0.3,1) forwards; }
+        @keyframes dot-bounce {
+          0%, 100% { transform: translateY(0);    opacity: 0.4; }
+          50%       { transform: translateY(-6px); opacity: 1; }
+        }
+        .ring-1 { animation: ring-pulse 2s ease-out infinite; }
+        .ring-2 { animation: ring-pulse 2s ease-out 0.35s infinite; }
+        .ring-3 { animation: ring-pulse 2s ease-out 0.7s infinite; }
+        .logo-enter { animation: logo-in 0.6s cubic-bezier(0.16,1,0.3,1) forwards; }
       `}</style>
 
-      {/* Subtle blue background blobs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-20 -left-20 w-72 h-72 rounded-full bg-[#4DC8F0]/8" />
-        <div className="absolute -bottom-20 -right-20 w-80 h-80 rounded-full bg-[#4DC8F0]/6" />
-        <div className="absolute top-1/3 right-0 w-48 h-48 rounded-full bg-[#4DC8F0]/5" />
-      </div>
-
+      {/* Rings */}
       <div className="relative flex items-center justify-center">
-        {/* Animated pulse rings */}
-        <div
-          className="splash-ring-1 absolute w-40 h-40 rounded-full border-2 border-[#4DC8F0]/40"
-          style={{ opacity: phase === "show" ? undefined : 0 }}
-        />
-        <div
-          className="splash-ring-2 absolute w-40 h-40 rounded-full border border-[#4DC8F0]/25"
-          style={{ opacity: phase === "show" ? undefined : 0 }}
-        />
+        {phase === "show" && (
+          <>
+            <div className="ring-1 absolute w-44 h-44 rounded-full border-2"
+              style={{ borderColor: `${PRIMARY}30` }} />
+            <div className="ring-2 absolute w-44 h-44 rounded-full border"
+              style={{ borderColor: `${PRIMARY}20` }} />
+            <div className="ring-3 absolute w-44 h-44 rounded-full border"
+              style={{ borderColor: `${PRIMARY}12` }} />
+          </>
+        )}
 
-        {/* Logo container */}
-        <div
-          className="relative w-40 h-40 rounded-full flex items-center justify-center splash-logo"
+        {/* Logo circle */}
+        <div className="logo-enter relative w-36 h-36 rounded-full flex items-center justify-center"
           style={{
-            background: "linear-gradient(135deg, #f0faff 0%, #e0f5fd 100%)",
-            boxShadow: "0 0 0 8px rgba(77,200,240,0.1), 0 8px 40px rgba(77,200,240,0.2)",
-          }}
-        >
-          <img
-            src={HABAL_LOGO}
-            alt="Habal"
-            className="w-24 h-24 object-contain"
-            onError={e => { e.target.style.display = "none"; }}
-          />
+            background: "linear-gradient(145deg, #f0faff 0%, #ddf3fc 100%)",
+            boxShadow: `0 0 0 10px rgba(77,200,240,0.08), 0 12px 48px rgba(77,200,240,0.22)`,
+          }}>
+          <img src={HABAL_LOGO} alt="Habal" className="w-22 h-22 object-contain"
+            style={{ width: 88, height: 88 }}
+            onError={e => { e.target.style.display = "none"; }} />
         </div>
       </div>
 
@@ -82,35 +72,34 @@ export default function SplashScreen() {
         className="mt-8 text-center"
         style={{
           opacity: phase === "show" ? 1 : 0,
-          transform: phase === "show" ? "translateY(0)" : "translateY(10px)",
-          transition: "opacity 0.5s 0.3s, transform 0.5s 0.3s",
+          transform: phase === "show" ? "translateY(0)" : "translateY(12px)",
+          transition: "opacity 0.5s 0.25s, transform 0.5s 0.25s",
           fontFamily: "'Poppins', sans-serif",
         }}
       >
-        <p className="text-[#4DC8F0] text-sm font-semibold tracking-widest uppercase">Habal-Habal</p>
-        <p className="text-gray-400 text-xs mt-1">Your ride, your way</p>
+        <p className="text-xl font-bold tracking-wide" style={{ color: "#1e293b" }}>Habal-Habal</p>
+        <p className="text-xs font-medium mt-1 tracking-widest uppercase" style={{ color: PRIMARY }}>
+          Your Ride, Your Way
+        </p>
       </div>
 
       {/* Loading dots */}
       <div
-        className="absolute bottom-16 flex gap-2"
+        className="absolute bottom-14 flex gap-2.5"
         style={{
           opacity: phase === "show" ? 1 : 0,
           transition: "opacity 0.4s 0.5s",
         }}
       >
         {[0, 1, 2].map(i => (
-          <div
-            key={i}
-            className="w-2 h-2 rounded-full bg-[#4DC8F0]"
+          <div key={i} className="w-2 h-2 rounded-full"
             style={{
-              animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
-              opacity: 0.7,
+              background: PRIMARY,
+              animation: `dot-bounce 1.1s ease-in-out ${i * 0.18}s infinite`,
             }}
           />
         ))}
       </div>
-      <style>{`@keyframes pulse { 0%,100%{transform:scale(0.7);opacity:0.4} 50%{transform:scale(1);opacity:1} }`}</style>
     </div>
   );
 }
