@@ -251,22 +251,7 @@ export default function CustomerHome({ user }) {
     setScreen("map");
   };
 
-  const sendSupportMessage = async () => {
-    if (!supportInput.trim()) return;
-    const text = supportInput.trim();
-    setSupportInput("");
-    // Create a support ticket so admin can see the message
-    await base44.entities.SupportTicket.create({
-      customer_id: user?.id || user?.email,
-      customer_name: user?.full_name || "Customer",
-      customer_email: user?.email,
-      category: "other",
-      subject: "In-app message",
-      message: text,
-      status: "open",
-      priority: "medium",
-    }).catch(() => {});
-  };
+  // sendSupportMessage is unused — support is handled by SupportScreen component directly
 
   const initials = user?.full_name ? user.full_name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() : "JD";
   const completedRides = bookings.filter(b => b.status === "completed").length;
