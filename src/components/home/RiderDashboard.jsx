@@ -728,8 +728,3 @@ function RiderProfileScreen({ user, riderData, setRiderData, screen, setScreen, 
     </Shell>
   );
 }
-
-// ── useState import needed for RiderProfileScreen ─────────────
-function useState(init) {
-  return window.React.useState(init);
-}
