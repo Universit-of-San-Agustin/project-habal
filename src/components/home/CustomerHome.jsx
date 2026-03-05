@@ -972,7 +972,31 @@ export default function CustomerHome({ user }) {
       {/* Schedule Modal */}
       {showScheduleModal && (
         <ScheduleRideModal
-          onConfirm={(isoDate) => { setScheduledAt(isoDate); setShowScheduleModal(false); handleBook(true); }}
+          onConfirm={async (isoDate) => {
+            setShowScheduleModal(false);
+            // Book directly with the isoDate passed in
+            if (!pickup || !dropoff || booking) return;
+            setBooking(true);
+            const bookingId = "BK-" + Date.now().toString(36).toUpperCase();
+            const b = await base44.entities.Booking.create({
+              booking_id: bookingId,
+              customer_name: user?.full_name || "Passenger",
+              customer_phone: user?.email || "",
+              pickup_address: pickup,
+              dropoff_address: dropoff,
+              zone: detectZone(pickup),
+              status: "scheduled",
+              payment_method: paymentMethod,
+              fare_estimate: fareEstimate,
+              is_scheduled: true,
+              scheduled_at: isoDate,
+            });
+            await base44.entities.BookingEvent.create({ booking_id: b.id, event_type: "BOOKING_CREATED", actor_role: "customer", actor_name: user?.full_name || "Passenger", timestamp: new Date().toISOString() }).catch(() => {});
+            setBooking(false);
+            addToast({ type: "success", title: "Ride Scheduled! 🗓", message: "Your ride has been booked for later." });
+            setDropoff(""); setDropoffInput(""); setDropoffCoords(null);
+            setScreen("map");
+          }}
           onCancel={() => setShowScheduleModal(false)}
         />
       )}
