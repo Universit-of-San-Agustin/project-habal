@@ -79,7 +79,7 @@ export default function WalletScreen({ user, bookings }) {
           </div>
           <div className="mb-6">
             <div className="text-white/70 text-xs font-medium mb-1">Available Balance</div>
-            <div className="text-4xl font-black text-white">₱ 0.00</div>
+            <div className="text-4xl font-black text-white">₱{walletBalance.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
           </div>
           <div className="flex items-center justify-between">
             <div className="text-white/60 text-xs">{user?.full_name?.toUpperCase() || "CUSTOMER"}</div>
