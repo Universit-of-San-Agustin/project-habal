@@ -12,6 +12,9 @@ import ChatPanel from "../chat/ChatPanel";
 import WalletScreen from "../customer/WalletScreen.jsx";
 import SupportScreen from "../customer/SupportScreen";
 import NotificationsPanel from "../customer/NotificationsPanel";
+import LiveRideMap from "../customer/LiveRideMap";
+import ScheduleRideModal from "../customer/ScheduleRideModal";
+import ScheduledRidesTab from "../customer/ScheduledRidesTab";
 
 const MAPBOX_TOKEN = "pk.eyJ1IjoieWlrMzQzMDAiLCJhIjoiY21seWd1ZnlpMHl6MTNnc2dkbjcwZ2NmZCJ9.RRkFfU-zgGip8mt8af3MWg";
 const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/fe9d5d17d_habal.png";
