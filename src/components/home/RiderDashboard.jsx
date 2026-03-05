@@ -653,14 +653,14 @@ function TripBtn({ children, onClick, loading, color }) {
 }
 
 function RiderProfileScreen({ user, riderData, setRiderData, screen, setScreen, activeBooking, IncomingPopup }) {
-  const [form, window_setForm] = window.React.useState({
+  const [form, setForm] = window.React.useState({
     motorcycle_make: riderData?.motorcycle_make || "",
     motorcycle_model: riderData?.motorcycle_model || "",
     plate_number: riderData?.plate_number || "",
     phone: riderData?.phone || "",
   });
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = window.React.useState(false);
+  const [saved, setSaved] = window.React.useState(false);
 
   const handleSave = async () => {
     if (!riderData?.id) return;
