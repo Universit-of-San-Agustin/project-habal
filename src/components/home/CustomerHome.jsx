@@ -269,6 +269,9 @@ export default function CustomerHome({ user }) {
     setActiveRide(b);
     if (pickupCoords) etaTargetRef.current = pickupCoords;
     setScreen("searching");
+    // Notify eligible riders of the new booking
+    base44.functions.invoke("notifyRidersOfBooking", { booking_id: bookingId }).catch(() => {});
+    // Then match to best rider
     base44.functions.invoke("matchRider", { booking_id: bookingId }).catch(() => {});
     setTimeout(() => setScreen(prev => prev === "searching" ? "active" : prev), 5000);
   };
