@@ -188,15 +188,34 @@ export default function LoginScreen({ onLogin }) {
 
   // ── NEW PASSWORD ─────────────────────────────────────────────
   if (screen === "new_password") {
+    const handleSavePassword = () => {
+      if (!form.password || form.password.length < 8) { setError("Password must be at least 8 characters."); return; }
+      if (form.password !== form.confirmPassword) { setError("Passwords do not match."); return; }
+      handleRealAuth();
+    };
     return (
       <Shell>
         <Logo />
         <Heading title="Set New Password" sub="Choose a strong password for your account" />
         <div className="space-y-3">
-          <Field label="New Password" placeholder="••••••••" type="password" value={form.password} onChange={v => set("password", v)} />
+          <Field label="New Password" placeholder="Min 8 characters" type="password" value={form.password} onChange={v => set("password", v)} />
           <Field label="Confirm Password" placeholder="••••••••" type="password" value={form.confirmPassword} onChange={v => set("confirmPassword", v)} />
+          {/* Password strength */}
+          {form.password && (
+            <div className="space-y-1">
+              <div className="w-full bg-gray-100 rounded-full h-1.5">
+                <div className="h-1.5 rounded-full transition-all"
+                  style={{
+                    width: form.password.length >= 12 ? "100%" : form.password.length >= 8 ? "60%" : "30%",
+                    background: form.password.length >= 12 ? "#10b981" : form.password.length >= 8 ? PRIMARY : "#ef4444",
+                  }} />
+              </div>
+              <p className="text-xs text-gray-400">{form.password.length >= 12 ? "Strong ✓" : form.password.length >= 8 ? "Good" : "Too short"}</p>
+            </div>
+          )}
         </div>
-        <Btn onClick={handleRealAuth} className="mt-6">Save Password</Btn>
+        {error && <p className="text-red-500 text-xs mt-2 text-center">{error}</p>}
+        <Btn onClick={handleSavePassword} loading={loading} className="mt-6">Save Password</Btn>
       </Shell>
     );
   }
