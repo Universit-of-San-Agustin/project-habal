@@ -524,8 +524,8 @@ export default function CustomerHome({ user }) {
   }
 
   // ── HISTORY ─────────────────────────────────────────────────
+  const [historyTab, setHistoryTab] = useState("history");
   if (screen === "history") {
-    const [historyTab, setHistoryTab] = useState("history");
     return (
       <Shell>
         <div className="flex-1 overflow-y-auto pb-20">
