@@ -34,8 +34,9 @@ export default function NotificationsPanel({ user }) {
   const unreadCount = notifications.filter(n => !n.read_status).length;
 
   if (loading) return (
-    <div className="flex justify-center py-20">
-      <div className="w-6 h-6 border-2 rounded-full animate-spin" style={{ borderColor: PRIMARY, borderTopColor: "transparent" }} />
+    <div className="flex flex-col items-center justify-center py-20 gap-3">
+      <div className="w-8 h-8 rounded-full animate-spin" style={{ borderWidth: "2.5px", borderStyle: "solid", borderColor: PRIMARY_BG, borderTopColor: PRIMARY }} />
+      <p className="text-xs text-gray-400">Loading notifications...</p>
     </div>
   );
 
