@@ -301,44 +301,28 @@ export default function CustomerHome({ user }) {
     );
   }
 
-  // ── SUPPORT CHAT ─────────────────────────────────────────────
+  // ── SUPPORT ──────────────────────────────────────────────────
   if (screen === "support") {
     return (
       <Shell>
-        <ScreenHeader title="Support Chat" onBack={() => setScreen("profile")} />
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-          {supportMessages.map(msg => (
-            <div key={msg.id} className={`flex ${msg.from === "user" ? "justify-end" : "justify-start"}`}>
-              {msg.from === "support" && (
-                <div className="w-8 h-8 rounded-full flex items-center justify-center mr-2 flex-shrink-0" style={{ background: PRIMARY_BG }}>
-                  <span className="text-sm">🛡</span>
-                </div>
-              )}
-              <div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm ${msg.from === "user"
-                ? "text-white rounded-br-sm"
-                : "bg-gray-100 text-gray-800 rounded-bl-sm"}`}
-                style={msg.from === "user" ? { background: PRIMARY } : {}}>
-                {msg.text}
-              </div>
-            </div>
-          ))}
+        <SupportScreen user={user} onBack={() => setScreen("profile")} />
+        <BottomNav screen={screen} setScreen={setScreen} completedRides={completedRides} />
+      </Shell>
+    );
+  }
+
+  // ── NOTIFICATIONS ─────────────────────────────────────────────
+  if (screen === "notifications") {
+    return (
+      <Shell>
+        <div className="flex items-center gap-3 px-4 pt-12 pb-4 border-b border-gray-100 bg-white">
+          <button onClick={() => setScreen("map")} className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center">
+            <ChevronLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <h1 className="font-bold text-gray-900 text-lg">Notifications</h1>
         </div>
-        <div className="px-4 pb-6 pt-2">
-          <div className="flex items-center gap-2 bg-gray-50 rounded-2xl px-4 py-3 border border-gray-100">
-            <input
-              value={supportInput}
-              onChange={e => setSupportInput(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && sendSupportMessage()}
-              placeholder="Type a message..."
-              className="flex-1 bg-transparent text-sm text-gray-800 focus:outline-none placeholder-gray-400"
-            />
-            <button onClick={sendSupportMessage}
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: PRIMARY }}>
-              <Send className="w-4 h-4 text-white" />
-            </button>
-          </div>
-        </div>
+        <NotificationsPanel user={user} />
+        <BottomNav screen={screen} setScreen={setScreen} completedRides={completedRides} />
       </Shell>
     );
   }
