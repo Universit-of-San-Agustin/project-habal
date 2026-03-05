@@ -525,13 +525,28 @@ export default function CustomerHome({ user }) {
 
   // ── HISTORY ─────────────────────────────────────────────────
   if (screen === "history") {
+    const [historyTab, setHistoryTab] = useState("history");
     return (
       <Shell>
         <div className="flex-1 overflow-y-auto pb-20">
-          <div className="px-4 pt-12 pb-4">
-            <h1 className="text-2xl font-bold text-gray-900">Ride History</h1>
-            <p className="text-sm text-gray-400 mt-0.5">{completedRides} completed rides</p>
+          <div className="px-4 pt-12 pb-3">
+            <h1 className="text-2xl font-bold text-gray-900">Rides</h1>
           </div>
+          {/* Tabs */}
+          <div className="px-4 flex gap-2 mb-4">
+            {[["history","History"],["scheduled","Scheduled"]].map(([id, lbl]) => (
+              <button key={id} onClick={() => setHistoryTab(id)}
+                className="px-4 py-2 rounded-full text-sm font-bold transition-all"
+                style={historyTab === id ? { background: PRIMARY, color: "#fff" } : { background: "#f3f4f6", color: "#6b7280" }}>
+                {lbl}
+              </button>
+            ))}
+          </div>
+          {historyTab === "scheduled" ? (
+            <ScheduledRidesTab user={user} />
+          ) : (
+          <div className="px-4">
+            <p className="text-sm text-gray-400 mb-4">{completedRides} completed rides</p>
           {/* Stats row */}
           <div className="px-4 mb-4 grid grid-cols-3 gap-3">
             {[
