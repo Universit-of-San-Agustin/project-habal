@@ -933,10 +933,10 @@ function BottomNav({ screen, setScreen, completedRides }) {
 function PrimaryBtn({ children, onClick, loading }) {
   return (
     <button onClick={onClick} disabled={loading}
-      className="w-full py-4 rounded-2xl font-bold text-white text-base disabled:opacity-60 transition-all"
-      style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)`, boxShadow: `0 4px 20px rgba(77,200,240,0.4)` }}>
+      className="w-full py-4 rounded-full font-bold text-white text-base disabled:opacity-60"
+      style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)`, boxShadow: `0 6px 24px rgba(77,200,240,0.38)` }}>
       {loading
-        ? <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin mx-auto" />
+        ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" />
         : children}
     </button>
   );
