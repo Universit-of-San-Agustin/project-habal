@@ -116,6 +116,7 @@ export default function AdminDashboard({ user }) {
     { id: "enforce",   label: "Enforce",   icon: ShieldAlert },
     { id: "wallet",    label: "Wallet",    icon: Wallet },
     { id: "support",   label: "Support",   icon: Shield },
+    { id: "audit",     label: "Audit Log", icon: FileText },
   ];
 
   const activeRidersCount = riders.filter(r => r.online_status === "online" || r.online_status === "on_trip").length;
@@ -538,6 +539,11 @@ export default function AdminDashboard({ user }) {
         {/* ── SUPPORT TICKETS ── */}
         {!loading && tab === "support" && (
           <SupportTicketsPanel />
+        )}
+
+        {/* ── AUDIT LOG ── */}
+        {!loading && tab === "audit" && (
+          <AuditLogPanel />
         )}
       </div>
     </div>
