@@ -70,11 +70,12 @@ export default function WalletScreen({ user, bookings }) {
       {/* Quick Actions */}
       <div className="px-4 grid grid-cols-3 gap-3 mt-4 mb-5">
         {[
-          { icon: <Plus className="w-5 h-5" />, label: "Top Up", color: "#10b981" },
-          { icon: <ArrowUpRight className="w-5 h-5" />, label: "Send", color: PRIMARY },
-          { icon: <ArrowDownLeft className="w-5 h-5" />, label: "Receive", color: "#8b5cf6" },
+          { id: "topup",   icon: <Plus className="w-5 h-5" />, label: "Top Up",  color: "#10b981" },
+          { id: "send",    icon: <ArrowUpRight className="w-5 h-5" />, label: "Send",    color: PRIMARY },
+          { id: "receive", icon: <ArrowDownLeft className="w-5 h-5" />, label: "Receive", color: "#8b5cf6" },
         ].map(a => (
-          <button key={a.label} className="flex flex-col items-center gap-2 bg-white border border-gray-100 rounded-2xl py-4 shadow-sm hover:shadow-md transition-shadow">
+          <button key={a.label} onClick={() => setWalletAction(a.id)}
+            className="flex flex-col items-center gap-2 bg-white border border-gray-100 rounded-2xl py-4 shadow-sm hover:shadow-md transition-shadow active:scale-95">
             <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: a.color + "15", color: a.color }}>
               {a.icon}
             </div>
@@ -82,6 +83,60 @@ export default function WalletScreen({ user, bookings }) {
           </button>
         ))}
       </div>
+
+      {/* Wallet Action Modal */}
+      {walletAction && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
+          <div className="w-full bg-white rounded-t-3xl px-5 pt-5 pb-10 max-w-md mx-auto">
+            <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
+            {actionDone ? (
+              <div className="flex flex-col items-center py-8">
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: PRIMARY_BG }}>
+                  <span className="text-3xl">✅</span>
+                </div>
+                <p className="font-bold text-gray-900">Done!</p>
+                <p className="text-sm text-gray-400 mt-1">Transaction recorded successfully.</p>
+              </div>
+            ) : (
+              <>
+                <div className="font-bold text-gray-900 text-lg mb-1 capitalize">{walletAction === "topup" ? "Top Up Wallet" : walletAction === "send" ? "Send Money" : "Receive Money"}</div>
+                <div className="text-xs text-gray-400 mb-5">{walletAction === "topup" ? "Add funds to your Habal Wallet via GCash or bank transfer." : walletAction === "send" ? "Transfer funds to another Habal user." : "Receive funds from another user."}</div>
+                <div className="space-y-3 mb-5">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">Amount (₱)</label>
+                    <input type="number" value={actionAmount} onChange={e => setActionAmount(e.target.value)}
+                      placeholder="0.00" min="1"
+                      className="w-full px-4 py-3.5 rounded-2xl text-gray-800 text-lg font-bold focus:outline-none transition-all"
+                      style={{ background: "#f8fbfd", border: `1.5px solid ${PRIMARY}40` }}
+                      onFocus={e => { e.target.style.borderColor = PRIMARY; }}
+                      onBlur={e => { e.target.style.borderColor = `${PRIMARY}40`; }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">Note (optional)</label>
+                    <input value={actionNote} onChange={e => setActionNote(e.target.value)}
+                      placeholder="Add a note..."
+                      className="w-full px-4 py-3.5 rounded-2xl text-gray-800 text-sm focus:outline-none"
+                      style={{ background: "#f8fbfd", border: "1.5px solid #e2ecf2" }}
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={() => { setWalletAction(null); setActionAmount(""); setActionNote(""); }}
+                    className="flex-1 py-3.5 border-2 border-gray-200 rounded-2xl font-bold text-gray-600 text-sm">Cancel</button>
+                  <button onClick={handleWalletAction} disabled={actionProcessing || !actionAmount}
+                    className="flex-1 py-3.5 rounded-2xl font-bold text-white text-sm disabled:opacity-50 flex items-center justify-center"
+                    style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)` }}>
+                    {actionProcessing
+                      ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      : "Confirm"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Summary Stats */}
       <div className="px-4 mb-5 grid grid-cols-2 gap-3">
