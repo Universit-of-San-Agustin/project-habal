@@ -612,6 +612,7 @@ export default function CustomerHome({ user }) {
               </div>
             ))}
           </div>
+          )} {/* end historyTab === "history" */}
         </div>
         <BottomNav screen={screen} setScreen={setScreen} completedRides={completedRides} />
       </Shell>
