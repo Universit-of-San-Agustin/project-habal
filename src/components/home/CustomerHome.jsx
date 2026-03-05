@@ -1115,6 +1115,30 @@ function StatusPill({ status }) {
   );
 }
 
+// ── ActiveRideStatusBanner ────────────────────────────────────
+function ActiveRideStatusBanner({ status, eta }) {
+  const MAP = {
+    pending:     { label: "Finding your rider...",      bg: "#FFF7ED", color: "#d97706", dot: "#f59e0b", emoji: "🔍" },
+    searching:   { label: "Searching nearby riders...", bg: "#FFF7ED", color: "#d97706", dot: "#f59e0b", emoji: "🔍" },
+    assigned:    { label: "Rider is on the way! 🏍",    bg: PRIMARY_BG, color: PRIMARY_DARK, dot: PRIMARY, emoji: "🏍" },
+    otw:         { label: "Rider heading to you",       bg: PRIMARY_BG, color: PRIMARY_DARK, dot: PRIMARY, emoji: "🏍" },
+    arrived:     { label: "Rider has arrived! 🎉",      bg: "#F0FDF4", color: "#15803d", dot: "#22c55e", emoji: "📍" },
+    in_progress: { label: "You're on your way! 🚀",     bg: "#EFF6FF", color: "#1d4ed8", dot: "#3b82f6", emoji: "🚀" },
+  };
+  const cfg = MAP[status] || MAP.pending;
+  return (
+    <div className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl"
+      style={{ background: cfg.bg }}>
+      <span className="text-2xl flex-shrink-0">{cfg.emoji}</span>
+      <div className="flex-1">
+        <div className="font-bold text-sm" style={{ color: cfg.color }}>{cfg.label}</div>
+        {eta && <div className="text-xs mt-0.5" style={{ color: cfg.color }}>ETA: <span className="font-black">{eta.minutes} min</span> {eta.label}</div>}
+      </div>
+      <span className="w-2.5 h-2.5 rounded-full animate-pulse flex-shrink-0" style={{ background: cfg.dot }} />
+    </div>
+  );
+}
+
 // ── CancelModal ───────────────────────────────────────────────
 function CancelModal({ onCancel, onKeep }) {
   return (
