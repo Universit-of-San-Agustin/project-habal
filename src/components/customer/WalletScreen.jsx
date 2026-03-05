@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { ArrowUpRight, ArrowDownLeft, Plus, CreditCard, Clock } from "lucide-react";
 
