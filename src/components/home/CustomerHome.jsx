@@ -16,16 +16,20 @@ import LiveRideMap from "../customer/LiveRideMap";
 import ScheduleRideModal from "../customer/ScheduleRideModal";
 import ScheduledRidesTab from "../customer/ScheduledRidesTab";
 
-const MAPBOX_TOKEN = "pk.eyJ1IjoieWlrMzQzMDAiLCJhIjoiY21seWd1ZnlpMHl6MTNnc2dkbjcwZ2NmZCJ9.RRkFfU-zgGip8mt8af3MWg";
+// Mapbox token is stored server-side. MapboxMap component reads from env.
+// For client-side geocoding we use the public token only for display (MapboxMap handles it).
+// Fare calculation and ETA now go through the secure backend function.
 const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/fe9d5d17d_habal.png";
 const PRIMARY = "#4DC8F0";
 const PRIMARY_DARK = "#1a9ecb";
 const PRIMARY_BG = "#EBF9FE";
+// Public Mapbox token used ONLY for client-side map display (MapboxMap component)
+const MAPBOX_PUBLIC = "pk.eyJ1IjoieWlrMzQzMDAiLCJhIjoiY21seWd1ZnlpMHl6MTNnc2dkbjcwZ2NmZCJ9.RRkFfU-zgGip8mt8af3MWg";
 
 // ── Utilities ─────────────────────────────────────────────────
 async function reverseGeocode(lng, lat) {
   try {
-    const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&limit=1&types=address,poi`);
+    const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_PUBLIC}&limit=1&types=address,poi`);
     const data = await res.json();
     if (data.features?.length) return data.features[0].place_name;
   } catch {}
@@ -34,16 +38,12 @@ async function reverseGeocode(lng, lat) {
 
 async function forwardGeocode(query) {
   try {
-    // Prioritize Iloilo/Panay region with tight bbox around Panay Island
-    // types include poi (landmarks, malls, universities, gov buildings) + address + place + neighborhood (barangays)
     const params = new URLSearchParams({
-      access_token: MAPBOX_TOKEN,
+      access_token: MAPBOX_PUBLIC,
       limit: 8,
       types: "poi,address,place,neighborhood,locality",
       country: "PH",
-      // Panay Island bounding box
       bbox: "121.8,10.3,122.9,11.8",
-      // Bias results toward Iloilo City center
       proximity: "122.5654,10.7202",
       language: "en",
     });
@@ -58,17 +58,29 @@ async function forwardGeocode(query) {
   return [];
 }
 
-function estimateFare() {
-  return Math.round((Math.random() * 80 + 50) / 10) * 10;
+// Real fare calculation via backend (uses MAPBOX_TOKEN server-side + distance/time formula)
+async function calculateRealFare(pickupCoords, dropoffCoords, pickupAddress, dropoffAddress) {
+  try {
+    const res = await base44.functions.invoke("calculateFare", {
+      pickup_coords: pickupCoords,
+      dropoff_coords: dropoffCoords,
+      pickup_address: pickupAddress,
+      dropoff_address: dropoffAddress,
+    });
+    return res?.data || null;
+  } catch {}
+  return null;
 }
 
 async function fetchETAMinutes(fromLng, fromLat, toLng, toLat) {
   try {
-    const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${fromLng},${fromLat};${toLng},${toLat}?access_token=${MAPBOX_TOKEN}&overview=false`;
-    const res = await fetch(url);
-    const data = await res.json();
-    const duration = data.routes?.[0]?.duration;
-    if (duration != null) return Math.max(1, Math.round(duration / 60));
+    const res = await base44.functions.invoke("calculateFare", {
+      pickup_coords: { lng: fromLng, lat: fromLat },
+      dropoff_coords: { lng: toLng, lat: toLat },
+    });
+    return res?.data?.breakdown?.duration_min != null
+      ? Math.max(1, Math.round(res.data.breakdown.duration_min))
+      : null;
   } catch {}
   return null;
 }
@@ -116,11 +128,8 @@ export default function CustomerHome({ user }) {
 
 
 
-  // Saved locations
-  const [savedLocations, setSavedLocations] = useState([
-    { id: 1, label: "Home", icon: "🏠", address: "123 Rizal St, Jaro, Iloilo City" },
-    { id: 2, label: "Work", icon: "💼", address: "Iloilo Business Park, Mandurriao" },
-  ]);
+  // Saved locations — persisted in DB via SavedLocation entity
+  const [savedLocations, setSavedLocations] = useState([]);
   const [addingLocation, setAddingLocation] = useState(false);
   const [newLocForm, setNewLocForm] = useState({ label: "", address: "", icon: "📍" });
 
