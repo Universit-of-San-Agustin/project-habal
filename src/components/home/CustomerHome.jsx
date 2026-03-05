@@ -140,6 +140,10 @@ export default function CustomerHome({ user }) {
       const active = rows?.find(b => ["pending", "searching", "assigned", "otw", "arrived", "in_progress"].includes(b.status));
       if (active) { setActiveRide(active); setScreen("active"); }
     });
+    // Load saved locations from DB
+    base44.entities.SavedLocation.filter({ user_email: user.email }, "-created_date", 20)
+      .then(locs => { if (locs?.length) setSavedLocations(locs); })
+      .catch(() => {});
   }, [user]);
 
   useEffect(() => {
@@ -201,14 +205,23 @@ export default function CustomerHome({ user }) {
     }, 350);
   }, []);
 
-  const selectSuggestion = useCallback((s) => {
+  const selectSuggestion = useCallback(async (s) => {
+    const dCoords = { lng: s.center[0], lat: s.center[1] };
     setDropoff(s.place_name);
     setDropoffInput(s.place_name);
-    setDropoffCoords({ lng: s.center[0], lat: s.center[1] });
+    setDropoffCoords(dCoords);
     setSuggestions([]);
-    setFareEstimate(estimateFare());
+    setFareEstimate(null); // show loading
     setScreen("confirm");
-  }, []);
+    // Calculate real fare in background
+    const fareData = await calculateRealFare(pickupCoords, dCoords, pickup, s.place_name);
+    if (fareData?.fare) {
+      setFareEstimate(fareData.fare);
+    } else {
+      // Fallback to a minimum fare if backend fails
+      setFareEstimate(40);
+    }
+  }, [pickupCoords, pickup]);
 
   const handleRepeatRide = async (b) => {
     setPickup(b.pickup_address);
