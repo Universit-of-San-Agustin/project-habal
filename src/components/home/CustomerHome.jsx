@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { MapPin, X, ChevronLeft, ChevronRight, Bike, User, Clock, Wallet, Star, LogOut } from "lucide-react";
+import {
+  MapPin, X, ChevronLeft, ChevronRight, Bike, User, Clock,
+  Wallet, Star, LogOut, MessageCircle, Home, Phone, Shield,
+  Heart, Bell, Settings, ChevronDown, Plus, Minus, Check,
+  Navigation, Package, HelpCircle, FileText, BookOpen, Send,
+  CreditCard, ArrowUpRight, ArrowDownLeft
+} from "lucide-react";
 import MapboxMap from "./MapboxMap";
 import { useToast, ToastContainer } from "./ToastNotification";
 import ChatPanel from "../chat/ChatPanel";
@@ -8,8 +14,10 @@ import ChatPanel from "../chat/ChatPanel";
 const MAPBOX_TOKEN = "pk.eyJ1IjoieWlrMzQzMDAiLCJhIjoiY21seWd1ZnlpMHl6MTNnc2dkbjcwZ2NmZCJ9.RRkFfU-zgGip8mt8af3MWg";
 const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/fe9d5d17d_habal.png";
 const PRIMARY = "#4DC8F0";
+const PRIMARY_DARK = "#1a9ecb";
+const PRIMARY_BG = "#EBF9FE";
 
-// screens: map | search | confirm | searching | active | rate | history | wallet | ratings | profile
+// ── Utilities ─────────────────────────────────────────────────
 async function reverseGeocode(lng, lat) {
   try {
     const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&limit=1&types=address,poi`);
@@ -32,23 +40,36 @@ function estimateFare() {
   return Math.round((Math.random() * 80 + 50) / 10) * 10;
 }
 
-// Returns ETA in minutes using Mapbox Directions API
 async function fetchETAMinutes(fromLng, fromLat, toLng, toLat) {
   try {
     const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${fromLng},${fromLat};${toLng},${toLat}?access_token=${MAPBOX_TOKEN}&overview=false`;
     const res = await fetch(url);
     const data = await res.json();
-    const duration = data.routes?.[0]?.duration; // seconds
+    const duration = data.routes?.[0]?.duration;
     if (duration != null) return Math.max(1, Math.round(duration / 60));
   } catch {}
   return null;
 }
 
+function detectZone(address) {
+  const a = (address || "").toLowerCase();
+  if (a.includes("jaro")) return "Jaro";
+  if (a.includes("mandurriao")) return "Mandurriao";
+  if (a.includes("la paz") || a.includes("lapaz")) return "La Paz";
+  if (a.includes("arevalo")) return "Arevalo";
+  if (a.includes("city proper") || a.includes("iloilo city")) return "City Proper";
+  return "City Proper";
+}
+
+// ── Main Component ────────────────────────────────────────────
 export default function CustomerHome({ user }) {
+  // screen: map | search | confirm | searching | active | rate | history | wallet | messages | profile | saved | support
   const [screen, setScreen] = useState("map");
   const [bookings, setBookings] = useState([]);
   const { toasts, addToast, dismiss } = useToast();
   const prevStatusRef = useRef(null);
+
+  // Booking
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
   const [dropoffInput, setDropoffInput] = useState("");
@@ -61,12 +82,24 @@ export default function CustomerHome({ user }) {
   const [booking, setBooking] = useState(false);
   const [activeRide, setActiveRide] = useState(null);
   const [riderLocation, setRiderLocation] = useState(null);
-  const [eta, setEta] = useState(null); // { minutes, label } or null
-  const etaTargetRef = useRef(null); // coords to calculate ETA towards
+  const [eta, setEta] = useState(null);
+  const etaTargetRef = useRef(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [rating, setRating] = useState(0);
   const [submittingRating, setSubmittingRating] = useState(false);
   const [showChat, setShowChat] = useState(false);
+
+  // Support chat
+  const [supportMessages, setSupportMessages] = useState([
+    { id: 1, from: "support", text: "Hi! How can we help you today?", time: "Now" }
+  ]);
+  const [supportInput, setSupportInput] = useState("");
+
+  // Saved locations
+  const [savedLocations] = useState([
+    { id: 1, label: "Home", icon: "🏠", address: "123 Rizal St, Jaro, Iloilo City" },
+    { id: 2, label: "Work", icon: "💼", address: "Iloilo Business Park, Mandurriao" },
+  ]);
 
   useEffect(() => {
     if (!user) return;
@@ -84,33 +117,23 @@ export default function CustomerHome({ user }) {
       const updated = rows?.[0];
       if (!updated) return;
 
-      // Fetch rider GPS every poll tick
       if (updated.rider_id) {
         const locs = await base44.entities.RiderLocation.filter({ rider_id: updated.rider_id }, "-updated_date", 1).catch(() => []);
         if (locs?.[0]) {
           const loc = { lat: locs[0].lat, lng: locs[0].lng };
           setRiderLocation(loc);
-
-          // Determine ETA target: en-route to pickup → use pickupCoords; in_progress → use dropoffCoords
           const isEnRoutePickup = ["assigned", "otw", "arrived"].includes(updated.status);
           const isInProgress = updated.status === "in_progress";
           const target = etaTargetRef.current;
-
           if (target && (isEnRoutePickup || isInProgress)) {
             const mins = await fetchETAMinutes(loc.lng, loc.lat, target.lng, target.lat);
-            if (mins != null) {
-              setEta({
-                minutes: mins,
-                label: isInProgress ? "to destination" : "to pickup",
-              });
-            }
+            if (mins != null) setEta({ minutes: mins, label: isInProgress ? "to destination" : "to pickup" });
           } else if (!isEnRoutePickup && !isInProgress) {
             setEta(null);
           }
         }
       }
 
-      // Fire toast on status change
       if (prevStatusRef.current && prevStatusRef.current !== updated.status) {
         const msgs = {
           assigned:    { type: "rider",    title: "Rider Assigned! 🏍", message: `${updated.rider_name} is on the way` },
@@ -121,14 +144,9 @@ export default function CustomerHome({ user }) {
           cancelled:   { type: "alert",    title: "Ride Cancelled", message: "Your booking was cancelled" },
         };
         if (msgs[updated.status]) addToast(msgs[updated.status]);
-
-        // Switch ETA target when trip starts
-        if (updated.status === "in_progress" && dropoffCoords) {
-          etaTargetRef.current = dropoffCoords;
-        }
+        if (updated.status === "in_progress" && dropoffCoords) etaTargetRef.current = dropoffCoords;
       }
       prevStatusRef.current = updated.status;
-
       setActiveRide(updated);
       if (updated.status === "completed") { setScreen("rate"); clearInterval(interval); }
       if (updated.status === "cancelled") { setActiveRide(null); setScreen("map"); clearInterval(interval); }
@@ -160,16 +178,6 @@ export default function CustomerHome({ user }) {
     setScreen("confirm");
   }, []);
 
-  const detectZone = (address) => {
-    const a = (address || "").toLowerCase();
-    if (a.includes("jaro")) return "Jaro";
-    if (a.includes("mandurriao")) return "Mandurriao";
-    if (a.includes("la paz") || a.includes("lapaz")) return "La Paz";
-    if (a.includes("arevalo")) return "Arevalo";
-    if (a.includes("city proper") || a.includes("iloilo city")) return "City Proper";
-    return "City Proper";
-  };
-
   const handleBook = async () => {
     if (!pickup || !dropoff || booking) return;
     setBooking(true);
@@ -193,13 +201,9 @@ export default function CustomerHome({ user }) {
     });
     setActiveRide(b);
     setBooking(false);
-    // Set ETA target to pickup first
     if (pickupCoords) etaTargetRef.current = pickupCoords;
     setScreen("searching");
-
-    // Trigger intelligent auto-match in background
     base44.functions.invoke("matchRider", { booking_id: bookingId }).catch(() => {});
-
     setTimeout(() => setScreen(prev => prev === "searching" ? "active" : prev), 5000);
   };
 
@@ -224,164 +228,414 @@ export default function CustomerHome({ user }) {
     setScreen("map");
   };
 
-  const initials = user?.full_name ? user.full_name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() : "JD";
-  const orderCount = bookings.filter(b => b.status === "completed").length;
+  const sendSupportMessage = () => {
+    if (!supportInput.trim()) return;
+    const msg = { id: Date.now(), from: "user", text: supportInput.trim(), time: "Now" };
+    setSupportMessages(m => [...m, msg]);
+    setSupportInput("");
+    setTimeout(() => {
+      setSupportMessages(m => [...m, {
+        id: Date.now() + 1, from: "support",
+        text: "Thanks for reaching out! A support agent will respond shortly.", time: "Now"
+      }]);
+    }, 1200);
+  };
 
-  // Screens that show the bottom nav
-  const navScreens = ["map", "history", "wallet", "ratings", "profile"];
+  const initials = user?.full_name ? user.full_name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() : "JD";
+  const completedRides = bookings.filter(b => b.status === "completed").length;
+  const navScreens = ["map", "history", "wallet", "messages", "profile"];
   const showNav = navScreens.includes(screen);
 
   // ── RATE ────────────────────────────────────────────────────
   if (screen === "rate") {
     return (
-      <AppShell showNav={false}>
-        <div className="flex-1 flex flex-col items-center justify-center px-6">
-          <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-4 text-4xl">🎉</div>
-          <h2 className="text-xl font-bold text-gray-900 mb-1">Trip Completed!</h2>
-          <p className="text-gray-400 text-sm mb-6">Rate your rider</p>
+      <Shell>
+        <div className="flex-1 flex flex-col items-center justify-center px-8">
+          <div className="relative mb-6">
+            <div className="w-28 h-28 rounded-full flex items-center justify-center" style={{ background: PRIMARY_BG }}>
+              <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: "#D6F3FC" }}>
+                <span className="text-4xl">🎉</span>
+              </div>
+            </div>
+            <div className="absolute -right-1 -bottom-1 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: PRIMARY }}>
+              <Check className="w-5 h-5 text-white" />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-1">You've arrived!</h2>
+          <p className="text-gray-400 text-sm mb-2 text-center">How was your ride? Rate your experience</p>
+          {activeRide?.fare_estimate && (
+            <div className="px-5 py-2.5 rounded-full mb-6 text-sm font-bold" style={{ background: PRIMARY_BG, color: PRIMARY_DARK }}>
+              Trip fare: ₱{activeRide.fare_estimate}
+            </div>
+          )}
           {activeRide?.rider_name && (
-            <div className="flex items-center gap-3 bg-gray-50 rounded-2xl px-5 py-4 mb-6 w-full max-w-xs">
-              <div className="w-12 h-12 rounded-full bg-[#4DC8F0]/10 flex items-center justify-center text-2xl">🏍</div>
+            <div className="flex items-center gap-4 bg-gray-50 rounded-3xl px-5 py-4 mb-6 w-full max-w-xs">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl" style={{ background: PRIMARY_BG }}>🏍</div>
               <div>
                 <div className="font-bold text-gray-900">{activeRide.rider_name}</div>
-                <div className="text-xs text-gray-400">{activeRide.rider_phone}</div>
+                <div className="text-xs text-gray-400 mt-0.5">Your rider</div>
+                <div className="flex mt-1">
+                  {[1,2,3,4,5].map(n => (
+                    <span key={n} className={`text-xs ${n <= 4 ? "text-yellow-400" : "text-gray-200"}`}>★</span>
+                  ))}
+                </div>
               </div>
             </div>
           )}
-          <div className="flex gap-2 mb-8">
+          <div className="flex gap-3 mb-8">
             {[1,2,3,4,5].map(n => (
-              <button key={n} onClick={() => setRating(n)} className="text-3xl">
-                {n <= rating ? "★" : "☆"}
+              <button key={n} onClick={() => setRating(n)}
+                className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl transition-all"
+                style={n <= rating ? { background: PRIMARY, boxShadow: `0 4px 12px rgba(77,200,240,0.4)` } : { background: "#f3f4f6" }}>
+                <span style={{ filter: n <= rating ? "brightness(10)" : "none" }}>⭐</span>
               </button>
             ))}
           </div>
-          <button onClick={handleSubmitRating} disabled={submittingRating}
-            className="w-full max-w-xs py-4 rounded-full font-semibold text-white disabled:opacity-60"
-            style={{ background: PRIMARY }}>
-            {submittingRating ? "Submitting..." : rating > 0 ? "Submit Rating" : "Skip"}
+          <PrimaryBtn onClick={handleSubmitRating} loading={submittingRating}>
+            {rating > 0 ? "Submit Rating" : "Skip for Now"}
+          </PrimaryBtn>
+        </div>
+      </Shell>
+    );
+  }
+
+  // ── SUPPORT CHAT ─────────────────────────────────────────────
+  if (screen === "support") {
+    return (
+      <Shell>
+        <ScreenHeader title="Support Chat" onBack={() => setScreen("profile")} />
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+          {supportMessages.map(msg => (
+            <div key={msg.id} className={`flex ${msg.from === "user" ? "justify-end" : "justify-start"}`}>
+              {msg.from === "support" && (
+                <div className="w-8 h-8 rounded-full flex items-center justify-center mr-2 flex-shrink-0" style={{ background: PRIMARY_BG }}>
+                  <span className="text-sm">🛡</span>
+                </div>
+              )}
+              <div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm ${msg.from === "user"
+                ? "text-white rounded-br-sm"
+                : "bg-gray-100 text-gray-800 rounded-bl-sm"}`}
+                style={msg.from === "user" ? { background: PRIMARY } : {}}>
+                {msg.text}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="px-4 pb-6 pt-2">
+          <div className="flex items-center gap-2 bg-gray-50 rounded-2xl px-4 py-3 border border-gray-100">
+            <input
+              value={supportInput}
+              onChange={e => setSupportInput(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && sendSupportMessage()}
+              placeholder="Type a message..."
+              className="flex-1 bg-transparent text-sm text-gray-800 focus:outline-none placeholder-gray-400"
+            />
+            <button onClick={sendSupportMessage}
+              className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{ background: PRIMARY }}>
+              <Send className="w-4 h-4 text-white" />
+            </button>
+          </div>
+        </div>
+      </Shell>
+    );
+  }
+
+  // ── MESSAGES ─────────────────────────────────────────────────
+  if (screen === "messages") {
+    const rideWithRider = bookings.find(b => b.rider_name && ["assigned","otw","arrived","in_progress","completed"].includes(b.status));
+    return (
+      <Shell>
+        <ScreenHeader title="Messages" />
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-4 pt-3">
+            <div className="bg-gray-50 rounded-2xl px-4 py-2.5 flex items-center gap-2 mb-4">
+              <MessageCircle className="w-4 h-4 text-gray-300" />
+              <span className="text-sm text-gray-400">Search messages...</span>
+            </div>
+          </div>
+          {/* Support */}
+          <button onClick={() => setScreen("support")}
+            className="w-full flex items-center gap-4 px-4 py-4 hover:bg-gray-50 transition-colors border-b border-gray-50">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: PRIMARY_BG }}>
+              <Shield className="w-6 h-6" style={{ color: PRIMARY }} />
+            </div>
+            <div className="flex-1 text-left">
+              <div className="font-semibold text-gray-900 text-sm">Habal Support</div>
+              <div className="text-xs text-gray-400 mt-0.5 truncate">Hi! How can we help you today?</div>
+            </div>
+            <div className="flex flex-col items-end gap-1">
+              <span className="text-xs text-gray-400">Now</span>
+              <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: PRIMARY }}>1</div>
+            </div>
+          </button>
+          {/* Active ride chat */}
+          {rideWithRider && (
+            <button onClick={() => { setActiveRide(rideWithRider); setShowChat(true); }}
+              className="w-full flex items-center gap-4 px-4 py-4 hover:bg-gray-50 transition-colors border-b border-gray-50">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "#f0fdf4" }}>
+                <span className="text-2xl">🏍</span>
+              </div>
+              <div className="flex-1 text-left">
+                <div className="font-semibold text-gray-900 text-sm">{rideWithRider.rider_name}</div>
+                <div className="text-xs text-gray-400 mt-0.5">Your rider · Tap to chat</div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-300" />
+            </button>
+          )}
+          {!rideWithRider && (
+            <div className="flex flex-col items-center py-16 text-gray-300">
+              <MessageCircle className="w-12 h-12 mb-3 opacity-40" />
+              <p className="text-sm">No rider chats yet</p>
+              <p className="text-xs mt-1 text-gray-300">Book a ride to chat with your rider</p>
+            </div>
+          )}
+        </div>
+        <BottomNav screen={screen} setScreen={setScreen} completedRides={completedRides} />
+      </Shell>
+    );
+  }
+
+  // ── SAVED LOCATIONS ──────────────────────────────────────────
+  if (screen === "saved") {
+    return (
+      <Shell>
+        <ScreenHeader title="Saved Locations" onBack={() => setScreen("profile")} />
+        <div className="flex-1 overflow-y-auto px-4 pt-4">
+          {savedLocations.map(loc => (
+            <div key={loc.id} className="flex items-center gap-4 bg-white border border-gray-100 rounded-2xl px-4 py-4 mb-3 shadow-sm">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl" style={{ background: PRIMARY_BG }}>
+                {loc.icon}
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-gray-900 text-sm">{loc.label}</div>
+                <div className="text-xs text-gray-400 mt-0.5">{loc.address}</div>
+              </div>
+              <button className="text-gray-300 hover:text-gray-500">
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+          <button className="w-full border-2 border-dashed border-gray-200 rounded-2xl py-4 flex items-center justify-center gap-2 text-sm font-medium text-gray-400 hover:border-blue-200 hover:text-blue-400 transition-colors">
+            <Plus className="w-4 h-4" /> Add New Location
           </button>
         </div>
-      </AppShell>
+      </Shell>
     );
   }
 
   // ── PROFILE ─────────────────────────────────────────────────
   if (screen === "profile") {
     return (
-      <AppShell showNav={true} screen={screen} setScreen={setScreen} orderCount={orderCount} initials={initials}>
-        <div className="flex-1 overflow-y-auto">
-          <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-100">
-            <h2 className="font-bold text-gray-900 text-base">User Profile</h2>
+      <Shell>
+        <div className="flex-1 overflow-y-auto pb-20">
+          {/* Hero */}
+          <div className="px-4 pt-14 pb-6 relative" style={{ background: `linear-gradient(160deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)` }}>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-white/20 border-2 border-white/30 flex items-center justify-center text-2xl font-bold text-white">
+                {initials}
+              </div>
+              <div>
+                <div className="font-bold text-white text-lg leading-tight">{user?.full_name || "Customer"}</div>
+                <div className="text-blue-100 text-xs mt-0.5">{user?.email}</div>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="px-2 py-0.5 bg-white/20 rounded-full text-white text-[10px] font-semibold">{completedRides} Rides</span>
+                  <span className="px-2 py-0.5 bg-white/20 rounded-full text-white text-[10px] font-semibold">⭐ Verified</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-col items-center py-6 border-b border-gray-100">
-            <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-2xl font-bold text-gray-600 mb-2">{initials}</div>
+
+          {/* Menu */}
+          <div className="px-4 py-4 space-y-2">
+            {[
+              { icon: "👤", label: "Personal Information", sub: "Name, phone, email", screen: null },
+              { icon: "📍", label: "Saved Locations", sub: "Home, work, favorites", screen: "saved" },
+              { icon: "🛡", label: "Support", sub: "Help & contact us", screen: "support" },
+              { icon: "⭐", label: "My Ratings", sub: `${bookings.filter(b=>b.customer_rating).length} reviews given`, screen: null },
+              { icon: "🔔", label: "Notifications", sub: "Manage preferences", screen: null },
+              { icon: "⚙️", label: "Settings", sub: "App preferences", screen: null },
+            ].map((item, i) => (
+              <button key={i} onClick={() => item.screen && setScreen(item.screen)}
+                className="w-full flex items-center gap-4 bg-white border border-gray-100 rounded-2xl px-4 py-3.5 shadow-sm hover:shadow-md transition-shadow text-left">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-xl" style={{ background: PRIMARY_BG }}>
+                  {item.icon}
+                </div>
+                <div className="flex-1">
+                  <div className="font-semibold text-gray-800 text-sm">{item.label}</div>
+                  <div className="text-xs text-gray-400 mt-0.5">{item.sub}</div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+              </button>
+            ))}
           </div>
-          <div className="px-4 py-4 space-y-1">
-            <SectionLabel>Personal Information</SectionLabel>
-            <InfoRow label="Name" value={user?.full_name || "—"} />
-            <InfoRow label="Sex" value="Not Specified" />
-            <SectionLabel className="mt-3">Contact Information</SectionLabel>
-            <InfoRow label="Mobile Number" value={user?.phone || "+639xxxxxxxxxx"} />
-            <InfoRow label="E-mail" value={user?.email || "—"} />
-            <SectionLabel className="mt-3">Account Settings</SectionLabel>
-            <button className="w-full text-left py-3 text-sm text-red-500 font-medium border-b border-gray-100">Delete Account</button>
-          </div>
-          <div className="px-4 py-2 space-y-2">
+
+          <div className="px-4 pb-4 space-y-2">
             <button onClick={() => base44.auth.logout(window.location.href)}
-              className="w-full py-3 rounded-full font-semibold text-white text-sm"
-              style={{ background: PRIMARY }}>
-              SIGN OUT
-            </button>
-            <button className="w-full py-3 rounded-full font-medium text-gray-600 text-sm border border-gray-200">
-              Support
+              className="w-full py-3.5 rounded-2xl font-bold text-white text-sm flex items-center justify-center gap-2"
+              style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)` }}>
+              <LogOut className="w-4 h-4" /> Sign Out
             </button>
           </div>
         </div>
-      </AppShell>
+        <BottomNav screen={screen} setScreen={setScreen} completedRides={completedRides} />
+      </Shell>
     );
   }
 
   // ── HISTORY ─────────────────────────────────────────────────
   if (screen === "history") {
     return (
-      <AppShell showNav={true} screen={screen} setScreen={setScreen} orderCount={orderCount} initials={initials}>
-        <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-100">
-          <h2 className="font-bold text-gray-900 text-base">Ride History</h2>
-        </div>
-        <div className="flex-1 overflow-y-auto px-4 pt-3 pb-4">
-          {bookings.length === 0 ? (
-            <div className="flex flex-col items-center py-16 text-gray-300">
-              <Bike className="w-10 h-10 mb-2" />
-              <p className="text-sm">No rides yet</p>
-            </div>
-          ) : bookings.map(b => (
-            <div key={b.id} className="border-b border-gray-100 py-3">
-              <div className="flex justify-between items-start mb-1">
-                <div className="text-sm font-medium text-gray-800 truncate flex-1 mr-2">{b.pickup_address}</div>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${b.status === "completed" ? "bg-green-50 text-green-600" : b.status === "cancelled" ? "bg-red-50 text-red-500" : "bg-blue-50 text-blue-600"}`}>{b.status}</span>
+      <Shell>
+        <div className="flex-1 overflow-y-auto pb-20">
+          <div className="px-4 pt-12 pb-4">
+            <h1 className="text-2xl font-bold text-gray-900">Ride History</h1>
+            <p className="text-sm text-gray-400 mt-0.5">{completedRides} completed rides</p>
+          </div>
+          {/* Stats row */}
+          <div className="px-4 mb-4 grid grid-cols-3 gap-3">
+            {[
+              { label: "Completed", value: completedRides, color: "#10b981" },
+              { label: "Cancelled", value: bookings.filter(b => b.status === "cancelled").length, color: "#ef4444" },
+              { label: "Total", value: bookings.length, color: PRIMARY },
+            ].map(s => (
+              <div key={s.label} className="bg-white border border-gray-100 rounded-2xl p-3 text-center shadow-sm">
+                <div className="text-xl font-black" style={{ color: s.color }}>{s.value}</div>
+                <div className="text-[10px] text-gray-400 mt-0.5">{s.label}</div>
               </div>
-              <div className="text-xs text-gray-400 truncate mb-1">{b.dropoff_address || "Locating address..."}</div>
-              <div className="flex justify-between items-center text-xs text-gray-400">
-                <span>{b.created_date ? new Date(b.created_date).toLocaleString() : ""}</span>
-                {b.fare_estimate && <span className="font-bold text-gray-700">₱{b.fare_estimate}.00</span>}
+            ))}
+          </div>
+          <div className="px-4 space-y-3 pb-4">
+            {bookings.length === 0 ? (
+              <div className="flex flex-col items-center py-20 text-gray-300">
+                <Bike className="w-16 h-16 mb-4 opacity-30" />
+                <p className="font-semibold text-gray-400">No rides yet</p>
+                <p className="text-sm text-gray-300 mt-1">Book your first ride!</p>
+                <button onClick={() => setScreen("map")} className="mt-5 px-6 py-2.5 rounded-full text-white text-sm font-semibold"
+                  style={{ background: PRIMARY }}>
+                  Book a Ride
+                </button>
               </div>
-            </div>
-          ))}
+            ) : bookings.map(b => (
+              <div key={b.id} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: PRIMARY_BG }}>🏍</div>
+                    <div>
+                      <div className="font-bold text-gray-900 text-sm font-mono">{b.booking_id || b.id?.slice(0, 8)}</div>
+                      <div className="text-xs text-gray-400">{b.created_date ? new Date(b.created_date).toLocaleDateString("en-PH", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : ""}</div>
+                    </div>
+                  </div>
+                  <StatusPill status={b.status} />
+                </div>
+                <div className="space-y-1.5 mb-3">
+                  <div className="flex items-center gap-2 text-xs text-gray-600">
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: PRIMARY }} />
+                    <span className="truncate">{b.pickup_address}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-600">
+                    <MapPin className="w-2.5 h-2.5 text-amber-400 flex-shrink-0" />
+                    <span className="truncate">{b.dropoff_address}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+                  <div className="text-xs text-gray-400">{b.payment_method?.toUpperCase() || "CASH"}</div>
+                  {b.fare_estimate && <div className="font-black text-gray-900">₱{b.fare_estimate}</div>}
+                  {b.customer_rating && (
+                    <div className="flex items-center gap-1">
+                      {[1,2,3,4,5].map(n => <span key={n} className={`text-xs ${n <= b.customer_rating ? "text-yellow-400" : "text-gray-200"}`}>★</span>)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </AppShell>
+        <BottomNav screen={screen} setScreen={setScreen} completedRides={completedRides} />
+      </Shell>
     );
   }
 
   // ── WALLET ───────────────────────────────────────────────────
   if (screen === "wallet") {
+    const totalSpent = bookings.filter(b => b.status === "completed" && b.fare_estimate).reduce((s, b) => s + b.fare_estimate, 0);
     return (
-      <AppShell showNav={true} screen={screen} setScreen={setScreen} orderCount={orderCount} initials={initials}>
-        <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-100">
-          <h2 className="font-bold text-gray-900 text-base">WALLET BALANCE</h2>
-        </div>
-        <div className="flex flex-col items-center py-10">
-          <div className="text-4xl font-bold text-gray-900 mb-1">₱0.00</div>
-          <div className="text-sm text-gray-400">Available Balance</div>
-        </div>
-        <div className="px-4">
-          <SectionLabel>Transaction History</SectionLabel>
-          <div className="flex flex-col items-center py-10 text-gray-300">
-            <Wallet className="w-10 h-10 mb-2" />
-            <p className="text-sm">No transactions yet</p>
+      <Shell>
+        <div className="flex-1 overflow-y-auto pb-20">
+          {/* Card */}
+          <div className="mx-4 mt-12 mb-4 rounded-3xl overflow-hidden shadow-lg"
+            style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)` }}>
+            <div className="px-6 pt-6 pb-8">
+              <div className="flex items-center justify-between mb-6">
+                <img src={HABAL_LOGO} alt="Habal" className="w-8 h-8 object-contain opacity-90" />
+                <span className="text-white/80 text-xs font-semibold uppercase tracking-widest">Habal Wallet</span>
+              </div>
+              <div className="mb-6">
+                <div className="text-white/70 text-xs font-medium mb-1">Available Balance</div>
+                <div className="text-4xl font-black text-white">₱ 0.00</div>
+              </div>
+              <div className="text-white/60 text-xs">{user?.full_name?.toUpperCase() || "CUSTOMER"}</div>
+            </div>
+          </div>
+
+          {/* Quick actions */}
+          <div className="px-4 grid grid-cols-3 gap-3 mb-5">
+            {[
+              { icon: <Plus className="w-5 h-5" />, label: "Top Up" },
+              { icon: <ArrowUpRight className="w-5 h-5" />, label: "Send" },
+              { icon: <ArrowDownLeft className="w-5 h-5" />, label: "Receive" },
+            ].map(a => (
+              <button key={a.label} className="flex flex-col items-center gap-1.5 bg-white border border-gray-100 rounded-2xl py-4 shadow-sm">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: PRIMARY_BG, color: PRIMARY }}>
+                  {a.icon}
+                </div>
+                <span className="text-xs font-semibold text-gray-700">{a.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Stats */}
+          <div className="px-4 mb-4 grid grid-cols-2 gap-3">
+            <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
+              <div className="text-xs text-gray-400 mb-1">Total Spent</div>
+              <div className="text-xl font-black" style={{ color: PRIMARY_DARK }}>₱{totalSpent}</div>
+              <div className="text-[10px] text-gray-400 mt-0.5">All time</div>
+            </div>
+            <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
+              <div className="text-xs text-gray-400 mb-1">Rides Paid</div>
+              <div className="text-xl font-black text-gray-900">{completedRides}</div>
+              <div className="text-[10px] text-gray-400 mt-0.5">Completed trips</div>
+            </div>
+          </div>
+
+          {/* Transactions */}
+          <div className="px-4">
+            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Recent Transactions</div>
+            {bookings.filter(b => b.status === "completed" && b.fare_estimate).length === 0 ? (
+              <div className="flex flex-col items-center py-10 text-gray-300">
+                <CreditCard className="w-12 h-12 mb-3 opacity-30" />
+                <p className="text-sm">No transactions yet</p>
+              </div>
+            ) : bookings.filter(b => b.status === "completed").slice(0, 10).map(b => (
+              <div key={b.id} className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 mb-2 shadow-sm">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style={{ background: "#fef3c7" }}>🏍</div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-gray-800 text-sm truncate">Ride to {b.dropoff_address?.split(",")[0]}</div>
+                  <div className="text-xs text-gray-400 mt-0.5">{b.created_date ? new Date(b.created_date).toLocaleDateString("en-PH") : ""}</div>
+                </div>
+                <div className="font-black text-gray-900 text-sm flex-shrink-0">-₱{b.fare_estimate}</div>
+              </div>
+            ))}
           </div>
         </div>
-      </AppShell>
+        <BottomNav screen={screen} setScreen={setScreen} completedRides={completedRides} />
+      </Shell>
     );
   }
 
-  // ── RATINGS ──────────────────────────────────────────────────
-  if (screen === "ratings") {
-    const rated = bookings.filter(b => b.customer_rating);
-    return (
-      <AppShell showNav={true} screen={screen} setScreen={setScreen} orderCount={orderCount} initials={initials}>
-        <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-100">
-          <h2 className="font-bold text-gray-900 text-base">My Ratings</h2>
-        </div>
-        <div className="flex-1 overflow-y-auto px-4 pt-3 pb-4">
-          {rated.length === 0 ? (
-            <div className="flex flex-col items-center py-16 text-gray-300">
-              <Star className="w-10 h-10 mb-2" />
-              <p className="text-sm">No ratings yet</p>
-            </div>
-          ) : rated.map(b => (
-            <div key={b.id} className="border-b border-gray-100 py-3 flex justify-between items-center">
-              <div className="text-sm text-gray-700 truncate flex-1 mr-3">{b.pickup_address}</div>
-              <div className="flex">{[1,2,3,4,5].map(n => <span key={n} className={`text-sm ${n <= b.customer_rating ? "text-yellow-400" : "text-gray-200"}`}>★</span>)}</div>
-            </div>
-          ))}
-        </div>
-      </AppShell>
-    );
-  }
-
-  // ── MAP: map + search + confirm + searching + active ─────────
+  // ── MAP + BOOKING SCREENS ────────────────────────────────────
   return (
-    <AppShell showNav={showNav} screen={screen} setScreen={setScreen} orderCount={orderCount} initials={initials} noScroll>
+    <Shell noScroll>
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
       {/* Map */}
       <div className="absolute inset-0" style={{ bottom: showNav ? 64 : 0 }}>
@@ -389,88 +643,121 @@ export default function CustomerHome({ user }) {
           pickupMarker={pickupCoords} dropoffMarker={dropoffCoords} riderMarker={riderLocation} />
       </div>
 
-      {/* Top header on map */}
+      {/* Map Top Header */}
       {screen === "map" && (
-        <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-10 pb-2 pointer-events-none">
-          <img src={HABAL_LOGO} alt="Habal" className="w-10 h-10 object-contain pointer-events-auto"
-            onError={e => { e.target.style.display="none"; }} />
-          <button onClick={() => setScreen("profile")} className="w-9 h-9 rounded-full bg-white shadow flex items-center justify-center pointer-events-auto">
-            <span className="text-xs font-bold text-gray-700">{initials}</span>
-          </button>
+        <div className="absolute top-0 left-0 right-0 z-20 px-4 pt-12 pb-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 bg-white rounded-2xl shadow-md px-3 py-2">
+              <img src={HABAL_LOGO} alt="Habal" className="w-7 h-7 object-contain" onError={e => { e.target.style.display="none"; }} />
+              <div>
+                <div className="text-xs text-gray-400 leading-none">Good day,</div>
+                <div className="text-sm font-bold text-gray-900 leading-tight">{user?.full_name?.split(" ")[0] || "Rider"}</div>
+              </div>
+            </div>
+            <button onClick={() => setScreen("profile")}
+              className="w-10 h-10 rounded-2xl shadow-md flex items-center justify-center font-bold text-sm text-white"
+              style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)` }}>
+              {initials}
+            </button>
+          </div>
         </div>
       )}
 
-      {/* IDLE booking bar */}
+      {/* Map Bottom Bar */}
       {screen === "map" && (
         <div className="absolute bottom-16 left-0 right-0 z-10 px-4 pb-2">
           {pickup && (
-            <div className="bg-white rounded-2xl shadow-md px-4 py-3 flex items-center gap-3 mb-2">
-              <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: PRIMARY }} />
+            <div className="bg-white rounded-2xl shadow-sm px-4 py-3 flex items-center gap-3 mb-2">
+              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: PRIMARY }} />
               <div className="flex-1 min-w-0">
-                <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: PRIMARY }}>Pick Up</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: PRIMARY }}>Pick Up</div>
                 <div className="text-sm text-gray-700 truncate">{pickup}</div>
               </div>
             </div>
           )}
           <button onClick={() => setScreen("search")}
-            className="w-full bg-white rounded-2xl shadow-lg px-5 py-4 flex items-center gap-3 text-left mb-2">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: PRIMARY }}>
-              <MapPin className="w-4 h-4 text-white" />
+            className="w-full bg-white rounded-2xl shadow-lg px-4 py-4 flex items-center gap-3 text-left">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)` }}>
+              <MapPin className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Destination</div>
-              <div className="text-sm font-medium text-gray-400">Where to?</div>
+              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Destination</div>
+              <div className="text-sm font-semibold text-gray-500 mt-0.5">Where to?</div>
             </div>
-            <ChevronRight className="w-4 h-4 text-gray-300" />
+            <ChevronRight className="w-5 h-5 text-gray-300" />
           </button>
         </div>
       )}
 
-      {/* SEARCH sheet */}
+      {/* SEARCH SCREEN */}
       {screen === "search" && (
-        <div className="absolute inset-0 z-20 flex flex-col bg-white" style={{ top: 0, bottom: 0 }}>
+        <div className="absolute inset-0 z-20 flex flex-col bg-white">
           <div className="px-4 pt-12 pb-3 border-b border-gray-100">
             <div className="flex items-center gap-3 mb-4">
-              <button onClick={() => setScreen("map")} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
+              <button onClick={() => setScreen("map")}
+                className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center">
                 <ChevronLeft className="w-4 h-4 text-gray-600" />
               </button>
               <span className="font-bold text-gray-900">Set Destination</span>
             </div>
+            {/* Pickup */}
             <div className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 rounded-xl mb-2">
               <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: PRIMARY }} />
               <span className="text-sm text-gray-500 truncate">{pickup || "Your location"}</span>
             </div>
-            <div className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 rounded-xl">
+            {/* Dropoff input */}
+            <div className="flex items-center gap-3 px-3 py-2.5 border-2 rounded-xl" style={{ borderColor: PRIMARY }}>
               <MapPin className="w-3.5 h-3.5 flex-shrink-0" style={{ color: PRIMARY }} />
               <input autoFocus value={dropoffInput} onChange={e => handleDropoffChange(e.target.value)}
-                placeholder="Where are you going?" className="flex-1 bg-transparent text-sm text-gray-800 focus:outline-none placeholder-gray-400" />
-              {dropoffInput && <button onClick={() => { setDropoffInput(""); setSuggestions([]); }}><X className="w-4 h-4 text-gray-400" /></button>}
+                placeholder="Where are you going?"
+                className="flex-1 bg-transparent text-sm text-gray-800 focus:outline-none placeholder-gray-400" />
+              {dropoffInput && (
+                <button onClick={() => { setDropoffInput(""); setSuggestions([]); }}>
+                  <X className="w-4 h-4 text-gray-400" />
+                </button>
+              )}
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">
+            {/* Suggestions */}
             {suggestions.map((s, i) => (
-              <button key={i} onClick={() => selectSuggestion(s)} className="w-full flex items-center gap-3 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 text-left">
-                <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+              <button key={i} onClick={() => selectSuggestion(s)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-gray-50 hover:bg-gray-50 text-left">
+                <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
                   <MapPin className="w-4 h-4 text-gray-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-800 truncate">{s.place_name.split(",")[0]}</div>
+                  <div className="text-sm font-semibold text-gray-800 truncate">{s.place_name.split(",")[0]}</div>
                   <div className="text-xs text-gray-400 truncate">{s.place_name.split(",").slice(1).join(",").trim()}</div>
                 </div>
               </button>
             ))}
             {dropoffInput.length >= 3 && suggestions.length === 0 && (
-              <div className="px-5 py-8 text-center text-gray-400 text-sm">No results found</div>
+              <div className="px-5 py-10 text-center">
+                <div className="text-gray-300 text-sm">No results for "{dropoffInput}"</div>
+              </div>
             )}
+            {/* Popular places */}
             {!dropoffInput && (
-              <div className="px-5 pt-4">
-                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Popular in Iloilo</div>
-                {["SM City Iloilo", "Robinsons Place Iloilo", "Iloilo Business Park", "Fort San Pedro"].map(place => (
-                  <button key={place} onClick={() => handleDropoffChange(place)} className="w-full flex items-center gap-3 py-3 border-b border-gray-50 text-left">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "#EBF9FE" }}>
-                      <MapPin className="w-4 h-4" style={{ color: PRIMARY }} />
+              <div className="px-4 pt-4">
+                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Popular in Iloilo</div>
+                {[
+                  { name: "SM City Iloilo", icon: "🏬", sub: "Mandurriao, Iloilo City" },
+                  { name: "Robinsons Place Iloilo", icon: "🛍", sub: "Gaisano, Iloilo City" },
+                  { name: "Iloilo Business Park", icon: "🏢", sub: "Mandurriao, Iloilo City" },
+                  { name: "Fort San Pedro", icon: "🏰", sub: "Molo, Iloilo City" },
+                  { name: "Iloilo City Hall", icon: "🏛", sub: "City Proper, Iloilo City" },
+                ].map(place => (
+                  <button key={place.name} onClick={() => handleDropoffChange(place.name)}
+                    className="w-full flex items-center gap-3 py-3.5 border-b border-gray-50 text-left">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-xl" style={{ background: PRIMARY_BG }}>
+                      {place.icon}
                     </div>
-                    <span className="text-sm font-medium text-gray-700">{place}</span>
+                    <div>
+                      <div className="text-sm font-semibold text-gray-800">{place.name}</div>
+                      <div className="text-xs text-gray-400">{place.sub}</div>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -479,191 +766,240 @@ export default function CustomerHome({ user }) {
         </div>
       )}
 
-      {/* CONFIRM sheet */}
+      {/* CONFIRM SCREEN */}
       {screen === "confirm" && (
-        <div className="absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-3xl shadow-2xl px-5 pt-4 pb-8">
-          <button onClick={() => setScreen("search")} className="mb-3 flex items-center gap-1 text-gray-400 text-sm">
-            <ChevronLeft className="w-4 h-4" /> Change destination
-          </button>
-          <div className="space-y-2 mb-4">
-            <div className="flex items-start gap-3">
-              <div className="w-3 h-3 rounded-full mt-1 flex-shrink-0" style={{ background: PRIMARY }} />
-              <div><div className="text-xs text-gray-400">PICK UP</div><div className="text-sm font-medium text-gray-800 truncate">{pickup}</div></div>
+        <div className="absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-3xl shadow-2xl">
+          <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mt-3 mb-4" />
+          <div className="px-5 pb-8">
+            <div className="flex items-center justify-between mb-4">
+              <button onClick={() => setScreen("search")} className="flex items-center gap-1 text-sm font-medium" style={{ color: PRIMARY }}>
+                <ChevronLeft className="w-4 h-4" /> Change
+              </button>
+              <h3 className="font-bold text-gray-900">Confirm Ride</h3>
+              <div className="w-16" />
             </div>
-            <div className="ml-1.5 w-0.5 h-3 bg-gray-200" />
-            <div className="flex items-start gap-3">
-              <MapPin className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: PRIMARY }} />
-              <div><div className="text-xs text-gray-400">DESTINATION</div><div className="text-sm font-medium text-gray-800 truncate">{dropoff}</div></div>
-            </div>
-          </div>
-          <div className="flex items-center justify-between bg-gray-50 rounded-2xl px-4 py-3 mb-4">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">🏍</span>
-              <div>
-                <div className="font-bold text-gray-900 text-sm">Motorcycle</div>
-                <div className="text-xs text-gray-400">1 passenger · fastest</div>
+            {/* Route */}
+            <div className="bg-gray-50 rounded-2xl p-4 mb-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="flex flex-col items-center gap-1 mt-1">
+                  <div className="w-3 h-3 rounded-full" style={{ background: PRIMARY }} />
+                  <div className="w-0.5 h-5 bg-gray-200" />
+                  <MapPin className="w-3.5 h-3.5 text-amber-400" />
+                </div>
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Pick Up</div>
+                    <div className="text-sm font-medium text-gray-800 leading-snug">{pickup}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Destination</div>
+                    <div className="text-sm font-medium text-gray-800 leading-snug">{dropoff}</div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="text-right">
-              <div className="text-xl font-black" style={{ color: PRIMARY }}>₱{fareEstimate}</div>
-              <div className="text-xs text-gray-400">estimated</div>
+            {/* Ride type + fare */}
+            <div className="flex items-center justify-between border-2 rounded-2xl px-4 py-3.5 mb-4" style={{ borderColor: PRIMARY + "40" }}>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{ background: PRIMARY_BG }}>🏍</div>
+                <div>
+                  <div className="font-bold text-gray-900 text-sm">Motorcycle</div>
+                  <div className="text-xs text-gray-400">1 passenger · fastest</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-black" style={{ color: PRIMARY }}>₱{fareEstimate}</div>
+                <div className="text-[10px] text-gray-400">estimated fare</div>
+              </div>
             </div>
+            {/* Payment */}
+            <div className="mb-5">
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Payment Method</div>
+              <div className="flex gap-2">
+                {[{ id: "cash", label: "💵 Cash", sub: "Pay on arrival" }, { id: "gcash", label: "📱 GCash", sub: "Digital wallet" }].map(m => (
+                  <button key={m.id} onClick={() => setPaymentMethod(m.id)}
+                    className={`flex-1 py-3 rounded-xl border-2 font-semibold text-sm transition-all`}
+                    style={paymentMethod === m.id
+                      ? { borderColor: PRIMARY, background: PRIMARY_BG, color: PRIMARY_DARK }
+                      : { borderColor: "#e5e7eb", color: "#9ca3af" }}>
+                    <div>{m.label}</div>
+                    <div className="text-[10px] font-normal mt-0.5">{m.sub}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <PrimaryBtn onClick={handleBook} loading={booking}>
+              {booking ? "Booking..." : `Book Now · ₱${fareEstimate}`}
+            </PrimaryBtn>
           </div>
-          <div className="flex gap-2 mb-4">
-            {["cash", "gcash"].map(m => (
-              <button key={m} onClick={() => setPaymentMethod(m)}
-                className={`flex-1 py-2.5 rounded-xl border font-semibold text-sm capitalize transition-colors`}
-                style={paymentMethod === m ? { borderColor: PRIMARY, background: "#EBF9FE", color: PRIMARY } : { borderColor: "#e5e7eb", color: "#6b7280" }}>
-                {m === "cash" ? "💵 Cash" : "📱 GCash"} {m === "cash" && <span className="text-xs font-normal ml-1">Now</span>}
-              </button>
-            ))}
-          </div>
-          <button onClick={handleBook} disabled={booking}
-            className="w-full py-4 rounded-full font-bold text-white text-base disabled:opacity-60"
-            style={{ background: PRIMARY, boxShadow: `0 4px 15px rgba(77,200,240,0.4)` }}>
-            {booking ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" /> : `Book Now · ₱${fareEstimate}`}
-          </button>
         </div>
       )}
 
       {/* SEARCHING */}
       {screen === "searching" && (
         <div className="absolute inset-0 z-20 bg-white flex flex-col">
-          <div className="flex-1 flex flex-col items-center justify-center px-6">
-            <div className="relative mb-8">
-              <div className="w-24 h-24 rounded-full flex items-center justify-center" style={{ background: "#EBF9FE" }}>
-                <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: "#D6F3FC" }}>
-                  <Bike className="w-8 h-8" style={{ color: PRIMARY }} />
+          <div className="flex-1 flex flex-col items-center justify-center px-8">
+            <div className="relative mb-10">
+              <div className="w-32 h-32 rounded-full flex items-center justify-center" style={{ background: PRIMARY_BG }}>
+                <div className="w-24 h-24 rounded-full flex items-center justify-center" style={{ background: "#D6F3FC" }}>
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: PRIMARY }}>
+                    <Bike className="w-9 h-9 text-white" />
+                  </div>
                 </div>
               </div>
-              <div className="absolute inset-0 rounded-full animate-ping" style={{ background: "rgba(77,200,240,0.2)", animationDuration: "1.5s" }} />
+              {[1, 1.6, 2.2].map((delay, i) => (
+                <div key={i} className="absolute inset-0 rounded-full animate-ping"
+                  style={{ background: `rgba(77,200,240,${0.15 - i * 0.04})`, animationDelay: `${delay * 0.4}s`, animationDuration: "2s" }} />
+              ))}
             </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Finding your rider...</h2>
-            <p className="text-sm text-gray-400 text-center">We're matching you with a verified Habal rider nearby</p>
-            <div className="w-full mt-8 bg-gray-50 rounded-2xl p-4 space-y-2">
-              <div className="flex items-start gap-2 text-sm">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Finding your rider...</h2>
+            <p className="text-sm text-gray-400 text-center mb-8">We're matching you with a verified Habal rider in your area</p>
+            <div className="w-full bg-gray-50 rounded-2xl p-4 space-y-3">
+              <div className="flex items-start gap-3">
                 <div className="w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0" style={{ background: PRIMARY }} />
-                <span className="text-gray-600 truncate">{pickup}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Pickup</div>
+                  <div className="text-sm text-gray-700 truncate">{pickup}</div>
+                </div>
               </div>
               <div className="ml-1 w-0.5 h-3 bg-gray-200" />
-              <div className="flex items-start gap-2 text-sm">
-                <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" style={{ color: PRIMARY }} />
-                <span className="text-gray-600 truncate">{dropoff}</span>
+              <div className="flex items-start gap-3">
+                <MapPin className="w-3 h-3 mt-0.5 text-amber-400 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Destination</div>
+                  <div className="text-sm text-gray-700 truncate">{dropoff}</div>
+                </div>
               </div>
             </div>
           </div>
           <div className="px-5 pb-10">
-            <button onClick={() => setShowCancelConfirm(true)} className="w-full py-3 border border-gray-200 text-gray-500 font-semibold rounded-full text-sm">Cancel Booking</button>
+            <button onClick={() => setShowCancelConfirm(true)}
+              className="w-full py-3.5 border-2 border-gray-200 text-gray-500 font-semibold rounded-2xl text-sm">
+              Cancel Booking
+            </button>
           </div>
           {showCancelConfirm && <CancelModal onCancel={handleCancelRide} onKeep={() => setShowCancelConfirm(false)} />}
         </div>
       )}
 
-      {/* ACTIVE */}
+      {/* ACTIVE RIDE */}
       {screen === "active" && activeRide && (
         <div className="absolute bottom-16 left-0 right-0 z-20">
           <div className="bg-white rounded-t-3xl shadow-2xl px-5 pt-4 pb-5 space-y-3">
+            <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-1" />
             <RideStatusBadge status={activeRide.status} />
             {activeRide.rider_name ? (
               <div className="flex items-center justify-between bg-gray-50 rounded-2xl px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl" style={{ background: "#EBF9FE" }}>🏍</div>
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl" style={{ background: PRIMARY_BG }}>🏍</div>
                   <div>
                     <div className="font-bold text-gray-900 text-sm">{activeRide.rider_name}</div>
-                    <div className="text-xs text-gray-400">{activeRide.rider_phone}</div>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <span className="text-xs text-yellow-500">⭐</span>
+                      <span className="text-xs text-gray-400">Verified Rider</span>
+                    </div>
                   </div>
                 </div>
                 {eta && (
                   <div className="text-right">
-                    <div className="text-xl font-black" style={{ color: PRIMARY }}>{eta.minutes} <span className="text-sm font-semibold">min</span></div>
+                    <div className="text-xl font-black" style={{ color: PRIMARY }}>{eta.minutes}<span className="text-sm font-semibold ml-0.5">min</span></div>
                     <div className="text-[10px] text-gray-400">{eta.label}</div>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-3 bg-blue-50 rounded-2xl px-4 py-3">
-                <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin flex-shrink-0" style={{ borderColor: PRIMARY, borderTopColor: "transparent" }} />
-                <span className="text-sm font-medium" style={{ color: PRIMARY }}>Waiting for rider to accept...</span>
+              <div className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ background: PRIMARY_BG }}>
+                <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin flex-shrink-0"
+                  style={{ borderColor: PRIMARY, borderTopColor: "transparent" }} />
+                <span className="text-sm font-semibold" style={{ color: PRIMARY_DARK }}>Waiting for a rider to accept...</span>
               </div>
             )}
+            {/* Route summary */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: PRIMARY }} />
                 <span className="truncate">{activeRide.pickup_address}</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-gray-500">
-                <MapPin className="w-2.5 h-2.5 flex-shrink-0" style={{ color: PRIMARY }} />
+                <MapPin className="w-2.5 h-2.5 text-amber-400 flex-shrink-0" />
                 <span className="truncate">{activeRide.dropoff_address}</span>
               </div>
             </div>
-            <div className="flex gap-2">
+            {/* Actions */}
+            <div className="flex gap-2 pt-1">
               {activeRide.rider_name && (
                 <button onClick={() => setShowChat(true)}
-                  className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center justify-center gap-1.5"
+                  className="flex-1 py-3 rounded-2xl text-white text-sm font-bold flex items-center justify-center gap-1.5"
                   style={{ background: PRIMARY }}>
-                  💬 Chat Rider
+                  <MessageCircle className="w-4 h-4" /> Chat Rider
                 </button>
               )}
               {["pending", "searching", "assigned", "otw"].includes(activeRide.status) && (
-                <button onClick={() => setShowCancelConfirm(true)} className="flex-1 py-2.5 border border-red-200 text-red-500 font-semibold rounded-xl text-sm">Cancel Ride</button>
+                <button onClick={() => setShowCancelConfirm(true)}
+                  className="flex-1 py-3 border-2 border-red-100 text-red-400 font-bold rounded-2xl text-sm">
+                  Cancel
+                </button>
               )}
             </div>
-      {showChat && activeRide && (
+            {showChat && activeRide && (
               <ChatPanel bookingId={activeRide.booking_id || activeRide.id} currentUser={user} senderRole="customer" onClose={() => setShowChat(false)} />
             )}
           </div>
           {showCancelConfirm && <CancelModal onCancel={handleCancelRide} onKeep={() => setShowCancelConfirm(false)} />}
         </div>
       )}
-    </AppShell>
+
+      {showNav && <BottomNav screen={screen} setScreen={setScreen} completedRides={completedRides} />}
+    </Shell>
   );
 }
 
-// ── Shell with bottom nav ────────────────────────────────────
-function AppShell({ children, showNav, screen, setScreen, orderCount, initials, noScroll }) {
+// ── Shell ─────────────────────────────────────────────────────
+function Shell({ children, noScroll }) {
   return (
     <div className="fixed inset-0 flex flex-col bg-white max-w-md mx-auto overflow-hidden" style={{ fontFamily: "'Poppins', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');`}</style>
       <div className={`flex-1 relative ${noScroll ? "" : "overflow-y-auto"}`}>
         {children}
       </div>
-      {showNav && (
-        <BottomNav screen={screen} setScreen={setScreen} orderCount={orderCount} initials={initials} />
-      )}
     </div>
   );
 }
 
-function BottomNav({ screen, setScreen, orderCount, initials }) {
+// ── ScreenHeader ──────────────────────────────────────────────
+function ScreenHeader({ title, onBack }) {
+  return (
+    <div className="flex items-center gap-3 px-4 pt-12 pb-4 border-b border-gray-100">
+      {onBack && (
+        <button onClick={onBack} className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center">
+          <ChevronLeft className="w-4 h-4 text-gray-600" />
+        </button>
+      )}
+      <h1 className="font-bold text-gray-900 text-lg">{title}</h1>
+    </div>
+  );
+}
+
+// ── BottomNav ─────────────────────────────────────────────────
+function BottomNav({ screen, setScreen, completedRides }) {
   const tabs = [
-    { id: "map", label: "Book Rides", icon: <Bike className="w-5 h-5" /> },
-    { id: "wallet", label: "Wallet", icon: <Wallet className="w-5 h-5" /> },
-    { id: "ratings", label: "Ratings", icon: <Star className="w-5 h-5" /> },
-    { id: "exit", label: "Exit", icon: <LogOut className="w-5 h-5" /> },
+    { id: "map",      label: "Home",     icon: Home },
+    { id: "wallet",   label: "Wallet",   icon: Wallet },
+    { id: "messages", label: "Messages", icon: MessageCircle },
+    { id: "profile",  label: "Profile",  icon: User },
   ];
   return (
-    <div className="flex items-center justify-around border-t border-gray-100 bg-white px-2 py-2" style={{ height: 64 }}>
-      {/* order count badge */}
-      {orderCount > 0 && (
-        <div className="absolute bottom-14 left-4 bg-gray-800 text-white text-xs font-bold px-2 py-0.5 rounded-full">{orderCount} Order</div>
-      )}
-      {tabs.map(t => {
-        const active = screen === t.id;
-        if (t.id === "exit") {
-          return (
-            <button key={t.id} onClick={() => base44.auth.logout(window.location.href)}
-              className="flex flex-col items-center gap-0.5 px-3 py-1 text-gray-400 text-xs">
-              <LogOut className="w-5 h-5" />
-              <span>Exit</span>
-            </button>
-          );
-        }
+    <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex px-2 py-1" style={{ height: 64 }}>
+      {tabs.map(({ id, label, icon: Icon }) => {
+        const active = screen === id;
         return (
-          <button key={t.id} onClick={() => setScreen(t.id)}
-            className="flex flex-col items-center gap-0.5 px-3 py-1 text-xs transition-colors"
-            style={active ? { color: "#4DC8F0" } : { color: "#9ca3af" }}>
-            {t.icon}
-            <span className="font-medium">{t.label}</span>
+          <button key={id} onClick={() => setScreen(id)}
+            className="flex-1 flex flex-col items-center justify-center gap-1 transition-all relative">
+            <div className={`w-10 h-8 rounded-xl flex items-center justify-center transition-all ${active ? "shadow-sm" : ""}`}
+              style={active ? { background: PRIMARY_BG } : {}}>
+              <Icon className="w-5 h-5 transition-colors" style={{ color: active ? PRIMARY : "#9ca3af" }} />
+            </div>
+            <span className="text-[10px] font-semibold transition-colors" style={{ color: active ? PRIMARY : "#9ca3af" }}>{label}</span>
           </button>
         );
       })}
@@ -671,47 +1007,79 @@ function BottomNav({ screen, setScreen, orderCount, initials }) {
   );
 }
 
+// ── PrimaryBtn ────────────────────────────────────────────────
+function PrimaryBtn({ children, onClick, loading }) {
+  return (
+    <button onClick={onClick} disabled={loading}
+      className="w-full py-4 rounded-2xl font-bold text-white text-base disabled:opacity-60 transition-all"
+      style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)`, boxShadow: `0 4px 20px rgba(77,200,240,0.4)` }}>
+      {loading
+        ? <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin mx-auto" />
+        : children}
+    </button>
+  );
+}
+
+// ── RideStatusBadge ───────────────────────────────────────────
 function RideStatusBadge({ status }) {
   const MAP = {
-    pending:     { label: "Finding your rider...", bg: "#FFF7ED", color: "#d97706" },
-    searching:   { label: "Searching nearby riders...", bg: "#FFF7ED", color: "#d97706" },
-    assigned:    { label: "Rider is on the way!", bg: "#EBF9FE", color: "#0369a1" },
-    otw:         { label: "Rider heading to you", bg: "#EBF9FE", color: "#0369a1" },
-    arrived:     { label: "Rider has arrived! 🎉", bg: "#F0FDF4", color: "#15803d" },
-    in_progress: { label: "You're on your way!", bg: "#EFF6FF", color: "#1d4ed8" },
+    pending:     { label: "Finding your rider...", bg: "#FFF7ED", color: "#d97706", dot: "#f59e0b" },
+    searching:   { label: "Searching nearby riders...", bg: "#FFF7ED", color: "#d97706", dot: "#f59e0b" },
+    assigned:    { label: "Rider is on the way! 🏍", bg: PRIMARY_BG, color: PRIMARY_DARK, dot: PRIMARY },
+    otw:         { label: "Rider heading to you", bg: PRIMARY_BG, color: PRIMARY_DARK, dot: PRIMARY },
+    arrived:     { label: "Rider has arrived! 🎉", bg: "#F0FDF4", color: "#15803d", dot: "#22c55e" },
+    in_progress: { label: "You're on your way! 🚀", bg: "#EFF6FF", color: "#1d4ed8", dot: "#3b82f6" },
   };
   const cfg = MAP[status] || MAP.pending;
   return (
-    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold" style={{ background: cfg.bg, color: cfg.color }}>
-      <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: cfg.color }} />
+    <div className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl text-sm font-semibold" style={{ background: cfg.bg, color: cfg.color }}>
+      <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: cfg.dot }} />
       {cfg.label}
     </div>
   );
 }
 
-function CancelModal({ onCancel, onKeep }) {
+// ── StatusPill ────────────────────────────────────────────────
+function StatusPill({ status }) {
+  const map = {
+    completed:   "bg-emerald-50 text-emerald-600",
+    cancelled:   "bg-red-50 text-red-500",
+    in_progress: "bg-blue-50 text-blue-600",
+    pending:     "bg-amber-50 text-amber-600",
+    searching:   "bg-amber-50 text-amber-600",
+    assigned:    "bg-sky-50 text-sky-600",
+    otw:         "bg-sky-50 text-sky-600",
+    arrived:     "bg-emerald-50 text-emerald-600",
+  };
   return (
-    <div className="absolute inset-0 bg-black/50 flex items-end z-30">
-      <div className="w-full bg-white rounded-t-3xl px-5 py-6 space-y-4">
-        <h3 className="font-bold text-gray-900 text-lg">Cancel this ride?</h3>
-        <p className="text-sm text-gray-500">Your rider may already be heading to you. Frequent cancellations may affect your account.</p>
-        <div className="flex gap-3">
-          <button onClick={onKeep} className="flex-1 py-3.5 border border-gray-200 rounded-full font-bold text-gray-700">Keep Ride</button>
-          <button onClick={onCancel} className="flex-1 py-3.5 bg-red-500 text-white rounded-full font-bold">Yes, Cancel</button>
-        </div>
-      </div>
-    </div>
+    <span className={`text-xs px-2.5 py-1 rounded-full font-semibold capitalize flex-shrink-0 ${map[status] || "bg-gray-100 text-gray-500"}`}>
+      {status}
+    </span>
   );
 }
 
-function SectionLabel({ children, className = "" }) {
-  return <div className={`text-xs font-semibold text-gray-400 uppercase tracking-wider pt-3 pb-1 ${className}`}>{children}</div>;
-}
-function InfoRow({ label, value }) {
+// ── CancelModal ───────────────────────────────────────────────
+function CancelModal({ onCancel, onKeep }) {
   return (
-    <div className="flex justify-between items-center py-2.5 border-b border-gray-100">
-      <span className="text-sm text-gray-500">{label}</span>
-      <span className="text-sm font-medium text-gray-800">{value}</span>
+    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-end z-30">
+      <div className="w-full bg-white rounded-t-3xl px-5 pt-6 pb-10 space-y-4">
+        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-2" />
+        <div className="text-center">
+          <div className="text-3xl mb-3">😔</div>
+          <h3 className="font-bold text-gray-900 text-lg">Cancel this ride?</h3>
+          <p className="text-sm text-gray-400 mt-1">Your rider may already be heading to you. Frequent cancellations may affect your account.</p>
+        </div>
+        <div className="flex gap-3 pt-2">
+          <button onClick={onKeep}
+            className="flex-1 py-3.5 border-2 border-gray-200 rounded-2xl font-bold text-gray-700">
+            Keep Ride
+          </button>
+          <button onClick={onCancel}
+            className="flex-1 py-3.5 bg-red-500 text-white rounded-2xl font-bold">
+            Yes, Cancel
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
