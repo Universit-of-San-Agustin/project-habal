@@ -122,6 +122,11 @@ export default function AdminDashboard({ user }) {
   return (
     <div className="fixed inset-0 bg-gray-50 flex flex-col max-w-md mx-auto overflow-hidden">
 
+      {/* Live Map Monitor Overlay */}
+      {showLiveMap && (
+        <LiveMapMonitor onClose={() => setShowLiveMap(false)} />
+      )}
+
       {/* Network Detail Modal */}
       {selectedNetwork && (
         <div className="absolute inset-0 z-50 bg-black/50 flex items-end">
