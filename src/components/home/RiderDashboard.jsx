@@ -5,6 +5,7 @@ import {
   Bike, MessageCircle, Navigation, Home, ChevronLeft,
   TrendingUp, DollarSign, Award, Phone, Shield
 } from "lucide-react";
+import EarningsScreen from "../rider/EarningsScreen";
 import MapboxMap from "./MapboxMap";
 import ChatPanel from "../chat/ChatPanel";
 
@@ -14,7 +15,7 @@ const GREEN_DARK = "#059669";
 const GREEN_BG = "#f0fdf4";
 
 export default function RiderDashboard({ user }) {
-  const [screen, setScreen] = useState("home"); // home | map | history | profile
+  const [screen, setScreen] = useState("home"); // home | map | history | earnings | profile
   const [riderData, setRiderData] = useState(null);
   const [incomingBooking, setIncomingBooking] = useState(null);
   const [activeBooking, setActiveBooking] = useState(null);
@@ -241,6 +242,17 @@ export default function RiderDashboard({ user }) {
       </div>
     </div>
   );
+
+  // ── EARNINGS ─────────────────────────────────────────────────
+  if (screen === "earnings") {
+    return (
+      <Shell>
+        {IncomingPopup}
+        <EarningsScreen tripHistory={tripHistory} riderData={riderData} onBack={() => setScreen("home")} />
+        <BottomNav screen={screen} setScreen={setScreen} hasActive={!!activeBooking} />
+      </Shell>
+    );
+  }
 
   // ── HISTORY ──────────────────────────────────────────────────
   if (screen === "history") {
@@ -585,10 +597,11 @@ function ScreenHeader({ title, onBack }) {
 
 function BottomNav({ screen, setScreen, hasActive }) {
   const tabs = [
-    { id: "home",    label: "Home",    icon: Home },
-    { id: "map",     label: "Map",     icon: Navigation },
-    { id: "history", label: "Trips",   icon: Clock },
-    { id: "profile", label: "Profile", icon: User },
+    { id: "home",     label: "Home",     icon: Home },
+    { id: "map",      label: "Map",      icon: Navigation },
+    { id: "history",  label: "Trips",    icon: Clock },
+    { id: "earnings", label: "Earnings", icon: DollarSign },
+    { id: "profile",  label: "Profile",  icon: User },
   ];
   return (
     <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex px-2 py-1" style={{ height: 64 }}>
