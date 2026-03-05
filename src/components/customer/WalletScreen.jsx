@@ -118,7 +118,7 @@ export default function WalletScreen({ user, bookings }) {
       </div>
 
       {/* Quick Actions */}
-      <div className="px-4 grid grid-cols-4 gap-2 mt-4 mb-5">
+      <div className="px-4 grid grid-cols-4 gap-2.5 mt-4 mb-5">
         {[
           { icon: <Plus className="w-5 h-5" />, label: "Top Up", color: "#10b981", action: () => setShowTopUp(true) },
           { icon: <ArrowUpRight className="w-5 h-5" />, label: "Send", color: PRIMARY, action: () => setSendModal(true) },
@@ -126,11 +126,11 @@ export default function WalletScreen({ user, bookings }) {
           { icon: <Receipt className="w-5 h-5" />, label: "History", color: "#f59e0b", action: () => setTab("all") },
         ].map(a => (
           <button key={a.label} onClick={a.action}
-            className="flex flex-col items-center gap-2 bg-white border border-gray-100 rounded-2xl py-3.5 shadow-sm hover:shadow-md transition-shadow active:scale-95">
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: a.color + "18", color: a.color }}>
+            className="flex flex-col items-center gap-2 bg-white border border-gray-100 rounded-xl py-3 shadow-sm hover:shadow-md hover:border-gray-200 transition-all active:scale-95">
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: a.color + "15", color: a.color }}>
               {a.icon}
             </div>
-            <span className="text-[10px] font-semibold text-gray-600">{a.label}</span>
+            <span className="text-[10px] font-bold text-gray-700">{a.label}</span>
           </button>
         ))}
       </div>
@@ -138,13 +138,13 @@ export default function WalletScreen({ user, bookings }) {
       {/* Payment Methods entry */}
       <div className="px-4 mb-4">
         <button onClick={() => setShowPaymentMethods(true)}
-          className="w-full bg-white border border-gray-100 rounded-2xl px-4 py-3.5 flex items-center gap-3 shadow-sm hover:shadow-md transition-shadow">
-          <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "#eef2ff" }}>
-            <CreditCard className="w-5 h-5 text-indigo-500" />
+          className="w-full bg-white border border-gray-100 rounded-2xl px-4 py-3.5 flex items-center gap-3 shadow-sm hover:shadow-md hover:border-gray-200 transition-all">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: PRIMARY_BG }}>
+            <CreditCard className="w-5 h-5" style={{ color: PRIMARY }} />
           </div>
           <div className="flex-1 text-left">
-            <div className="font-semibold text-gray-800 text-sm">Payment Methods</div>
-            <div className="text-xs text-gray-400 mt-0.5">Manage cards & mobile wallets</div>
+            <div className="font-semibold text-gray-900 text-sm">Payment Methods</div>
+            <div className="text-xs text-gray-500 mt-0.5">Manage cards & wallets</div>
           </div>
           <ChevronRight className="w-4 h-4 text-gray-300" />
         </button>
@@ -166,32 +166,31 @@ export default function WalletScreen({ user, bookings }) {
         </div>
 
         {displayItems.length === 0 ? (
-          <div className="flex flex-col items-center py-12 text-gray-300">
-            <Wallet className="w-12 h-12 mb-3 opacity-30" />
-            <p className="text-sm text-gray-400">No transactions yet</p>
-            <p className="text-xs text-gray-300 mt-1">Top up or complete a ride to see history</p>
+          <div className="flex flex-col items-center py-16 text-gray-400">
+            <Wallet className="w-14 h-14 mb-4 opacity-30" />
+            <p className="font-medium text-gray-500">No transactions yet</p>
+            <p className="text-xs mt-1 text-gray-400">Complete a ride to see history</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {displayItems.map((item, i) => {
               const credit = isCredit(item);
               return (
                 <button key={item.id || i} onClick={() => setReceipt({ item, type: item._kind })}
-                  className="w-full flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm hover:shadow-md transition-shadow text-left">
+                  className="w-full flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3.5 shadow-sm hover:shadow-md hover:border-gray-200 transition-all text-left">
                   <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl flex-shrink-0"
                     style={{ background: item._kind === "ride" ? "#fef3c7" : credit ? "#f0fdf4" : "#fff1f2" }}>
                     {item._kind === "ride" ? "🏍" : credit ? "💳" : "📤"}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-gray-800 text-sm truncate">
-                      {item._kind === "ride" ? `Ride to ${item.dropoff_address?.split(",")[0]}` : (item.description || "Transaction")}
-                    </div>
-                    <div className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {item.created_date ? new Date(item.created_date).toLocaleDateString("en-PH", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
-                      {item._kind === "ride" && <span className="ml-1 capitalize text-gray-300">· {item.payment_method || "cash"}</span>}
-                    </div>
-                  </div>
+                     <div className="font-semibold text-gray-900 text-sm truncate">
+                       {item._kind === "ride" ? `Ride to ${item.dropoff_address?.split(",")[0]}` : (item.description || "Transaction")}
+                     </div>
+                     <div className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
+                       <Clock className="w-3 h-3" />
+                       {item.created_date ? new Date(item.created_date).toLocaleDateString("en-PH", { month: "short", day: "numeric" }) : "—"}
+                     </div>
+                   </div>
                   <div className={`font-black text-sm flex-shrink-0 ${item._kind === "ride" ? "text-red-500" : credit ? "text-emerald-600" : "text-red-500"}`}>
                     {item._kind === "ride" ? "-" : credit ? "+" : "-"}₱{item._kind === "ride" ? item.fare_estimate : item.amount?.toLocaleString()}
                   </div>
@@ -211,38 +210,38 @@ export default function WalletScreen({ user, bookings }) {
       {/* Send Money Modal */}
       {sendModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
-          <div className="w-full bg-white rounded-t-3xl px-5 pt-5 pb-10 max-w-md mx-auto">
+          <div className="w-full bg-white rounded-t-3xl px-5 pt-6 pb-10 max-w-md mx-auto">
             <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
             {sendDone ? (
               <div className="flex flex-col items-center py-8">
-                <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: PRIMARY_BG }}>
-                  <span className="text-3xl">✅</span>
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 text-4xl" style={{ background: PRIMARY_BG }}>
+                  ✅
                 </div>
-                <p className="font-bold text-gray-900">Transfer Sent!</p>
+                <p className="font-bold text-gray-900 text-lg">Sent!</p>
               </div>
             ) : (
               <>
-                <div className="font-bold text-gray-900 text-lg mb-1">Send Money</div>
-                <div className="text-xs text-gray-400 mb-4">Balance: <span className="font-bold text-gray-700">₱{walletBalance.toLocaleString("en-PH", { minimumFractionDigits: 2 })}</span></div>
+                <div className="font-bold text-gray-900 text-lg mb-3">Send Money</div>
+                <div className="text-xs text-gray-500 mb-4">Available: <span className="font-bold text-gray-800">₱{walletBalance.toLocaleString("en-PH", { minimumFractionDigits: 2 })}</span></div>
                 <div className="space-y-3 mb-5">
                   <input type="number" value={sendAmount} onChange={e => setSendAmount(e.target.value)}
                     placeholder="Amount (₱)" min="1" max={walletBalance}
-                    className="w-full px-4 py-4 rounded-2xl text-gray-800 text-2xl font-black text-center focus:outline-none"
-                    style={{ background: "#f8fbfd", border: `1.5px solid ${PRIMARY}40` }} />
+                    className="w-full px-4 py-4 rounded-xl text-gray-800 text-2xl font-black text-center focus:outline-none border border-gray-100"
+                    style={{ background: "#f9fafb" }} />
                   <input value={sendNote} onChange={e => setSendNote(e.target.value)}
                     placeholder="Note (optional)"
-                    className="w-full px-4 py-3.5 rounded-2xl text-gray-800 text-sm focus:outline-none"
-                    style={{ background: "#f8fbfd", border: "1.5px solid #e2ecf2" }} />
+                    className="w-full px-4 py-3 rounded-xl text-gray-800 text-sm focus:outline-none border border-gray-100"
+                    style={{ background: "#f9fafb" }} />
                 </div>
                 {parseFloat(sendAmount) > walletBalance && (
-                  <p className="text-xs text-red-400 mb-3 text-center">Insufficient balance</p>
+                  <p className="text-xs text-red-500 font-medium mb-3 text-center">Insufficient balance</p>
                 )}
                 <div className="flex gap-3">
                   <button onClick={() => { setSendModal(false); setSendAmount(""); setSendNote(""); }}
-                    className="flex-1 py-3.5 border-2 border-gray-200 rounded-2xl font-bold text-gray-600 text-sm">Cancel</button>
+                    className="flex-1 py-3 border-2 border-gray-200 rounded-xl font-bold text-gray-700 text-sm hover:bg-gray-50 transition-colors">Cancel</button>
                   <button onClick={handleSend} disabled={sendProcessing || !sendAmount || parseFloat(sendAmount) > walletBalance}
-                    className="flex-1 py-3.5 rounded-2xl font-bold text-white text-sm disabled:opacity-50 flex items-center justify-center"
-                    style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)` }}>
+                    className="flex-1 py-3 rounded-xl font-bold text-white text-sm disabled:opacity-60 flex items-center justify-center transition-all"
+                    style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)`, boxShadow: `0 4px 12px ${PRIMARY}35` }}>
                     {sendProcessing ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Send"}
                   </button>
                 </div>
