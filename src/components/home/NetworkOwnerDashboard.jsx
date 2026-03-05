@@ -296,11 +296,12 @@ export default function NetworkOwnerDashboard({ user }) {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-100 bg-white overflow-x-auto flex-shrink-0">
+      <div className="flex border-b border-gray-100 bg-white overflow-x-auto flex-shrink-0"
+        style={{ boxShadow: "0 2px 8px rgba(77,200,240,0.06)" }}>
         {tabs.map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => setTab(id)}
-            className="flex-1 flex flex-col items-center py-2.5 gap-0.5 text-[10px] font-semibold transition-colors min-w-[56px]"
-            style={tab === id ? { color: PRIMARY, borderBottom: `2px solid ${PRIMARY}` } : { color: "#9ca3af" }}>
+            className="flex-1 flex flex-col items-center py-2.5 gap-0.5 text-[10px] font-semibold transition-all min-w-[56px]"
+            style={tab === id ? { color: PRIMARY, borderBottom: `2.5px solid ${PRIMARY}` } : { color: "#b0bec5" }}>
             <Icon className="w-4 h-4" />
             {label}
           </button>
