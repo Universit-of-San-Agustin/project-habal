@@ -653,7 +653,7 @@ function TripBtn({ children, onClick, loading, color }) {
 }
 
 function RiderProfileScreen({ user, riderData, setRiderData, screen, setScreen, activeBooking, IncomingPopup }) {
-  const [form, setForm] = useState({
+  const [form, window_setForm] = window.React.useState({
     motorcycle_make: riderData?.motorcycle_make || "",
     motorcycle_model: riderData?.motorcycle_model || "",
     plate_number: riderData?.plate_number || "",
