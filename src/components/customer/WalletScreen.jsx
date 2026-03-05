@@ -40,18 +40,27 @@ export default function WalletScreen({ user, bookings }) {
     setActionProcessing(true);
     const typeMap = { topup: "credit", send: "debit", receive: "credit" };
     const descMap = {
-      topup: `Top up via GCash`,
-      send: `Transfer sent`,
-      receive: `Transfer received`,
+      topup: "Top up via GCash",
+      send: "Transfer sent",
+      receive: "Transfer received",
     };
-    await base44.entities.WalletTransaction.create({
+    const txType = typeMap[walletAction];
+    const newBalance = txType === "credit"
+      ? walletBalance + amt
+      : Math.max(0, walletBalance - amt);
+    const tx = await base44.entities.WalletTransaction.create({
       network_id: user?.id || user?.email,
       network_name: user?.full_name,
       amount: amt,
-      type: typeMap[walletAction],
+      type: txType,
       description: actionNote || descMap[walletAction],
+      balance_after: newBalance,
       performed_by: user?.email,
-    }).catch(() => {});
+    }).catch(() => null);
+    if (tx) {
+      setWalletTxns(prev => [tx, ...prev]);
+      setWalletBalance(newBalance);
+    }
     setActionProcessing(false);
     setActionDone(true);
     setTimeout(() => { setActionDone(false); setWalletAction(null); setActionAmount(""); setActionNote(""); }, 2000);
