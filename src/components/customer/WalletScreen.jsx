@@ -8,9 +8,38 @@ const PRIMARY_BG = "#EBF9FE";
 const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/fe9d5d17d_habal.png";
 
 export default function WalletScreen({ user, bookings }) {
+  const [walletAction, setWalletAction] = useState(null); // "topup" | "send" | "receive"
+  const [actionAmount, setActionAmount] = useState("");
+  const [actionNote, setActionNote] = useState("");
+  const [actionProcessing, setActionProcessing] = useState(false);
+  const [actionDone, setActionDone] = useState(false);
+
   const completedBookings = (bookings || []).filter(b => b.status === "completed" && b.fare_estimate);
   const totalSpent = completedBookings.reduce((s, b) => s + (b.fare_estimate || 0), 0);
   const completedRides = completedBookings.length;
+
+  const handleWalletAction = async () => {
+    const amt = parseFloat(actionAmount);
+    if (!amt || amt <= 0) return;
+    setActionProcessing(true);
+    const typeMap = { topup: "credit", send: "debit", receive: "credit" };
+    const descMap = {
+      topup: `Top up via GCash`,
+      send: `Transfer sent`,
+      receive: `Transfer received`,
+    };
+    await base44.entities.WalletTransaction.create({
+      network_id: user?.id || user?.email,
+      network_name: user?.full_name,
+      amount: amt,
+      type: typeMap[walletAction],
+      description: actionNote || descMap[walletAction],
+      performed_by: user?.email,
+    }).catch(() => {});
+    setActionProcessing(false);
+    setActionDone(true);
+    setTimeout(() => { setActionDone(false); setWalletAction(null); setActionAmount(""); setActionNote(""); }, 2000);
+  };
 
   return (
     <div className="flex-1 overflow-y-auto pb-24">
