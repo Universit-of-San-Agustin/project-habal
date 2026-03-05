@@ -879,8 +879,7 @@ export default function CustomerHome({ user }) {
 // ── Shell ─────────────────────────────────────────────────────
 function Shell({ children, noScroll }) {
   return (
-    <div className="fixed inset-0 flex flex-col bg-white max-w-md mx-auto overflow-hidden" style={{ fontFamily: "'Poppins', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');`}</style>
+    <div className="fixed inset-0 flex flex-col bg-white max-w-md mx-auto overflow-hidden">
       <div className={`flex-1 relative ${noScroll ? "" : "overflow-y-auto"}`}>
         {children}
       </div>
