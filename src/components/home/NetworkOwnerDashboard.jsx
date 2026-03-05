@@ -282,6 +282,12 @@ export default function NetworkOwnerDashboard({ user }) {
                 <span className="text-[10px] font-bold text-amber-600">{pendingVerification} pending</span>
               </div>
             )}
+            <button onClick={() => setShowLiveMap(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-white text-[10px] font-bold"
+              style={{ background: `linear-gradient(135deg, ${GREEN} 0%, #059669 100%)` }}>
+              <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+              Live Map
+            </button>
             <button onClick={load} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: PRIMARY_BG }}>
               <RefreshCw className="w-3.5 h-3.5" style={{ color: PRIMARY }} />
             </button>
