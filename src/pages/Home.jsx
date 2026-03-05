@@ -25,8 +25,13 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleLogin = () => {
-    base44.auth.redirectToLogin(window.location.href);
+  const handleLogin = (demoUser) => {
+    if (demoUser) {
+      setUser(demoUser);
+      setPhase("app");
+    } else {
+      base44.auth.redirectToLogin(window.location.href);
+    }
   };
 
   if (phase === "splash") return <SplashScreen />;
