@@ -407,47 +407,41 @@ export default function CustomerHome({ user }) {
     return (
       <Shell>
         <ScreenHeader title="Messages" />
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-4 pt-3">
-            <div className="bg-gray-50 rounded-2xl px-4 py-2.5 flex items-center gap-2 mb-4">
-              <MessageCircle className="w-4 h-4 text-gray-300" />
-              <span className="text-sm text-gray-400">Search messages...</span>
-            </div>
-          </div>
+        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-20">
           {/* Support */}
           <button onClick={() => setScreen("support")}
-            className="w-full flex items-center gap-4 px-4 py-4 hover:bg-gray-50 transition-colors border-b border-gray-50">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: PRIMARY_BG }}>
-              <Shield className="w-6 h-6" style={{ color: PRIMARY }} />
+            className="w-full flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3.5 shadow-sm hover:shadow-md transition-all mb-3">
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-lg" style={{ background: PRIMARY_BG }}>
+              🛡️
             </div>
             <div className="flex-1 text-left">
               <div className="font-semibold text-gray-900 text-sm">Habal Support</div>
-              <div className="text-xs text-gray-400 mt-0.5 truncate">Hi! How can we help you today?</div>
+              <div className="text-xs text-gray-500 mt-0.5">Get help anytime</div>
             </div>
-            <div className="flex flex-col items-end gap-1">
-              <span className="text-xs text-gray-400">Now</span>
-              <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: PRIMARY }}>1</div>
-            </div>
+            <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
           </button>
           {/* Active ride chat */}
           {rideWithRider && (
-            <button onClick={() => { setActiveRide(rideWithRider); setShowChat(true); }}
-              className="w-full flex items-center gap-4 px-4 py-4 hover:bg-gray-50 transition-colors border-b border-gray-50">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "#f0fdf4" }}>
-                <span className="text-2xl">🏍</span>
-              </div>
-              <div className="flex-1 text-left">
-                <div className="font-semibold text-gray-900 text-sm">{rideWithRider.rider_name}</div>
-                <div className="text-xs text-gray-400 mt-0.5">Your rider · Tap to chat</div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-gray-300" />
-            </button>
+            <div>
+              <div className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2 mb-3">Active Ride</div>
+              <button onClick={() => { setActiveRide(rideWithRider); setShowChat(true); }}
+                className="w-full flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3.5 shadow-sm hover:shadow-md transition-all">
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-lg" style={{ background: "#f0fdf4" }}>
+                  🏍
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="font-semibold text-gray-900 text-sm">{rideWithRider.rider_name}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">Tap to chat with your rider</div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+              </button>
+            </div>
           )}
           {!rideWithRider && (
-            <div className="flex flex-col items-center py-16 text-gray-300">
-              <MessageCircle className="w-12 h-12 mb-3 opacity-40" />
-              <p className="text-sm">No rider chats yet</p>
-              <p className="text-xs mt-1 text-gray-300">Book a ride to chat with your rider</p>
+            <div className="flex flex-col items-center py-16 text-gray-400">
+              <MessageCircle className="w-14 h-14 mb-4 opacity-30" />
+              <p className="font-medium text-gray-500">No active chats</p>
+              <p className="text-xs mt-1 text-gray-400">Messages appear when you book a ride</p>
             </div>
           )}
         </div>
