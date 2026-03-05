@@ -458,8 +458,8 @@ export default function CustomerHome({ user }) {
 
           <div className="px-4 pb-4 space-y-2">
             <button onClick={() => base44.auth.logout(window.location.href)}
-              className="w-full py-3.5 rounded-2xl font-bold text-white text-sm flex items-center justify-center gap-2"
-              style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)` }}>
+              className="w-full py-3.5 rounded-full font-bold text-white text-sm flex items-center justify-center gap-2"
+              style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)`, boxShadow: "0 4px 18px rgba(77,200,240,0.35)" }}>
               <LogOut className="w-4 h-4" /> Sign Out
             </button>
           </div>
