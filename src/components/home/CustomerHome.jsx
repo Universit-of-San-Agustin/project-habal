@@ -254,7 +254,6 @@ export default function CustomerHome({ user }) {
   const sendSupportMessage = async () => {
     if (!supportInput.trim()) return;
     const text = supportInput.trim();
-    setSupportMessages(m => [...m, { id: Date.now(), from: "user", text, time: "Now" }]);
     setSupportInput("");
     // Create a support ticket so admin can see the message
     await base44.entities.SupportTicket.create({
