@@ -23,26 +23,26 @@ async function logAccess(user, action, details = "") {
 
 export default function SensitiveLogsGate({ user, onBack }) {
   // step: "confirm" | "password" | "granted"
-  const [step, setStep] = useState(() => {
-    return sessionStorage.getItem(SESSION_KEY) === "granted" ? "granted" : "confirm";
-  });
+  const [step, setStep] = useState("confirm");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const [verifying, setVerifying] = useState(false);
   const inputRef = useRef(null);
 
+  // Check session auth on mount
+  useEffect(() => {
+    if (sessionStorage.getItem(SESSION_KEY) === "granted") {
+      setStep("granted");
+    } else {
+      logAccess(user, "SENSITIVE_LOGS_ATTEMPT", "Admin opened sensitive logs section");
+    }
+  }, []);
+
   // Focus password input when step changes
   useEffect(() => {
     if (step === "password") setTimeout(() => inputRef.current?.focus(), 100);
   }, [step]);
-
-  // Log attempted access when gate first mounts (not if already authed)
-  useEffect(() => {
-    if (step !== "granted") {
-      logAccess(user, "SENSITIVE_LOGS_ATTEMPT", "Admin opened sensitive logs section");
-    }
-  }, []);
 
   const handleConfirm = () => setStep("password");
 
