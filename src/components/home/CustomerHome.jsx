@@ -827,9 +827,14 @@ export default function CustomerHome({ user }) {
                 ))}
               </div>
             </div>
-            <PrimaryBtn onClick={handleBook} loading={booking}>
+            <PrimaryBtn onClick={() => handleBook(false)} loading={booking}>
               {booking ? "Booking..." : `Book Now · ₱${fareEstimate}`}
             </PrimaryBtn>
+            <button onClick={() => setShowScheduleModal(true)} disabled={booking}
+              className="w-full py-3.5 rounded-full font-semibold text-sm border-2 mt-2"
+              style={{ borderColor: PRIMARY + "60", color: PRIMARY_DARK }}>
+              🗓 Schedule for Later
+            </button>
           </div>
         </div>
       )}
