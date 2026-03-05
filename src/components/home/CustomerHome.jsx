@@ -223,6 +223,13 @@ export default function CustomerHome({ user }) {
   const handleCancelRide = async () => {
     if (!activeRide) return;
     await base44.entities.Booking.update(activeRide.id, { status: "cancelled", cancelled_by: "customer", cancellation_reason: "Cancelled by customer" });
+    await base44.entities.BookingEvent.create({
+      booking_id: activeRide.booking_id || activeRide.id,
+      event_type: "BOOKING_CANCELLED",
+      actor_role: "customer", actor_name: user?.full_name || "Customer",
+      details: "Cancelled by customer",
+      timestamp: new Date().toISOString(),
+    }).catch(() => {});
     setActiveRide(null);
     setShowCancelConfirm(false);
     setScreen("map");
