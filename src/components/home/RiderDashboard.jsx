@@ -31,13 +31,19 @@ export default function RiderDashboard({ user }) {
   // Load data
   useEffect(() => {
     base44.entities.Rider.filter({ email: user?.email }, "-created_date", 1)
-      .then(rows => setRiderData(rows?.[0] || null)).catch(() => {});
-    base44.entities.Booking.filter({ rider_phone: user?.email }, "-created_date", 50)
-      .then(setTripHistory).catch(() => {});
-    base44.entities.Booking.filter({ rider_phone: user?.email }, "-created_date", 5).then(rows => {
-      const active = rows?.find(b => ["assigned", "otw", "arrived", "in_progress"].includes(b.status));
-      if (active) { setActiveBooking(active); setScreen("map"); }
-    });
+      .then(async rows => {
+        const rider = rows?.[0] || null;
+        setRiderData(rider);
+        if (rider?.id) {
+          const [history, activeRows] = await Promise.all([
+            base44.entities.Booking.filter({ rider_id: rider.id }, "-created_date", 50).catch(() => []),
+            base44.entities.Booking.filter({ rider_id: rider.id }, "-created_date", 5).catch(() => []),
+          ]);
+          setTripHistory(history || []);
+          const active = activeRows?.find(b => ["assigned", "otw", "arrived", "in_progress"].includes(b.status));
+          if (active) { setActiveBooking(active); setScreen("map"); }
+        }
+      }).catch(() => {});
   }, [user]);
 
   // GPS broadcast
