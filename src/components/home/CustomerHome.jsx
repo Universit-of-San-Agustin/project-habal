@@ -925,17 +925,22 @@ export default function CustomerHome({ user }) {
               </div>
             </div>
             {/* Actions */}
-            <div className="flex gap-2 pt-1">
+            <div className="flex gap-2 pt-1 flex-wrap">
+              <button onClick={() => setShowLiveMap(true)}
+                className="flex-1 py-3 rounded-2xl text-white text-sm font-bold flex items-center justify-center gap-1.5"
+                style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)` }}>
+                <Navigation className="w-4 h-4" /> Live Map
+              </button>
               {activeRide.rider_name && (
                 <button onClick={() => setShowChat(true)}
-                  className="flex-1 py-3 rounded-2xl text-white text-sm font-bold flex items-center justify-center gap-1.5"
-                  style={{ background: PRIMARY }}>
-                  <MessageCircle className="w-4 h-4" /> Chat Rider
+                  className="flex-1 py-3 rounded-2xl text-sm font-bold flex items-center justify-center gap-1.5 border-2"
+                  style={{ borderColor: PRIMARY + "40", color: PRIMARY_DARK }}>
+                  <MessageCircle className="w-4 h-4" /> Chat
                 </button>
               )}
               {["pending", "searching", "assigned", "otw"].includes(activeRide.status) && (
                 <button onClick={() => setShowCancelConfirm(true)}
-                  className="flex-1 py-3 border-2 border-red-100 text-red-400 font-bold rounded-2xl text-sm">
+                  className="py-3 px-4 border-2 border-red-100 text-red-400 font-bold rounded-2xl text-sm">
                   Cancel
                 </button>
               )}
