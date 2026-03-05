@@ -65,7 +65,7 @@ export default function SupportScreen({ user, onBack }) {
         ))}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-8">
+      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-8 fade-in">
         {/* FAQ */}
         {tab === "faq" && (
           <div className="space-y-2">
