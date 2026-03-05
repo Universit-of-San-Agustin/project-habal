@@ -12,14 +12,15 @@ export default function ChatPanel({ bookingId, currentUser, senderRole, onClose 
   const pollRef = useRef(null);
 
   const load = async () => {
-    const msgs = await base44.entities.ChatMessage.filter({ booking_id: bookingId }, "created_date", 100).catch(() => []);
+    const msgs = await base44.entities.ChatMessage.filter({ booking_id: bookingId }, "-created_date", 100).catch(() => []);
     setMessages(msgs || []);
   };
 
+  // Load chat messages on mount, poll every 2 seconds for new ones
   useEffect(() => {
     if (!bookingId) return;
     load();
-    pollRef.current = setInterval(load, 4000);
+    pollRef.current = setInterval(load, 2000);
     return () => clearInterval(pollRef.current);
   }, [bookingId]);
 
