@@ -182,6 +182,15 @@ export default function CustomerHome({ user }) {
     setScreen("confirm");
   }, []);
 
+  const handleRepeatRide = async (b) => {
+    setPickup(b.pickup_address);
+    setDropoff(b.dropoff_address);
+    setDropoffInput(b.dropoff_address);
+    setPaymentMethod(b.payment_method || "cash");
+    setFareEstimate(b.fare_estimate || estimateFare());
+    setScreen("confirm");
+  };
+
   const handleBook = async () => {
     if (!pickup || !dropoff || booking) return;
     setBooking(true);
