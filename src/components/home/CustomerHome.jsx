@@ -833,17 +833,13 @@ export default function CustomerHome({ user }) {
       {/* CONFIRM SCREEN */}
       {screen === "confirm" && (
         <div className="absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-3xl shadow-2xl slide-up">
-          <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mt-3 mb-4" />
+          <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mt-3 mb-3" />
           <div className="px-5 pb-8">
-            <div className="flex items-center justify-between mb-4">
-              <button onClick={() => setScreen("search")} className="flex items-center gap-1 text-sm font-medium" style={{ color: PRIMARY }}>
-                <ChevronLeft className="w-4 h-4" /> Change
-              </button>
-              <h3 className="font-bold text-gray-900">Confirm Ride</h3>
-              <div className="w-16" />
+            <div className="mb-5">
+              <h3 className="font-bold text-gray-900 text-lg">Review Your Ride</h3>
             </div>
             {/* Route */}
-            <div className="bg-gray-50 rounded-2xl p-4 mb-4 space-y-3">
+            <div className="bg-white border border-gray-100 rounded-2xl p-4 mb-4 space-y-3">
               <div className="flex items-start gap-3">
                 <div className="flex flex-col items-center gap-1 mt-1">
                   <div className="w-3 h-3 rounded-full" style={{ background: PRIMARY }} />
@@ -863,33 +859,33 @@ export default function CustomerHome({ user }) {
               </div>
             </div>
             {/* Ride type + fare */}
-            <div className="flex items-center justify-between border-2 rounded-2xl px-4 py-3.5 mb-4" style={{ borderColor: PRIMARY + "40" }}>
+            <div className="bg-white border border-gray-100 rounded-2xl px-4 py-3.5 mb-4 flex items-center justify-between shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{ background: PRIMARY_BG }}>🏍</div>
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center text-2xl" style={{ background: PRIMARY_BG }}>🏍</div>
                 <div>
                   <div className="font-bold text-gray-900 text-sm">Motorcycle</div>
-                  <div className="text-xs text-gray-400">1 passenger · fastest</div>
+                  <div className="text-xs text-gray-500">1 passenger · fastest</div>
                 </div>
               </div>
               <div className="text-right">
                 {fareEstimate == null ? (
-                  <div className="w-6 h-6 border-2 rounded-full animate-spin ml-auto" style={{ borderColor: PRIMARY, borderTopColor: "transparent" }} />
+                  <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: PRIMARY, borderTopColor: "transparent" }} />
                 ) : (
                   <div className="text-2xl font-black" style={{ color: PRIMARY }}>₱{fareEstimate}</div>
                 )}
-                <div className="text-[10px] text-gray-400">estimated fare</div>
+                <div className="text-[10px] text-gray-500 mt-0.5">estimated fare</div>
               </div>
             </div>
             {/* Payment */}
             <div className="mb-5">
-              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Payment Method</div>
+              <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Payment Method</div>
               <div className="flex gap-2">
-                {[{ id: "cash", label: "💵 Cash", sub: "Pay on arrival" }, { id: "gcash", label: "📱 GCash", sub: "Digital wallet" }].map(m => (
+                {[{ id: "cash", label: "💵 Cash", sub: "Pay driver" }, { id: "gcash", label: "📱 GCash", sub: "Wallet" }].map(m => (
                   <button key={m.id} onClick={() => setPaymentMethod(m.id)}
                     className={`flex-1 py-3 rounded-xl border-2 font-semibold text-sm transition-all`}
                     style={paymentMethod === m.id
-                      ? { borderColor: PRIMARY, background: PRIMARY_BG, color: PRIMARY_DARK }
-                      : { borderColor: "#e5e7eb", color: "#9ca3af" }}>
+                      ? { borderColor: PRIMARY, background: PRIMARY_BG, color: PRIMARY_DARK, boxShadow: `0 2px 8px ${PRIMARY}20` }
+                      : { borderColor: "#e5e7eb", color: "#9ca3af", background: "#f9fafb" }}>
                     <div>{m.label}</div>
                     <div className="text-[10px] font-normal mt-0.5">{m.sub}</div>
                   </button>
@@ -897,12 +893,12 @@ export default function CustomerHome({ user }) {
               </div>
             </div>
             <PrimaryBtn onClick={() => handleBook(false)} loading={booking || fareEstimate == null}>
-              {booking ? "Booking..." : fareEstimate == null ? "Calculating fare..." : `Book Now · ₱${fareEstimate}`}
+              {booking ? "Booking..." : fareEstimate == null ? "Calculating..." : `Book Now • ₱${fareEstimate}`}
             </PrimaryBtn>
             <button onClick={() => setShowScheduleModal(true)} disabled={booking}
-              className="w-full py-3.5 rounded-full font-semibold text-sm border-2 mt-2"
-              style={{ borderColor: PRIMARY + "60", color: PRIMARY_DARK }}>
-              🗓 Schedule for Later
+              className="w-full py-3 rounded-xl font-bold text-sm border-2 mt-2 transition-all"
+              style={{ borderColor: PRIMARY + "30", color: PRIMARY_DARK, background: PRIMARY_BG }}>
+              📅 Schedule for Later
             </button>
           </div>
         </div>
