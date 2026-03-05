@@ -366,8 +366,8 @@ export default function RiderDashboard({ user }) {
           <MapboxMap
             className="w-full h-full"
             onGeolocate={() => {}}
-            pickupMarker={activeBooking ? { lat: null, lng: null, _address: activeBooking.pickup_address } : null}
-            dropoffMarker={activeBooking?.status === "in_progress" ? { lat: null, lng: null, _address: activeBooking.dropoff_address } : null}
+            pickupMarker={pickupCoords}
+            dropoffMarker={activeBooking?.status === "in_progress" ? dropoffCoords : null}
           />
         </div>
         {/* Top bar */}
