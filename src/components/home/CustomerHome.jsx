@@ -891,7 +891,10 @@ export default function CustomerHome({ user }) {
         <div className="absolute bottom-16 left-0 right-0 z-20 slide-up">
           <div className="bg-white rounded-t-3xl shadow-2xl px-5 pt-4 pb-5 space-y-3">
             <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-1" />
-            <RideStatusBadge status={activeRide.status} />
+
+            {/* Prominent full-width status banner */}
+            <ActiveRideStatusBanner status={activeRide.status} eta={eta} />
+
             {activeRide.rider_name ? (
               <div className="flex items-center justify-between bg-gray-50 rounded-2xl px-4 py-3">
                 <div className="flex items-center gap-3">
@@ -904,10 +907,10 @@ export default function CustomerHome({ user }) {
                     </div>
                   </div>
                 </div>
-                {eta && (
-                  <div className="text-right">
-                    <div className="text-xl font-black" style={{ color: PRIMARY }}>{eta.minutes}<span className="text-sm font-semibold ml-0.5">min</span></div>
-                    <div className="text-[10px] text-gray-400">{eta.label}</div>
+                {riderLocation && (
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-[10px] text-emerald-600 font-semibold">Live</span>
                   </div>
                 )}
               </div>
@@ -918,6 +921,7 @@ export default function CustomerHome({ user }) {
                 <span className="text-sm font-semibold" style={{ color: PRIMARY_DARK }}>Waiting for a rider to accept...</span>
               </div>
             )}
+
             {/* Route summary */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -929,6 +933,7 @@ export default function CustomerHome({ user }) {
                 <span className="truncate">{activeRide.dropoff_address}</span>
               </div>
             </div>
+
             {/* Actions */}
             <div className="flex gap-2 pt-1 flex-wrap">
               <button onClick={() => setShowLiveMap(true)}
