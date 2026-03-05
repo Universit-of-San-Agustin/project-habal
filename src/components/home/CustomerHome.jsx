@@ -34,9 +34,26 @@ async function reverseGeocode(lng, lat) {
 
 async function forwardGeocode(query) {
   try {
-    const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&limit=6&types=address,poi,place&country=PH&bbox=122.4,9.4,125.1,12.7`);
+    // Prioritize Iloilo/Panay region with tight bbox around Panay Island
+    // types include poi (landmarks, malls, universities, gov buildings) + address + place + neighborhood (barangays)
+    const params = new URLSearchParams({
+      access_token: MAPBOX_TOKEN,
+      limit: 8,
+      types: "poi,address,place,neighborhood,locality",
+      country: "PH",
+      // Panay Island bounding box
+      bbox: "121.8,10.3,122.9,11.8",
+      // Bias results toward Iloilo City center
+      proximity: "122.5654,10.7202",
+      language: "en",
+    });
+    const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?${params}`);
     const data = await res.json();
-    return data.features?.map(f => ({ place_name: f.place_name, center: f.center })) || [];
+    return data.features?.map(f => ({
+      place_name: f.place_name,
+      center: f.center,
+      place_type: f.place_type?.[0],
+    })) || [];
   } catch {}
   return [];
 }
