@@ -437,9 +437,9 @@ export default function CustomerHome({ user }) {
             {[
               { icon: "👤", label: "Personal Information", sub: "Name, phone, email", screen: null },
               { icon: "📍", label: "Saved Locations", sub: "Home, work, favorites", screen: "saved" },
-              { icon: "🛡", label: "Support", sub: "Help & contact us", screen: "support" },
+              { icon: "🔔", label: "Notifications", sub: "Alerts & updates", screen: "notifications" },
+              { icon: "🛡", label: "Help & Support", sub: "FAQ, tickets, contact", screen: "support" },
               { icon: "⭐", label: "My Ratings", sub: `${bookings.filter(b=>b.customer_rating).length} reviews given`, screen: null },
-              { icon: "🔔", label: "Notifications", sub: "Manage preferences", screen: null },
               { icon: "⚙️", label: "Settings", sub: "App preferences", screen: null },
             ].map((item, i) => (
               <button key={i} onClick={() => item.screen && setScreen(item.screen)}
