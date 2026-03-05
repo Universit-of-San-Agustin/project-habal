@@ -108,7 +108,7 @@ export default function CustomerHome({ user }) {
   useEffect(() => {
     if (!user) return;
     base44.entities.Booking.filter({ customer_phone: user.email }, "-created_date", 20).then(setBookings).catch(() => {});
-    base44.entities.Booking.filter({ customer_phone: user.email }, "-created_date", 5).then(rows => {
+    base44.entities.Booking.filter({ customer_phone: user.email }, "-created_date", 5).then(async rows => {
       const active = rows?.find(b => ["pending", "searching", "assigned", "otw", "arrived", "in_progress"].includes(b.status));
       if (active) { setActiveRide(active); setScreen("active"); }
     });
