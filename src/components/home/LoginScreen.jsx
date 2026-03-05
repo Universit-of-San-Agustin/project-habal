@@ -15,10 +15,14 @@ const DEMO_ACCOUNTS = {
   Admin:      { email: "demo.admin@habal.app",      label: "🛡 Admin" },
 };
 
+const PHONE_RE = /^(\+63|0)9\d{9}$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function LoginScreen({ onLogin }) {
   const [screen, setScreen]   = useState("login");
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading]  = useState(false);
+  const [error, setError]      = useState("");
   const [form, setForm] = useState({
     email: "", password: "", confirmPassword: "",
     firstName: "", lastName: "", username: "", phone: "", dob: "",
@@ -27,11 +31,39 @@ export default function LoginScreen({ onLogin }) {
   const [demoLoading, setDemoLoading] = useState(null);
   const [demoError, setDemoError]     = useState("");
 
-  const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
+  const set = (key, val) => { setForm(f => ({ ...f, [key]: val })); setError(""); };
 
   const handleRealAuth = () => {
     setLoading(true);
     base44.auth.redirectToLogin(window.location.href);
+  };
+
+  const handleLogin = () => {
+    if (!form.phone && !form.email) { setError("Please enter your phone number or email."); return; }
+    if (!form.password) { setError("Please enter your password."); return; }
+    handleRealAuth();
+  };
+
+  const handleRegister = () => {
+    if (!form.firstName || !form.lastName) { setError("Please enter your full name."); return; }
+    if (!form.email || !EMAIL_RE.test(form.email)) { setError("Please enter a valid email address."); return; }
+    if (form.phone && !PHONE_RE.test(form.phone.replace(/\s/g, ""))) { setError("Phone must be a valid PH number (e.g. 09XX XXX XXXX)."); return; }
+    if (!form.password || form.password.length < 8) { setError("Password must be at least 8 characters."); return; }
+    if (form.password !== form.confirmPassword) { setError("Passwords do not match."); return; }
+    handleRealAuth();
+  };
+
+  const handleForgot = () => {
+    if (!form.email || !EMAIL_RE.test(form.email)) { setError("Please enter a valid email address."); return; }
+    setError("");
+    setScreen("otp");
+  };
+
+  const handleOtpVerify = () => {
+    const code = form.otp.join("");
+    if (code.length < 6) { setError("Please enter the full 6-digit code."); return; }
+    setError("");
+    setScreen("otp_success");
   };
 
   const handleDemoRole = async (roleName) => {
