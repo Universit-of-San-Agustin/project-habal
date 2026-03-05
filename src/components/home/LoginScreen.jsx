@@ -116,9 +116,10 @@ export default function LoginScreen({ onLogin }) {
         <Logo />
         <Heading title="Forgot Password?" sub="Enter your email and we'll send a reset link" />
         <Field placeholder="Email address" type="email" value={form.email} onChange={v => set("email", v)} />
-        <Btn onClick={() => setScreen("otp")} className="mt-5">Send Reset Link</Btn>
+        {error && <p className="text-red-500 text-xs mt-2 text-center">{error}</p>}
+        <Btn onClick={handleForgot} className="mt-5">Send Reset Link</Btn>
         <p className="text-center text-gray-400 text-sm mt-5">
-          <button onClick={() => setScreen("login")} className="font-semibold" style={{ color: PRIMARY }}>← Back to Sign In</button>
+          <button onClick={() => { setScreen("login"); setError(""); }} className="font-semibold" style={{ color: PRIMARY }}>← Back to Sign In</button>
         </p>
       </Shell>
     );
