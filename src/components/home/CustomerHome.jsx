@@ -860,7 +860,11 @@ export default function CustomerHome({ user }) {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-black" style={{ color: PRIMARY }}>₱{fareEstimate}</div>
+                {fareEstimate == null ? (
+                  <div className="w-6 h-6 border-2 rounded-full animate-spin ml-auto" style={{ borderColor: PRIMARY, borderTopColor: "transparent" }} />
+                ) : (
+                  <div className="text-2xl font-black" style={{ color: PRIMARY }}>₱{fareEstimate}</div>
+                )}
                 <div className="text-[10px] text-gray-400">estimated fare</div>
               </div>
             </div>
@@ -880,8 +884,8 @@ export default function CustomerHome({ user }) {
                 ))}
               </div>
             </div>
-            <PrimaryBtn onClick={() => handleBook(false)} loading={booking}>
-              {booking ? "Booking..." : `Book Now · ₱${fareEstimate}`}
+            <PrimaryBtn onClick={() => handleBook(false)} loading={booking || fareEstimate == null}>
+              {booking ? "Booking..." : fareEstimate == null ? "Calculating fare..." : `Book Now · ₱${fareEstimate}`}
             </PrimaryBtn>
             <button onClick={() => setShowScheduleModal(true)} disabled={booking}
               className="w-full py-3.5 rounded-full font-semibold text-sm border-2 mt-2"
