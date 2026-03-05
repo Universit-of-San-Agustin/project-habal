@@ -13,6 +13,22 @@ export default function WalletScreen({ user, bookings }) {
   const [actionNote, setActionNote] = useState("");
   const [actionProcessing, setActionProcessing] = useState(false);
   const [actionDone, setActionDone] = useState(false);
+  const [walletTxns, setWalletTxns] = useState([]);
+  const [walletBalance, setWalletBalance] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    base44.entities.WalletTransaction.filter({ network_id: user.id || user.email }, "-created_date", 30)
+      .then(txns => {
+        setWalletTxns(txns || []);
+        // Calculate balance from transactions
+        const bal = (txns || []).reduce((s, t) => {
+          if (t.type === "credit" || t.type === "refund") return s + (t.amount || 0);
+          return s - (t.amount || 0);
+        }, 0);
+        setWalletBalance(Math.max(0, bal));
+      }).catch(() => {});
+  }, [user]);
 
   const completedBookings = (bookings || []).filter(b => b.status === "completed" && b.fare_estimate);
   const totalSpent = completedBookings.reduce((s, b) => s + (b.fare_estimate || 0), 0);
