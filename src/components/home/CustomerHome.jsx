@@ -91,10 +91,6 @@ export default function CustomerHome({ user }) {
   const [submittingRating, setSubmittingRating] = useState(false);
   const [showChat, setShowChat] = useState(false);
 
-  // Support chat (lightweight in-app messaging that creates real support tickets)
-  const [supportMessages, setSupportMessages] = useState([
-    { id: 1, from: "support", text: "Hi! How can we help you today?", time: "Now" }
-  ]);
   const [supportInput, setSupportInput] = useState("");
 
   // Saved locations
