@@ -29,6 +29,7 @@ export default function AdminDashboard({ user }) {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [showLiveMap, setShowLiveMap] = useState(false);
 
   // Detail modals
   const [selectedNetwork, setSelectedNetwork] = useState(null);
@@ -115,6 +116,8 @@ export default function AdminDashboard({ user }) {
     { id: "wallet",    label: "Wallet",    icon: Wallet },
     { id: "support",   label: "Support",   icon: Shield },
   ];
+
+  const activeRidersCount = riders.filter(r => r.online_status === "online" || r.online_status === "on_trip").length;
 
   return (
     <div className="fixed inset-0 bg-gray-50 flex flex-col max-w-md mx-auto overflow-hidden">
