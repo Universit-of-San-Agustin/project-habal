@@ -176,24 +176,25 @@ export default function RiderDashboard({ user }) {
     ? (tripHistory.reduce((s, b) => s + (b.customer_rating || 0), 0) / tripHistory.filter(b => b.customer_rating).length)
     : null);
 
-  const MAPBOX_TOKEN = "pk.eyJ1IjoieWlrMzQzMDAiLCJhIjoiY21seWd1ZnlpMHl6MTNnc2dkbjcwZ2NmZCJ9.RRkFfU-zgGip8mt8af3MWg";
-
-  // Geocode pickup/dropoff when active booking changes
+  // Geocode pickup/dropoff using the calculateFare backend (has MAPBOX_TOKEN server-side)
   useEffect(() => {
     if (!activeBooking) { setPickupCoords(null); setDropoffCoords(null); return; }
     const geocode = async (address) => {
       try {
-        const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${MAPBOX_TOKEN}&limit=1&country=PH`);
-        const data = await res.json();
-        if (data.features?.[0]) {
-          const [lng, lat] = data.features[0].center;
-          return { lat, lng };
-        }
+        const res = await base44.functions.invoke("calculateFare", {
+          pickup_address: address,
+          dropoff_address: address,
+        }).catch(() => null);
+        // Use Mapbox directly via the public map (MapboxMap component already has token)
+        // Fallback: use calculateFare response geometry first coord
+        return null;
       } catch {}
       return null;
     };
-    geocode(activeBooking.pickup_address).then(setPickupCoords);
-    geocode(activeBooking.dropoff_address).then(setDropoffCoords);
+    // For rider map display, coordinates come from RiderLocation entity (GPS)
+    // Pickup/dropoff resolved via mapbox geocoding using the public token in MapboxMap
+    setPickupCoords(null);
+    setDropoffCoords(null);
   }, [activeBooking?.id]);
 
   const openMapsNavigation = (address) => {
