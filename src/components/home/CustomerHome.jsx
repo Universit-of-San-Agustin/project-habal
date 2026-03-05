@@ -193,7 +193,7 @@ export default function CustomerHome({ user }) {
     setScreen("confirm");
   };
 
-  const handleBook = async () => {
+  const handleBook = async (isScheduled = false) => {
     if (!pickup || !dropoff || booking) return;
     setBooking(true);
     const bookingId = "BK-" + Date.now().toString(36).toUpperCase();
@@ -205,9 +205,10 @@ export default function CustomerHome({ user }) {
       pickup_address: pickup,
       dropoff_address: dropoff,
       zone: detectedZone,
-      status: "pending",
+      status: isScheduled ? "scheduled" : "pending",
       payment_method: paymentMethod,
       fare_estimate: fareEstimate,
+      ...(isScheduled && scheduledAt ? { is_scheduled: true, scheduled_at: scheduledAt } : {}),
     });
     await base44.entities.BookingEvent.create({
       booking_id: b.id, event_type: "BOOKING_CREATED",
