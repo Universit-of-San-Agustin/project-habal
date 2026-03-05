@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import {
   Users, MapPin, BarChart2, ShieldAlert, LogOut, RefreshCw,
-  CheckCircle, XCircle, AlertTriangle, Wallet, Network,
+  CheckCircle, XCircle, AlertTriangle, Wallet,
   Bike, BookOpen, Star, ChevronRight, Eye, Building2,
-  TrendingUp, DollarSign, Clock, Shield
+  TrendingUp, DollarSign, Clock, Shield, FileText
 } from "lucide-react";
 import ZoneManagement from "../admin/ZoneManagement";
 import EnforcementPanel from "../admin/EnforcementPanel";
@@ -12,6 +12,7 @@ import AdminAnalytics from "../admin/AdminAnalytics";
 import SupportTicketsPanel from "../admin/SupportTicketsPanel";
 import WalletPanel from "../admin/WalletPanel";
 import LiveMapMonitor from "../admin/LiveMapMonitor";
+import AuditLogPanel from "../admin/AuditLogPanel";
 
 const PRIMARY = "#4DC8F0";
 const PRIMARY_DARK = "#1a9ecb";
