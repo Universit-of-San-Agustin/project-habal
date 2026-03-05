@@ -29,14 +29,13 @@ function scoreRider(rider, riderLoc, bookingLoc) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    // Allow both authenticated users and service calls
     const { booking_id } = await req.json();
 
     if (!booking_id) {
       return Response.json({ error: 'booking_id required' }, { status: 400 });
     }
 
-    // Use service role for all DB ops
+    // Service role for all DB ops — avoids auth errors
     const db = base44.asServiceRole;
 
     // 1. Fetch the booking
