@@ -574,6 +574,13 @@ export default function CustomerHome({ user }) {
                     </div>
                   )}
                 </div>
+                {b.status === "completed" && (
+                  <button onClick={() => handleRepeatRide(b)}
+                    className="w-full mt-2 py-2 rounded-xl text-xs font-bold text-center"
+                    style={{ background: PRIMARY_BG, color: PRIMARY_DARK }}>
+                    🔁 Repeat this ride
+                  </button>
+                )}
               </div>
             ))}
           </div>
