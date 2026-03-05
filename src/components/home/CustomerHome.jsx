@@ -547,7 +547,6 @@ export default function CustomerHome({ user }) {
           ) : (
             <div className="px-4">
               <p className="text-sm text-gray-400 mb-4">{completedRides} completed rides</p>
-              {/* Stats row */}
               <div className="grid grid-cols-3 gap-3 mb-4">
                 {[
                   { label: "Completed", value: completedRides, color: "#10b981" },
@@ -561,59 +560,60 @@ export default function CustomerHome({ user }) {
                 ))}
               </div>
               <div className="space-y-3 pb-4">
-            {bookings.length === 0 ? (
-              <div className="flex flex-col items-center py-20 text-gray-300">
-                <Bike className="w-16 h-16 mb-4 opacity-30" />
-                <p className="font-semibold text-gray-400">No rides yet</p>
-                <p className="text-sm text-gray-300 mt-1">Book your first ride!</p>
-                <button onClick={() => setScreen("map")} className="mt-5 px-6 py-2.5 rounded-full text-white text-sm font-semibold"
-                  style={{ background: PRIMARY }}>
-                  Book a Ride
-                </button>
-              </div>
-            ) : bookings.map(b => (
-              <div key={b.id} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: PRIMARY_BG }}>🏍</div>
-                    <div>
-                      <div className="font-bold text-gray-900 text-sm font-mono">{b.booking_id || b.id?.slice(0, 8)}</div>
-                      <div className="text-xs text-gray-400">{b.created_date ? new Date(b.created_date).toLocaleDateString("en-PH", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : ""}</div>
+                {bookings.length === 0 ? (
+                  <div className="flex flex-col items-center py-20 text-gray-300">
+                    <Bike className="w-16 h-16 mb-4 opacity-30" />
+                    <p className="font-semibold text-gray-400">No rides yet</p>
+                    <p className="text-sm text-gray-300 mt-1">Book your first ride!</p>
+                    <button onClick={() => setScreen("map")} className="mt-5 px-6 py-2.5 rounded-full text-white text-sm font-semibold"
+                      style={{ background: PRIMARY }}>
+                      Book a Ride
+                    </button>
+                  </div>
+                ) : bookings.map(b => (
+                  <div key={b.id} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: PRIMARY_BG }}>🏍</div>
+                        <div>
+                          <div className="font-bold text-gray-900 text-sm font-mono">{b.booking_id || b.id?.slice(0, 8)}</div>
+                          <div className="text-xs text-gray-400">{b.created_date ? new Date(b.created_date).toLocaleDateString("en-PH", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : ""}</div>
+                        </div>
+                      </div>
+                      <StatusPill status={b.status} />
                     </div>
-                  </div>
-                  <StatusPill status={b.status} />
-                </div>
-                <div className="space-y-1.5 mb-3">
-                  <div className="flex items-center gap-2 text-xs text-gray-600">
-                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: PRIMARY }} />
-                    <span className="truncate">{b.pickup_address}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-600">
-                    <MapPin className="w-2.5 h-2.5 text-amber-400 flex-shrink-0" />
-                    <span className="truncate">{b.dropoff_address}</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between pt-3 border-t border-gray-50">
-                  <div className="text-xs text-gray-400">{b.payment_method?.toUpperCase() || "CASH"}</div>
-                  {b.fare_estimate && <div className="font-black text-gray-900">₱{b.fare_estimate}</div>}
-                  {b.customer_rating && (
-                    <div className="flex items-center gap-1">
-                      {[1,2,3,4,5].map(n => <span key={n} className={`text-xs ${n <= b.customer_rating ? "text-yellow-400" : "text-gray-200"}`}>★</span>)}
+                    <div className="space-y-1.5 mb-3">
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: PRIMARY }} />
+                        <span className="truncate">{b.pickup_address}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <MapPin className="w-2.5 h-2.5 text-amber-400 flex-shrink-0" />
+                        <span className="truncate">{b.dropoff_address}</span>
+                      </div>
                     </div>
-                  )}
-                </div>
-                {b.status === "completed" && (
-                  <button onClick={() => handleRepeatRide(b)}
-                    className="w-full mt-2 py-2 rounded-xl text-xs font-bold text-center"
-                    style={{ background: PRIMARY_BG, color: PRIMARY_DARK }}>
-                    🔁 Repeat this ride
-                  </button>
-                )}
-              </div>
-            ))}
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+                      <div className="text-xs text-gray-400">{b.payment_method?.toUpperCase() || "CASH"}</div>
+                      {b.fare_estimate && <div className="font-black text-gray-900">₱{b.fare_estimate}</div>}
+                      {b.customer_rating && (
+                        <div className="flex items-center gap-1">
+                          {[1,2,3,4,5].map(n => <span key={n} className={`text-xs ${n <= b.customer_rating ? "text-yellow-400" : "text-gray-200"}`}>★</span>)}
+                        </div>
+                      )}
+                    </div>
+                    {b.status === "completed" && (
+                      <button onClick={() => handleRepeatRide(b)}
+                        className="w-full mt-2 py-2 rounded-xl text-xs font-bold text-center"
+                        style={{ background: PRIMARY_BG, color: PRIMARY_DARK }}>
+                        🔁 Repeat this ride
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           )}
+        </div>
         <BottomNav screen={screen} setScreen={setScreen} completedRides={completedRides} />
       </Shell>
     );
