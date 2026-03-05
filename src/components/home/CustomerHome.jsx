@@ -98,10 +98,12 @@ export default function CustomerHome({ user }) {
   const [supportInput, setSupportInput] = useState("");
 
   // Saved locations
-  const [savedLocations] = useState([
+  const [savedLocations, setSavedLocations] = useState([
     { id: 1, label: "Home", icon: "🏠", address: "123 Rizal St, Jaro, Iloilo City" },
     { id: 2, label: "Work", icon: "💼", address: "Iloilo Business Park, Mandurriao" },
   ]);
+  const [addingLocation, setAddingLocation] = useState(false);
+  const [newLocForm, setNewLocForm] = useState({ label: "", address: "", icon: "📍" });
 
   useEffect(() => {
     if (!user) return;
