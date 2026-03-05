@@ -52,9 +52,25 @@ export default function AdminDashboard({ user }) {
   useEffect(() => { load(); }, []);
 
   // Network actions
+  const writeAuditLog = (action, targetType, target, details = "") => {
+    base44.entities.AuditLog.create({
+      log_type: "admin_action",
+      action,
+      actor_id: user?.id || user?.email,
+      actor_name: user?.full_name || "Admin",
+      actor_role: "admin",
+      target_type: targetType,
+      target_id: target?.id,
+      target_name: target?.name || target?.full_name,
+      details,
+      timestamp: new Date().toISOString(),
+    }).catch(() => {});
+  };
+
   const approveNetwork = async (net) => {
     setProcessing(true);
     await base44.entities.Network.update(net.id, { status: "approved", verified_badge: true });
+    writeAuditLog("NETWORK_APPROVED", "network", net, "Network approved and verified");
     await load();
     setSelectedNetwork(null);
     setProcessing(false);
@@ -62,6 +78,7 @@ export default function AdminDashboard({ user }) {
   const suspendNetwork = async (net) => {
     setProcessing(true);
     await base44.entities.Network.update(net.id, { status: "suspended" });
+    writeAuditLog("NETWORK_SUSPENDED", "network", net, "Network suspended by admin");
     await load();
     setSelectedNetwork(null);
     setProcessing(false);
@@ -69,6 +86,7 @@ export default function AdminDashboard({ user }) {
   const banNetwork = async (net) => {
     setProcessing(true);
     await base44.entities.Network.update(net.id, { status: "banned" });
+    writeAuditLog("NETWORK_BANNED", "network", net, "Network banned by admin");
     await load();
     setSelectedNetwork(null);
     setProcessing(false);
@@ -78,6 +96,7 @@ export default function AdminDashboard({ user }) {
   const approveRider = async (rider) => {
     setProcessing(true);
     await base44.entities.Rider.update(rider.id, { status: "active" });
+    writeAuditLog("RIDER_APPROVED", "rider", { id: rider.id, full_name: rider.full_name }, "Rider verified and activated");
     await load();
     setSelectedRider(null);
     setProcessing(false);
@@ -85,6 +104,7 @@ export default function AdminDashboard({ user }) {
   const suspendRider = async (rider) => {
     setProcessing(true);
     await base44.entities.Rider.update(rider.id, { status: "suspended", online_status: "offline" });
+    writeAuditLog("RIDER_SUSPENDED", "rider", { id: rider.id, full_name: rider.full_name }, "Rider suspended by admin");
     await load();
     setSelectedRider(null);
     setProcessing(false);
@@ -92,6 +112,7 @@ export default function AdminDashboard({ user }) {
   const banRider = async (rider) => {
     setProcessing(true);
     await base44.entities.Rider.update(rider.id, { status: "banned", online_status: "offline" });
+    writeAuditLog("RIDER_BANNED", "rider", { id: rider.id, full_name: rider.full_name }, "Rider banned by admin");
     await load();
     setSelectedRider(null);
     setProcessing(false);
