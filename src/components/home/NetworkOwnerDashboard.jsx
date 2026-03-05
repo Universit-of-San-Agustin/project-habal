@@ -75,9 +75,26 @@ export default function NetworkOwnerDashboard({ user }) {
     return () => clearInterval(pollRef.current);
   }, [user]);
 
+  const writeAuditLog = (action, targetType, targetId, targetName, details = "") => {
+    base44.entities.AuditLog.create({
+      log_type: "admin_action",
+      action,
+      actor_id: user?.id || user?.email,
+      actor_name: user?.full_name || "Operator",
+      actor_role: "network_owner",
+      target_type: targetType,
+      target_id: targetId,
+      target_name: targetName,
+      details,
+      network_id: network?.id,
+      timestamp: new Date().toISOString(),
+    }).catch(() => {});
+  };
+
   const handleVerifyRider = async (rider) => {
     setProcessing(true);
     await base44.entities.Rider.update(rider.id, { status: "active" });
+    writeAuditLog("RIDER_APPROVED", "rider", rider.id, rider.full_name, "Rider verified by network operator");
     await load();
     addToast({ type: "success", title: "Rider Verified", message: `${rider.full_name} is now active` });
     setProcessing(false);
@@ -86,6 +103,7 @@ export default function NetworkOwnerDashboard({ user }) {
   const handleSuspendRider = async (rider) => {
     setProcessing(true);
     await base44.entities.Rider.update(rider.id, { status: "suspended", online_status: "offline" });
+    writeAuditLog("RIDER_SUSPENDED", "rider", rider.id, rider.full_name, "Rider suspended by network operator");
     await load();
     addToast({ type: "alert", title: "Rider Suspended", message: `${rider.full_name} has been suspended` });
     setProcessing(false);
