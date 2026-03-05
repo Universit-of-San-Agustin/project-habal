@@ -93,16 +93,17 @@ export default function LoginScreen({ onLogin }) {
           <Field placeholder="Username"    value={form.username} onChange={v => set("username", v)} />
           <Field placeholder="Email"       type="email" value={form.email} onChange={v => set("email", v)} />
           <Field placeholder="Mobile (+63 9XX XXX XXXX)" type="tel" value={form.phone} onChange={v => set("phone", v)} />
-          <Field placeholder="Password" type={showPass ? "text" : "password"} value={form.password} onChange={v => set("password", v)}
+          <Field placeholder="Password (min 8 chars)" type={showPass ? "text" : "password"} value={form.password} onChange={v => set("password", v)}
             suffix={<button type="button" onClick={() => setShowPass(p => !p)}>
               {showPass ? <EyeOff className="w-4 h-4 text-gray-300" /> : <Eye className="w-4 h-4 text-gray-300" />}
             </button>} />
           <Field placeholder="Confirm Password" type="password" value={form.confirmPassword} onChange={v => set("confirmPassword", v)} />
         </div>
-        <Btn onClick={handleRealAuth} loading={loading} className="mt-6">Create Account</Btn>
+        {error && <p className="text-red-500 text-xs mt-3 text-center">{error}</p>}
+        <Btn onClick={handleRegister} loading={loading} className="mt-4">Create Account</Btn>
         <p className="text-center text-gray-400 text-sm mt-5">
           Already have an account?{" "}
-          <button onClick={() => setScreen("login")} className="font-semibold" style={{ color: PRIMARY }}>Sign In</button>
+          <button onClick={() => { setScreen("login"); setError(""); }} className="font-semibold" style={{ color: PRIMARY }}>Sign In</button>
         </p>
       </Shell>
     );
