@@ -108,13 +108,16 @@ export default function AdminDashboard({ user }) {
           <div className="px-4 pt-4 pb-6 space-y-3">
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: "Active Networks", value: activeNetworks.length, color: PRIMARY },
-                { label: "Total Riders", value: riders.length, color: "#10b981" },
-                { label: "Total Bookings", value: bookings.length, color: "#6366f1" },
-                { label: "Completed Trips", value: totalCompleted, color: "#f59e0b" },
+                { label: "Active Networks", value: activeNetworks.length, color: PRIMARY, icon: "🏢" },
+                { label: "Total Riders", value: riders.length, color: "#10b981", icon: "🏍" },
+                { label: "Total Bookings", value: bookings.length, color: "#6366f1", icon: "📋" },
+                { label: "Completed Trips", value: totalCompleted, color: "#f59e0b", icon: "✅" },
+                { label: "Pending Networks", value: pendingNetworks.length, color: "#ef4444", icon: "⏳" },
+                { label: "Pending Riders", value: pendingRiders.length, color: "#f97316", icon: "🔍" },
               ].map(s => (
                 <div key={s.label} className="bg-white rounded-2xl p-4 border border-gray-100" style={{ boxShadow: `0 2px 12px rgba(77,200,240,0.08)` }}>
-                  <div className="text-xs text-gray-400 font-medium mb-1">{s.label}</div>
+                  <div className="text-lg mb-1">{s.icon}</div>
+                  <div className="text-xs text-gray-400 font-medium mb-0.5">{s.label}</div>
                   <div className="text-2xl font-black" style={{ color: s.color }}>{s.value}</div>
                 </div>
               ))}
@@ -124,8 +127,16 @@ export default function AdminDashboard({ user }) {
                 <div className="flex items-center gap-2 text-amber-700 font-semibold text-sm mb-1">
                   <AlertTriangle className="w-4 h-4" /> Action Required
                 </div>
-                {pendingNetworks.length > 0 && <p className="text-xs text-amber-600">{pendingNetworks.length} network(s) awaiting approval</p>}
-                {pendingRiders.length > 0 && <p className="text-xs text-amber-600">{pendingRiders.length} rider(s) awaiting verification</p>}
+                {pendingNetworks.length > 0 && (
+                  <button onClick={() => setTab("networks")} className="w-full text-left text-xs text-amber-600 py-1 hover:underline">
+                    {pendingNetworks.length} network(s) awaiting approval →
+                  </button>
+                )}
+                {pendingRiders.length > 0 && (
+                  <button onClick={() => setTab("riders")} className="w-full text-left text-xs text-amber-600 py-1 hover:underline">
+                    {pendingRiders.length} rider(s) awaiting verification →
+                  </button>
+                )}
               </div>
             )}
           </div>
