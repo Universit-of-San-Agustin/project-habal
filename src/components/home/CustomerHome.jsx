@@ -160,17 +160,28 @@ export default function CustomerHome({ user }) {
     setScreen("confirm");
   }, []);
 
+  const detectZone = (address) => {
+    const a = (address || "").toLowerCase();
+    if (a.includes("jaro")) return "Jaro";
+    if (a.includes("mandurriao")) return "Mandurriao";
+    if (a.includes("la paz") || a.includes("lapaz")) return "La Paz";
+    if (a.includes("arevalo")) return "Arevalo";
+    if (a.includes("city proper") || a.includes("iloilo city")) return "City Proper";
+    return "City Proper";
+  };
+
   const handleBook = async () => {
     if (!pickup || !dropoff || booking) return;
     setBooking(true);
     const bookingId = "BK-" + Date.now().toString(36).toUpperCase();
+    const detectedZone = detectZone(pickup);
     const b = await base44.entities.Booking.create({
       booking_id: bookingId,
       customer_name: user?.full_name || "Passenger",
       customer_phone: user?.email || "",
       pickup_address: pickup,
       dropoff_address: dropoff,
-      zone: "Jaro",
+      zone: detectedZone,
       status: "pending",
       payment_method: paymentMethod,
       fare_estimate: fareEstimate,
