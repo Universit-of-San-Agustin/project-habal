@@ -255,17 +255,22 @@ export default function CustomerHome({ user }) {
     setScreen("map");
   };
 
-  const sendSupportMessage = () => {
+  const sendSupportMessage = async () => {
     if (!supportInput.trim()) return;
-    const msg = { id: Date.now(), from: "user", text: supportInput.trim(), time: "Now" };
-    setSupportMessages(m => [...m, msg]);
+    const text = supportInput.trim();
+    setSupportMessages(m => [...m, { id: Date.now(), from: "user", text, time: "Now" }]);
     setSupportInput("");
-    setTimeout(() => {
-      setSupportMessages(m => [...m, {
-        id: Date.now() + 1, from: "support",
-        text: "Thanks for reaching out! A support agent will respond shortly.", time: "Now"
-      }]);
-    }, 1200);
+    // Create a support ticket so admin can see the message
+    await base44.entities.SupportTicket.create({
+      customer_id: user?.id || user?.email,
+      customer_name: user?.full_name || "Customer",
+      customer_email: user?.email,
+      category: "other",
+      subject: "In-app message",
+      message: text,
+      status: "open",
+      priority: "medium",
+    }).catch(() => {});
   };
 
   const initials = user?.full_name ? user.full_name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() : "JD";
