@@ -151,8 +151,9 @@ export default function NetworkOwnerDashboard({ user }) {
   ];
 
   if (loading) return (
-    <div className="fixed inset-0 flex items-center justify-center bg-white">
-      <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: PRIMARY, borderTopColor: "transparent" }} />
+    <div className="fixed inset-0 flex flex-col items-center justify-center bg-white gap-4">
+      <div className="w-10 h-10 border-3 rounded-full animate-spin" style={{ borderWidth: "3px", borderColor: PRIMARY_BG, borderTopColor: PRIMARY }} />
+      <p className="text-xs text-gray-400 font-medium">Loading dashboard...</p>
     </div>
   );
 
