@@ -86,29 +86,58 @@ export default function RiderDashboard({ user }) {
     base44.entities.Rider.update(riderData.id, { online_status: isOnline ? "online" : "offline" }).catch(() => {});
   }, [isOnline, riderData?.id]);
 
-  // Poll for new bookings
+  // Poll for new booking notifications (from Notification entity)
   useEffect(() => {
     if (!riderData?.id || !isOnline || activeBooking) return;
     const poll = async () => {
-      // Re-fetch rider data to pick up any new assignment by dispatcher/operator
-      const rows = await base44.entities.Booking.filter(
-        { rider_id: riderData.id, status: "assigned" }, "-created_date", 3
-      );
-      const fresh = rows?.find(b => !seenBookingsRef.current.has(b.id));
-      if (fresh) {
-        seenBookingsRef.current.add(fresh.id);
-        setIncomingBooking(fresh);
-        timerRef.current = setTimeout(async () => {
-          await base44.entities.Booking.update(fresh.id, { status: "pending", rider_id: null, rider_name: null, rider_phone: null }).catch(() => {});
-          await base44.entities.Rider.update(riderData.id, { online_status: "online" }).catch(() => {});
-          setIncomingBooking(null);
-        }, 30000);
+      // Check for unread booking notifications
+      const notifs = await base44.entities.Notification.filter({
+        user_id: riderData.id,
+        read_status: false,
+        type: "booking",
+      }, "-created_date", 5).catch(() => []);
+
+      if (notifs && notifs.length > 0) {
+        const notif = notifs[0]; // Most recent
+        // Fetch the actual booking
+        const bookings = await base44.entities.Booking.filter(
+          { id: notif.reference_id }, "-created_date", 1
+        ).catch(() => []);
+
+        const booking = bookings?.[0];
+        if (booking && !seenBookingsRef.current.has(booking.id)) {
+          seenBookingsRef.current.add(booking.id);
+          // Assign booking to this rider immediately
+          await base44.entities.Booking.update(booking.id, {
+            status: "assigned",
+            rider_id: riderData.id,
+            rider_name: user?.full_name,
+            rider_phone: user?.email,
+            assigned_at: new Date().toISOString(),
+          }).catch(() => {});
+          
+          setIncomingBooking(booking);
+          // Mark notification as read
+          await base44.entities.Notification.update(notif.id, { read_status: true }).catch(() => {});
+          
+          // Auto-decline after 30s if no action
+          timerRef.current = setTimeout(async () => {
+            await base44.entities.Booking.update(booking.id, {
+              status: "pending",
+              rider_id: null,
+              rider_name: null,
+              rider_phone: null,
+            }).catch(() => {});
+            await base44.entities.Rider.update(riderData.id, { online_status: "online" }).catch(() => {});
+            setIncomingBooking(null);
+          }, 30000);
+        }
       }
     };
     poll();
-    const interval = setInterval(poll, 5000);
+    const interval = setInterval(poll, 2000); // Check every 2 seconds
     return () => { clearInterval(interval); if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [riderData?.id, isOnline, activeBooking]);
+  }, [riderData?.id, isOnline, activeBooking, user?.full_name, user?.email]);
 
   const handleAccept = async () => {
     if (!incomingBooking) return;
