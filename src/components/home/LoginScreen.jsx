@@ -148,11 +148,12 @@ export default function LoginScreen({ onLogin }) {
             />
           ))}
         </div>
+        {error && <p className="text-red-500 text-xs mb-3 text-center">{error}</p>}
         <p className="text-center text-gray-400 text-xs mb-5">
           Didn't receive it?{" "}
-          <button className="font-semibold" style={{ color: PRIMARY }}>Resend Code</button>
+          <button onClick={() => set("otp", ["","","","","",""])} className="font-semibold" style={{ color: PRIMARY }}>Resend Code</button>
         </p>
-        <Btn onClick={() => setScreen("otp_success")}>Verify</Btn>
+        <Btn onClick={handleOtpVerify}>Verify</Btn>
         <p className="text-center text-gray-400 text-sm mt-4">
           <button onClick={() => setScreen("login")} className="font-semibold" style={{ color: PRIMARY }}>← Back to Sign In</button>
         </p>
