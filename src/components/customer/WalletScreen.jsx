@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { ArrowUpRight, ArrowDownLeft, Plus, CreditCard, Clock } from "lucide-react";
+import { CreditCard, Clock, ChevronRight, ArrowUpRight, ArrowDownLeft, Plus, Receipt, Wallet } from "lucide-react";
+import PaymentMethodsList from "../wallet/PaymentMethodsList";
+import TopUpModal from "../wallet/TopUpModal";
+import ReceiptModal from "../wallet/ReceiptModal";
 
 const PRIMARY = "#4DC8F0";
 const PRIMARY_DARK = "#1a9ecb";
@@ -8,52 +11,56 @@ const PRIMARY_BG = "#EBF9FE";
 const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/fe9d5d17d_habal.png";
 
 export default function WalletScreen({ user, bookings }) {
-  const [walletAction, setWalletAction] = useState(null); // "topup" | "send" | "receive"
-  const [actionAmount, setActionAmount] = useState("");
-  const [actionNote, setActionNote] = useState("");
-  const [actionProcessing, setActionProcessing] = useState(false);
-  const [actionDone, setActionDone] = useState(false);
   const [walletTxns, setWalletTxns] = useState([]);
   const [walletBalance, setWalletBalance] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  const [showPaymentMethods, setShowPaymentMethods] = useState(false);
+  const [showTopUp, setShowTopUp] = useState(false);
+  const [receipt, setReceipt] = useState(null); // { item, type }
+  const [sendModal, setSendModal] = useState(false);
+  const [sendAmount, setSendAmount] = useState("");
+  const [sendNote, setSendNote] = useState("");
+  const [sendProcessing, setSendProcessing] = useState(false);
+  const [sendDone, setSendDone] = useState(false);
+  const [tab, setTab] = useState("all"); // all | wallet | rides
 
   useEffect(() => {
     if (!user) return;
-    base44.entities.WalletTransaction.filter({ network_id: user.id || user.email }, "-created_date", 30)
+    base44.entities.WalletTransaction.filter({ network_id: user.id || user.email }, "-created_date", 50)
       .then(txns => {
-        setWalletTxns(txns || []);
-        // Calculate balance from transactions
-        const bal = (txns || []).reduce((s, t) => {
+        const list = txns || [];
+        setWalletTxns(list);
+        const bal = list.reduce((s, t) => {
           if (t.type === "credit" || t.type === "refund") return s + (t.amount || 0);
           return s - (t.amount || 0);
         }, 0);
         setWalletBalance(Math.max(0, bal));
-      }).catch(() => {});
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [user]);
 
   const completedBookings = (bookings || []).filter(b => b.status === "completed" && b.fare_estimate);
   const totalSpent = completedBookings.reduce((s, b) => s + (b.fare_estimate || 0), 0);
-  const completedRides = completedBookings.length;
 
-  const handleWalletAction = async () => {
-    const amt = parseFloat(actionAmount);
-    if (!amt || amt <= 0) return;
-    setActionProcessing(true);
-    const typeMap = { topup: "credit", send: "debit", receive: "credit" };
-    const descMap = {
-      topup: "Top up via GCash",
-      send: "Transfer sent",
-      receive: "Transfer received",
-    };
-    const txType = typeMap[walletAction];
-    const newBalance = txType === "credit"
-      ? walletBalance + amt
-      : Math.max(0, walletBalance - amt);
+  const handleTopUpSuccess = (tx, newBalance) => {
+    setWalletTxns(prev => [tx, ...prev]);
+    setWalletBalance(newBalance);
+    setTimeout(() => setShowTopUp(false), 2200);
+  };
+
+  const handleSend = async () => {
+    const amt = parseFloat(sendAmount);
+    if (!amt || amt <= 0 || amt > walletBalance) return;
+    setSendProcessing(true);
+    const newBalance = walletBalance - amt;
     const tx = await base44.entities.WalletTransaction.create({
       network_id: user?.id || user?.email,
       network_name: user?.full_name,
       amount: amt,
-      type: txType,
-      description: actionNote || descMap[walletAction],
+      type: "debit",
+      description: sendNote || "Transfer sent",
       balance_after: newBalance,
       performed_by: user?.email,
     }).catch(() => null);
@@ -61,100 +68,184 @@ export default function WalletScreen({ user, bookings }) {
       setWalletTxns(prev => [tx, ...prev]);
       setWalletBalance(newBalance);
     }
-    setActionProcessing(false);
-    setActionDone(true);
-    setTimeout(() => { setActionDone(false); setWalletAction(null); setActionAmount(""); setActionNote(""); }, 2000);
+    setSendProcessing(false);
+    setSendDone(true);
+    setTimeout(() => { setSendDone(false); setSendModal(false); setSendAmount(""); setSendNote(""); }, 2000);
   };
+
+  // Combined & sorted transactions for "all" tab
+  const allItems = [
+    ...walletTxns.map(t => ({ ...t, _kind: "wallet" })),
+    ...completedBookings.map(b => ({ ...b, _kind: "ride" })),
+  ].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+
+  const displayItems = tab === "wallet" ? walletTxns.map(t => ({ ...t, _kind: "wallet" }))
+    : tab === "rides" ? completedBookings.map(b => ({ ...b, _kind: "ride" }))
+    : allItems;
+
+  const isCredit = (item) => item._kind === "wallet" && (item.type === "credit" || item.type === "refund");
 
   return (
     <div className="flex-1 overflow-y-auto pb-24">
       {/* Wallet Card */}
       <div className="mx-4 mt-4 rounded-3xl overflow-hidden shadow-lg fade-in"
         style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)` }}>
-        <div className="px-6 pt-6 pb-8">
-          <div className="flex items-center justify-between mb-6">
-            <img src={HABAL_LOGO} alt="Habal" className="w-8 h-8 object-contain opacity-90"
-              onError={e => { e.target.style.display = "none"; }} />
+        <div className="px-6 pt-6 pb-6">
+          <div className="flex items-center justify-between mb-4">
+            <img src={HABAL_LOGO} alt="Habal" className="w-8 h-8 object-contain opacity-90" onError={e => { e.target.style.display = "none"; }} />
             <span className="text-white/70 text-xs font-semibold uppercase tracking-widest">Habal Wallet</span>
           </div>
-          <div className="mb-6">
+          <div className="mb-4">
             <div className="text-white/70 text-xs font-medium mb-1">Available Balance</div>
-            <div className="text-4xl font-black text-white">₱{walletBalance.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            <div className="text-4xl font-black text-white">
+              {loading ? "—" : `₱${walletBalance.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+            </div>
           </div>
           <div className="flex items-center justify-between">
             <div className="text-white/60 text-xs">{user?.full_name?.toUpperCase() || "CUSTOMER"}</div>
-            <div className="flex gap-1">
-              {[0, 1, 2, 3].map(i => (
-                <div key={i} className="w-1.5 h-1.5 rounded-full bg-white/40" />
-              ))}
-            </div>
+            <div className="flex gap-1">{[0,1,2,3].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-white/40" />)}</div>
+          </div>
+        </div>
+        {/* Stats row */}
+        <div className="grid grid-cols-2 border-t border-white/10">
+          <div className="px-5 py-3 border-r border-white/10">
+            <div className="text-white/50 text-[10px] uppercase tracking-wider">Total Spent</div>
+            <div className="text-white font-bold text-sm mt-0.5">₱{totalSpent.toLocaleString()}</div>
+          </div>
+          <div className="px-5 py-3">
+            <div className="text-white/50 text-[10px] uppercase tracking-wider">Paid Rides</div>
+            <div className="text-white font-bold text-sm mt-0.5">{completedBookings.length}</div>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="px-4 grid grid-cols-3 gap-3 mt-4 mb-5">
+      <div className="px-4 grid grid-cols-4 gap-2 mt-4 mb-5">
         {[
-          { id: "topup",   icon: <Plus className="w-5 h-5" />, label: "Top Up",  color: "#10b981" },
-          { id: "send",    icon: <ArrowUpRight className="w-5 h-5" />, label: "Send",    color: PRIMARY },
-          { id: "receive", icon: <ArrowDownLeft className="w-5 h-5" />, label: "Receive", color: "#8b5cf6" },
+          { icon: <Plus className="w-5 h-5" />, label: "Top Up", color: "#10b981", action: () => setShowTopUp(true) },
+          { icon: <ArrowUpRight className="w-5 h-5" />, label: "Send", color: PRIMARY, action: () => setSendModal(true) },
+          { icon: <CreditCard className="w-5 h-5" />, label: "Cards", color: "#6366f1", action: () => setShowPaymentMethods(true) },
+          { icon: <Receipt className="w-5 h-5" />, label: "History", color: "#f59e0b", action: () => setTab("all") },
         ].map(a => (
-          <button key={a.label} onClick={() => setWalletAction(a.id)}
-            className="flex flex-col items-center gap-2 bg-white border border-gray-100 rounded-2xl py-4 shadow-sm hover:shadow-md transition-shadow active:scale-95">
-            <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: a.color + "15", color: a.color }}>
+          <button key={a.label} onClick={a.action}
+            className="flex flex-col items-center gap-2 bg-white border border-gray-100 rounded-2xl py-3.5 shadow-sm hover:shadow-md transition-shadow active:scale-95">
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: a.color + "18", color: a.color }}>
               {a.icon}
             </div>
-            <span className="text-xs font-semibold text-gray-700">{a.label}</span>
+            <span className="text-[10px] font-semibold text-gray-600">{a.label}</span>
           </button>
         ))}
       </div>
 
-      {/* Wallet Action Modal */}
-      {walletAction && (
+      {/* Payment Methods preview */}
+      <div className="px-4 mb-4">
+        <button onClick={() => setShowPaymentMethods(true)}
+          className="w-full bg-white border border-gray-100 rounded-2xl px-4 py-3.5 flex items-center gap-3 shadow-sm hover:shadow-md transition-shadow">
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "#eef2ff" }}>
+            <CreditCard className="w-5 h-5 text-indigo-500" />
+          </div>
+          <div className="flex-1 text-left">
+            <div className="font-semibold text-gray-800 text-sm">Payment Methods</div>
+            <div className="text-xs text-gray-400 mt-0.5">Manage cards & mobile wallets</div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-300" />
+        </button>
+      </div>
+
+      {/* Transaction History */}
+      <div className="px-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Transactions</div>
+          <div className="flex gap-1">
+            {[["all","All"],["wallet","Wallet"],["rides","Rides"]].map(([id, lbl]) => (
+              <button key={id} onClick={() => setTab(id)}
+                className="px-2.5 py-1 rounded-xl text-[10px] font-bold transition-all"
+                style={tab === id ? { background: PRIMARY, color: "#fff" } : { background: "#f3f4f6", color: "#6b7280" }}>
+                {lbl}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {displayItems.length === 0 ? (
+          <div className="flex flex-col items-center py-12 text-gray-300">
+            <Wallet className="w-12 h-12 mb-3 opacity-30" />
+            <p className="text-sm text-gray-400">No transactions yet</p>
+            <p className="text-xs text-gray-300 mt-1">Top up or complete a ride to see history</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {displayItems.map((item, i) => {
+              const credit = isCredit(item);
+              return (
+                <button key={item.id || i} onClick={() => setReceipt({ item, type: item._kind })}
+                  className="w-full flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm hover:shadow-md transition-shadow text-left">
+                  <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl flex-shrink-0"
+                    style={{ background: item._kind === "ride" ? "#fef3c7" : credit ? "#f0fdf4" : "#fff1f2" }}>
+                    {item._kind === "ride" ? "🏍" : credit ? "💳" : "📤"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-gray-800 text-sm truncate">
+                      {item._kind === "ride" ? `Ride to ${item.dropoff_address?.split(",")[0]}` : (item.description || "Transaction")}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {item.created_date ? new Date(item.created_date).toLocaleDateString("en-PH", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
+                      {item._kind === "ride" && <span className="ml-1 capitalize text-gray-300">· {item.payment_method || "cash"}</span>}
+                    </div>
+                  </div>
+                  <div className={`font-black text-sm flex-shrink-0 ${item._kind === "ride" ? "text-red-500" : credit ? "text-emerald-600" : "text-red-500"}`}>
+                    {item._kind === "ride" ? "-" : credit ? "+" : "-"}₱{item._kind === "ride" ? item.fare_estimate : item.amount?.toLocaleString()}
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-gray-200 flex-shrink-0" />
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Modals */}
+      {showPaymentMethods && <PaymentMethodsList user={user} onClose={() => setShowPaymentMethods(false)} />}
+      {showTopUp && <TopUpModal user={user} walletBalance={walletBalance} onSuccess={handleTopUpSuccess} onClose={() => setShowTopUp(false)} />}
+      {receipt && <ReceiptModal item={receipt.item} type={receipt.type} onClose={() => setReceipt(null)} />}
+
+      {/* Send Money Modal */}
+      {sendModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
           <div className="w-full bg-white rounded-t-3xl px-5 pt-5 pb-10 max-w-md mx-auto">
             <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
-            {actionDone ? (
+            {sendDone ? (
               <div className="flex flex-col items-center py-8">
                 <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: PRIMARY_BG }}>
                   <span className="text-3xl">✅</span>
                 </div>
-                <p className="font-bold text-gray-900">Done!</p>
-                <p className="text-sm text-gray-400 mt-1">Transaction recorded successfully.</p>
+                <p className="font-bold text-gray-900">Transfer Sent!</p>
               </div>
             ) : (
               <>
-                <div className="font-bold text-gray-900 text-lg mb-1 capitalize">{walletAction === "topup" ? "Top Up Wallet" : walletAction === "send" ? "Send Money" : "Receive Money"}</div>
-                <div className="text-xs text-gray-400 mb-5">{walletAction === "topup" ? "Add funds to your Habal Wallet via GCash or bank transfer." : walletAction === "send" ? "Transfer funds to another Habal user." : "Receive funds from another user."}</div>
+                <div className="font-bold text-gray-900 text-lg mb-1">Send Money</div>
+                <div className="text-xs text-gray-400 mb-4">Balance: <span className="font-bold text-gray-700">₱{walletBalance.toLocaleString("en-PH", { minimumFractionDigits: 2 })}</span></div>
                 <div className="space-y-3 mb-5">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">Amount (₱)</label>
-                    <input type="number" value={actionAmount} onChange={e => setActionAmount(e.target.value)}
-                      placeholder="0.00" min="1"
-                      className="w-full px-4 py-3.5 rounded-2xl text-gray-800 text-lg font-bold focus:outline-none transition-all"
-                      style={{ background: "#f8fbfd", border: `1.5px solid ${PRIMARY}40` }}
-                      onFocus={e => { e.target.style.borderColor = PRIMARY; }}
-                      onBlur={e => { e.target.style.borderColor = `${PRIMARY}40`; }}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">Note (optional)</label>
-                    <input value={actionNote} onChange={e => setActionNote(e.target.value)}
-                      placeholder="Add a note..."
-                      className="w-full px-4 py-3.5 rounded-2xl text-gray-800 text-sm focus:outline-none"
-                      style={{ background: "#f8fbfd", border: "1.5px solid #e2ecf2" }}
-                    />
-                  </div>
+                  <input type="number" value={sendAmount} onChange={e => setSendAmount(e.target.value)}
+                    placeholder="Amount (₱)" min="1" max={walletBalance}
+                    className="w-full px-4 py-4 rounded-2xl text-gray-800 text-2xl font-black text-center focus:outline-none"
+                    style={{ background: "#f8fbfd", border: `1.5px solid ${PRIMARY}40` }} />
+                  <input value={sendNote} onChange={e => setSendNote(e.target.value)}
+                    placeholder="Note (optional)"
+                    className="w-full px-4 py-3.5 rounded-2xl text-gray-800 text-sm focus:outline-none"
+                    style={{ background: "#f8fbfd", border: "1.5px solid #e2ecf2" }} />
                 </div>
+                {parseFloat(sendAmount) > walletBalance && (
+                  <p className="text-xs text-red-400 mb-3 text-center">Insufficient balance</p>
+                )}
                 <div className="flex gap-3">
-                  <button onClick={() => { setWalletAction(null); setActionAmount(""); setActionNote(""); }}
+                  <button onClick={() => { setSendModal(false); setSendAmount(""); setSendNote(""); }}
                     className="flex-1 py-3.5 border-2 border-gray-200 rounded-2xl font-bold text-gray-600 text-sm">Cancel</button>
-                  <button onClick={handleWalletAction} disabled={actionProcessing || !actionAmount}
+                  <button onClick={handleSend} disabled={sendProcessing || !sendAmount || parseFloat(sendAmount) > walletBalance}
                     className="flex-1 py-3.5 rounded-2xl font-bold text-white text-sm disabled:opacity-50 flex items-center justify-center"
                     style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)` }}>
-                    {actionProcessing
-                      ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      : "Confirm"}
+                    {sendProcessing ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Send"}
                   </button>
                 </div>
               </>
@@ -162,67 +253,6 @@ export default function WalletScreen({ user, bookings }) {
           </div>
         </div>
       )}
-
-      {/* Summary Stats */}
-      <div className="px-4 mb-5 grid grid-cols-2 gap-3">
-        <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
-          <div className="text-xs text-gray-400 mb-1">Total Spent</div>
-          <div className="text-2xl font-black" style={{ color: PRIMARY_DARK }}>₱{totalSpent.toLocaleString()}</div>
-          <div className="text-[10px] text-gray-400 mt-0.5">All time</div>
-        </div>
-        <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
-          <div className="text-xs text-gray-400 mb-1">Rides Paid</div>
-          <div className="text-2xl font-black text-gray-900">{completedRides}</div>
-          <div className="text-[10px] text-gray-400 mt-0.5">Completed trips</div>
-        </div>
-      </div>
-
-      {/* Transactions */}
-      <div className="px-4">
-        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Recent Transactions</div>
-        {walletTxns.length === 0 && completedBookings.length === 0 ? (
-          <div className="flex flex-col items-center py-12 text-gray-300">
-            <CreditCard className="w-12 h-12 mb-3 opacity-30" />
-            <p className="text-sm text-gray-400">No transactions yet</p>
-            <p className="text-xs text-gray-300 mt-1">Top up or complete a ride to see history</p>
-          </div>
-        ) : (
-          <>
-            {walletTxns.slice(0, 10).map(tx => (
-              <div key={tx.id} className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 mb-2 shadow-sm">
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl flex-shrink-0"
-                  style={{ background: (tx.type === "credit" || tx.type === "refund") ? "#f0fdf4" : "#fff1f2" }}>
-                  {(tx.type === "credit" || tx.type === "refund") ? "💳" : "📤"}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-gray-800 text-sm truncate">{tx.description}</div>
-                  <div className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {tx.created_date ? new Date(tx.created_date).toLocaleDateString("en-PH", { month: "short", day: "numeric" }) : "—"}
-                  </div>
-                </div>
-                <div className={`font-black text-sm flex-shrink-0 ${(tx.type === "credit" || tx.type === "refund") ? "text-emerald-600" : "text-red-500"}`}>
-                  {(tx.type === "credit" || tx.type === "refund") ? "+" : "-"}₱{tx.amount?.toLocaleString()}
-                </div>
-              </div>
-            ))}
-            {completedBookings.slice(0, 10).map(b => (
-              <div key={b.id} className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 mb-2 shadow-sm">
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl flex-shrink-0" style={{ background: "#fef3c7" }}>🏍</div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-gray-800 text-sm truncate">Ride to {b.dropoff_address?.split(",")[0]}</div>
-                  <div className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {b.created_date ? new Date(b.created_date).toLocaleDateString("en-PH", { month: "short", day: "numeric" }) : "—"}
-                    <span className="ml-1 capitalize">{b.payment_method || "cash"}</span>
-                  </div>
-                </div>
-                <div className="font-black text-red-500 text-sm flex-shrink-0">-₱{b.fare_estimate}</div>
-              </div>
-            ))}
-          </>
-        )}
-      </div>
     </div>
   );
 }
