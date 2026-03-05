@@ -228,8 +228,12 @@ export default function CustomerHome({ user }) {
     setDropoff(b.dropoff_address);
     setDropoffInput(b.dropoff_address);
     setPaymentMethod(b.payment_method || "cash");
-    setFareEstimate(b.fare_estimate || estimateFare());
+    setFareEstimate(b.fare_estimate || null);
     setScreen("confirm");
+    // Recalculate fare
+    const fareData = await calculateRealFare(pickupCoords, null, b.pickup_address, b.dropoff_address);
+    if (fareData?.fare) setFareEstimate(fareData.fare);
+    else setFareEstimate(b.fare_estimate || 40);
   };
 
   const handleBook = async (isScheduled = false) => {
@@ -451,6 +455,9 @@ export default function CustomerHome({ user }) {
       <Shell>
         <ScreenHeader title="Saved Locations" onBack={() => setScreen("profile")} />
         <div className="flex-1 overflow-y-auto px-4 pt-4">
+          {savedLocations.length === 0 && !addingLocation && (
+            <div className="text-center py-6 text-gray-400 text-sm">No saved locations yet</div>
+          )}
           {savedLocations.map(loc => (
             <div key={loc.id} className="flex items-center gap-4 bg-white border border-gray-100 rounded-2xl px-4 py-4 mb-3 shadow-sm">
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl" style={{ background: PRIMARY_BG }}>
@@ -483,9 +490,16 @@ export default function CustomerHome({ user }) {
               <div className="flex gap-2">
                 <button onClick={() => setAddingLocation(false)}
                   className="flex-1 py-2.5 border-2 border-gray-200 rounded-xl text-sm font-semibold text-gray-500">Cancel</button>
-                <button onClick={() => {
+                <button onClick={async () => {
                   if (!newLocForm.label || !newLocForm.address) return;
-                  setSavedLocations(l => [...l, { id: Date.now(), ...newLocForm }]);
+                  const newLoc = await base44.entities.SavedLocation.create({
+                    user_id: user?.id || user?.email,
+                    user_email: user?.email,
+                    label: newLocForm.label,
+                    address: newLocForm.address,
+                    icon: newLocForm.icon,
+                  }).catch(() => null);
+                  if (newLoc) setSavedLocations(l => [...l, newLoc]);
                   setAddingLocation(false);
                   setNewLocForm({ label: "", address: "", icon: "📍" });
                 }} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white"
