@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Users, Network, MapPin, BarChart2, ShieldAlert, LogOut, RefreshCw, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import ZoneManagement from "../admin/ZoneManagement";
+import EnforcementPanel from "../admin/EnforcementPanel";
+import AnalyticsDashboard from "../admin/AnalyticsDashboard";
 
 const PRIMARY = "#4DC8F0";
 const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/fe9d5d17d_habal.png";
