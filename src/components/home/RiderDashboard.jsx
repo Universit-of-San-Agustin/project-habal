@@ -341,7 +341,12 @@ export default function RiderDashboard({ user }) {
       <Shell noScroll>
         {IncomingPopup}
         <div className="absolute inset-0 bottom-16">
-          <MapboxMap className="w-full h-full" onGeolocate={() => {}} />
+          <MapboxMap
+            className="w-full h-full"
+            onGeolocate={() => {}}
+            pickupMarker={activeBooking ? { lat: null, lng: null, _address: activeBooking.pickup_address } : null}
+            dropoffMarker={activeBooking?.status === "in_progress" ? { lat: null, lng: null, _address: activeBooking.dropoff_address } : null}
+          />
         </div>
         {/* Top bar */}
         <div className="absolute top-0 left-0 right-0 z-10 px-4 pt-12 pb-2 pointer-events-none">
