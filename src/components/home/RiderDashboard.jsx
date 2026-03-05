@@ -142,8 +142,10 @@ export default function RiderDashboard({ user }) {
     await base44.entities.BookingEvent.create({ booking_id: activeBooking.id, event_type: eventMap[newStatus] || "TRIP_ENDED", actor_role: "rider", actor_name: user?.full_name, timestamp: new Date().toISOString() });
     if (newStatus === "completed") {
       setActiveBooking(null);
-      if (riderData?.id) await base44.entities.Rider.update(riderData.id, { online_status: "online" }).catch(() => {});
-      base44.entities.Booking.filter({ rider_phone: user?.email }, "-created_date", 50).then(setTripHistory);
+      if (riderData?.id) {
+        await base44.entities.Rider.update(riderData.id, { online_status: "online" }).catch(() => {});
+        base44.entities.Booking.filter({ rider_id: riderData.id }, "-created_date", 50).then(setTripHistory).catch(() => {});
+      }
       setScreen("home");
     } else {
       setActiveBooking(b => ({ ...b, status: newStatus }));
