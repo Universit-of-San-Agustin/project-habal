@@ -46,20 +46,20 @@ export default function SupportScreen({ user, onBack }) {
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 pt-12 pb-4 border-b border-gray-100 bg-white">
-        <button onClick={onBack} className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center">
+        <button onClick={onBack} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
           <ChevronLeft className="w-4 h-4 text-gray-600" />
         </button>
         <h1 className="font-bold text-gray-900 text-lg">Help & Support</h1>
       </div>
 
       {/* Tab switcher */}
-      <div className="flex border-b border-gray-100 bg-white">
-        {[{ id: "faq", label: "FAQ" }, { id: "ticket", label: "Submit Ticket" }].map(t => (
+      <div className="flex border-b border-gray-100 bg-white" style={{ boxShadow: "0 2px 8px rgba(77,200,240,0.05)" }}>
+        {[{ id: "faq", label: "💬 FAQ" }, { id: "ticket", label: "🎫 Submit Ticket" }].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className="flex-1 py-3 text-sm font-semibold transition-colors"
+            className="flex-1 py-3.5 text-sm font-semibold transition-all"
             style={tab === t.id
-              ? { color: PRIMARY, borderBottom: `2px solid ${PRIMARY}` }
-              : { color: "#9ca3af" }}>
+              ? { color: PRIMARY, borderBottom: `2.5px solid ${PRIMARY}` }
+              : { color: "#b0bec5" }}>
             {t.label}
           </button>
         ))}
