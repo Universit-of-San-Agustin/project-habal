@@ -9,6 +9,8 @@ import {
 import ZoneManagement from "../admin/ZoneManagement";
 import EnforcementPanel from "../admin/EnforcementPanel";
 import AdminAnalytics from "../admin/AdminAnalytics";
+import SupportTicketsPanel from "../admin/SupportTicketsPanel";
+import WalletPanel from "../admin/WalletPanel";
 
 const PRIMARY = "#4DC8F0";
 const PRIMARY_DARK = "#1a9ecb";
@@ -109,6 +111,8 @@ export default function AdminDashboard({ user }) {
     { id: "zones",     label: "Zones",     icon: MapPin },
     { id: "analytics", label: "Analytics", icon: TrendingUp },
     { id: "enforce",   label: "Enforce",   icon: ShieldAlert },
+    { id: "wallet",    label: "Wallet",    icon: Wallet },
+    { id: "support",   label: "Support",   icon: Shield },
   ];
 
   return (
@@ -507,6 +511,16 @@ export default function AdminDashboard({ user }) {
         {/* ── ENFORCE ── */}
         {!loading && tab === "enforce" && (
           <EnforcementPanel networks={networks} riders={riders} onRefresh={load} />
+        )}
+
+        {/* ── WALLET ── */}
+        {!loading && tab === "wallet" && (
+          <WalletPanel networks={networks} />
+        )}
+
+        {/* ── SUPPORT TICKETS ── */}
+        {!loading && tab === "support" && (
+          <SupportTicketsPanel />
         )}
       </div>
     </div>
