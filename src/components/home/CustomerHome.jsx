@@ -252,7 +252,7 @@ export default function CustomerHome({ user }) {
   if (screen === "rate") {
     return (
       <Shell>
-        <div className="flex-1 flex flex-col items-center justify-center px-8">
+        <div className="flex-1 flex flex-col items-center justify-center px-8 fade-in">
           <div className="relative mb-6">
             <div className="w-28 h-28 rounded-full flex items-center justify-center" style={{ background: PRIMARY_BG }}>
               <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: "#D6F3FC" }}>
