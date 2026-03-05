@@ -322,50 +322,54 @@ export default function CustomerHome({ user }) {
   if (screen === "rate") {
     return (
       <Shell>
-        <div className="flex-1 flex flex-col items-center justify-center px-8 fade-in">
-          <div className="relative mb-6">
-            <div className="w-28 h-28 rounded-full flex items-center justify-center" style={{ background: PRIMARY_BG }}>
-              <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: "#D6F3FC" }}>
-                <span className="text-4xl">🎉</span>
+        <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20 fade-in">
+          <div className="relative mb-8">
+            <div className="w-28 h-28 rounded-3xl flex items-center justify-center" style={{ background: PRIMARY_BG }}>
+              <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: "#d0ecf9" }}>
+                <span className="text-5xl">🎉</span>
               </div>
             </div>
-            <div className="absolute -right-1 -bottom-1 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: PRIMARY }}>
+            <div className="absolute -right-2 -bottom-2 w-10 h-10 rounded-full flex items-center justify-center bg-emerald-500 shadow-lg">
               <Check className="w-5 h-5 text-white" />
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">You've arrived!</h2>
-          <p className="text-gray-400 text-sm mb-2 text-center">How was your ride? Rate your experience</p>
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-2">Trip completed!</h2>
+          <p className="text-gray-500 text-sm text-center mb-6">Rate your experience to help us improve</p>
           {activeRide?.fare_estimate && (
-            <div className="px-5 py-2.5 rounded-full mb-6 text-sm font-bold" style={{ background: PRIMARY_BG, color: PRIMARY_DARK }}>
-              Trip fare: ₱{activeRide.fare_estimate}
+            <div className="px-4 py-2 rounded-full mb-6 text-sm font-bold text-center" style={{ background: PRIMARY_BG, color: PRIMARY_DARK }}>
+              Fare: ₱{activeRide.fare_estimate}
             </div>
           )}
           {activeRide?.rider_name && (
-            <div className="flex items-center gap-4 bg-gray-50 rounded-3xl px-5 py-4 mb-6 w-full max-w-xs">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl" style={{ background: PRIMARY_BG }}>🏍</div>
-              <div>
-                <div className="font-bold text-gray-900">{activeRide.rider_name}</div>
-                <div className="text-xs text-gray-400 mt-0.5">Your rider</div>
-                <div className="flex mt-1">
-                  {[1,2,3,4,5].map(n => (
-                    <span key={n} className={`text-xs ${n <= 4 ? "text-yellow-400" : "text-gray-200"}`}>★</span>
-                  ))}
+            <div className="w-full bg-white border border-gray-100 rounded-2xl shadow-sm p-4 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl" style={{ background: PRIMARY_BG }}>🏍</div>
+                <div className="flex-1">
+                  <div className="font-bold text-gray-900 text-sm">{activeRide.rider_name}</div>
+                  <div className="text-xs text-gray-400 mt-0.5">Your rider</div>
                 </div>
               </div>
             </div>
           )}
-          <div className="flex gap-3 mb-8">
-            {[1,2,3,4,5].map(n => (
-              <button key={n} onClick={() => setRating(n)}
-                className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl transition-all"
-                style={n <= rating ? { background: PRIMARY, boxShadow: `0 4px 12px rgba(77,200,240,0.4)` } : { background: "#f3f4f6" }}>
-                <span style={{ filter: n <= rating ? "brightness(10)" : "none" }}>⭐</span>
-              </button>
-            ))}
+          <div className="w-full bg-white border border-gray-100 rounded-2xl shadow-sm p-4 mb-6">
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Rate this ride</div>
+            <div className="flex justify-center gap-2">
+              {[1,2,3,4,5].map(n => (
+                <button key={n} onClick={() => setRating(n)}
+                  className="w-11 h-11 rounded-xl flex items-center justify-center text-xl transition-all"
+                  style={n <= rating ? { background: PRIMARY, color: "white", boxShadow: `0 4px 12px ${PRIMARY}60` } : { background: "#f3f4f6", color: "#9ca3af" }}>
+                  ★
+                </button>
+              ))}
+            </div>
           </div>
-          <PrimaryBtn onClick={handleSubmitRating} loading={submittingRating}>
-            {rating > 0 ? "Submit Rating" : "Skip for Now"}
-          </PrimaryBtn>
+          <div className="w-full space-y-3">
+            <button onClick={handleSubmitRating} disabled={submittingRating}
+              className="w-full py-3.5 rounded-xl font-bold text-white text-base disabled:opacity-60"
+              style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)`, boxShadow: `0 4px 12px ${PRIMARY}40` }}>
+              {submittingRating ? "Submitting..." : rating > 0 ? "Submit Rating" : "Skip for Now"}
+            </button>
+          </div>
         </div>
       </Shell>
     );
@@ -584,16 +588,14 @@ export default function CustomerHome({ user }) {
   if (screen === "history") {
     return (
       <Shell>
+        <ScreenHeader title="Your Rides" />
         <div className="flex-1 overflow-y-auto pb-20">
-          <div className="px-4 pt-12 pb-3">
-            <h1 className="text-2xl font-bold text-gray-900">Rides</h1>
-          </div>
           {/* Tabs */}
-          <div className="px-4 flex gap-2 mb-4">
-            {[["history","History"],["scheduled","Scheduled"]].map(([id, lbl]) => (
+          <div className="px-4 pt-4 flex gap-2 mb-4">
+            {[["history","Completed"],["scheduled","Scheduled"]].map(([id, lbl]) => (
               <button key={id} onClick={() => setHistoryTab(id)}
-                className="px-4 py-2 rounded-full text-sm font-bold transition-all"
-                style={historyTab === id ? { background: PRIMARY, color: "#fff" } : { background: "#f3f4f6", color: "#6b7280" }}>
+                className="px-4 py-2.5 rounded-xl text-sm font-bold transition-all"
+                style={historyTab === id ? { background: PRIMARY, color: "#fff", boxShadow: `0 2px 8px ${PRIMARY}30` } : { background: "#f3f4f6", color: "#6b7280" }}>
                 {lbl}
               </button>
             ))}
@@ -601,21 +603,20 @@ export default function CustomerHome({ user }) {
           {historyTab === "scheduled" ? (
             <ScheduledRidesTab user={user} />
           ) : (
-            <div className="px-4">
-              <p className="text-sm text-gray-400 mb-4">{completedRides} completed rides</p>
-              <div className="grid grid-cols-3 gap-3 mb-4">
-                {[
-                  { label: "Completed", value: completedRides, color: "#10b981" },
-                  { label: "Cancelled", value: bookings.filter(b => b.status === "cancelled").length, color: "#ef4444" },
-                  { label: "Total", value: bookings.length, color: PRIMARY },
-                ].map(s => (
-                  <div key={s.label} className="bg-white border border-gray-100 rounded-2xl p-3 text-center shadow-sm">
-                    <div className="text-xl font-black" style={{ color: s.color }}>{s.value}</div>
-                    <div className="text-[10px] text-gray-400 mt-0.5">{s.label}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="space-y-3 pb-4">
+           <div className="px-4">
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {[
+                { label: "Completed", value: completedRides, color: "#10b981" },
+                { label: "Cancelled", value: bookings.filter(b => b.status === "cancelled").length, color: "#ef4444" },
+                { label: "Total", value: bookings.length, color: PRIMARY },
+              ].map(s => (
+                <div key={s.label} className="bg-white border border-gray-100 rounded-2xl p-3 text-center shadow-sm">
+                  <div className="text-xl font-black" style={{ color: s.color }}>{s.value}</div>
+                  <div className="text-[10px] text-gray-400 mt-0.5">{s.label}</div>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-3 pb-4">
                 {bookings.length === 0 ? (
                   <div className="flex flex-col items-center py-20 text-gray-300">
                     <Bike className="w-16 h-16 mb-4 opacity-30" />
@@ -627,47 +628,47 @@ export default function CustomerHome({ user }) {
                     </button>
                   </div>
                 ) : bookings.map(b => (
-                  <div key={b.id} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: PRIMARY_BG }}>🏍</div>
-                        <div>
-                          <div className="font-bold text-gray-900 text-sm font-mono">{b.booking_id || b.id?.slice(0, 8)}</div>
-                          <div className="text-xs text-gray-400">{b.created_date ? new Date(b.created_date).toLocaleDateString("en-PH", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : ""}</div>
-                        </div>
-                      </div>
-                      <StatusPill status={b.status} />
-                    </div>
-                    <div className="space-y-1.5 mb-3">
-                      <div className="flex items-center gap-2 text-xs text-gray-600">
-                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: PRIMARY }} />
-                        <span className="truncate">{b.pickup_address}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-600">
-                        <MapPin className="w-2.5 h-2.5 text-amber-400 flex-shrink-0" />
-                        <span className="truncate">{b.dropoff_address}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-50">
-                      <div className="text-xs text-gray-400">{b.payment_method?.toUpperCase() || "CASH"}</div>
-                      {b.fare_estimate && <div className="font-black text-gray-900">₱{b.fare_estimate}</div>}
-                      {b.customer_rating && (
-                        <div className="flex items-center gap-1">
-                          {[1,2,3,4,5].map(n => <span key={n} className={`text-xs ${n <= b.customer_rating ? "text-yellow-400" : "text-gray-200"}`}>★</span>)}
-                        </div>
-                      )}
-                    </div>
-                    {b.status === "completed" && (
-                      <button onClick={() => handleRepeatRide(b)}
-                        className="w-full mt-2 py-2 rounded-xl text-xs font-bold text-center"
-                        style={{ background: PRIMARY_BG, color: PRIMARY_DARK }}>
-                        🔁 Repeat this ride
-                      </button>
-                    )}
-                  </div>
+                   <div key={b.id} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                     <div className="flex items-start justify-between mb-3">
+                       <div className="flex items-center gap-3">
+                         <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: PRIMARY_BG }}>🏍</div>
+                         <div className="flex-1">
+                           <div className="font-bold text-gray-900 text-sm">{b.booking_id || b.id?.slice(0, 8)}</div>
+                           <div className="text-xs text-gray-500">{b.created_date ? new Date(b.created_date).toLocaleDateString("en-PH", { month: "short", day: "numeric" }) : ""}</div>
+                         </div>
+                       </div>
+                       <StatusPill status={b.status} />
+                     </div>
+                     <div className="space-y-1.5 mb-3">
+                       <div className="flex items-center gap-2 text-xs text-gray-600">
+                         <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: PRIMARY }} />
+                         <span className="truncate font-medium">{b.pickup_address}</span>
+                       </div>
+                       <div className="flex items-center gap-2 text-xs text-gray-600">
+                         <MapPin className="w-2.5 h-2.5 text-amber-400 flex-shrink-0" />
+                         <span className="truncate font-medium">{b.dropoff_address}</span>
+                       </div>
+                     </div>
+                     <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+                       <span className="text-xs font-medium text-gray-500">{b.payment_method?.toUpperCase() || "CASH"}</span>
+                       {b.fare_estimate && <span className="font-bold text-gray-900">₱{b.fare_estimate}</span>}
+                       {b.customer_rating && (
+                         <div className="flex gap-0.5">
+                           {[1,2,3,4,5].map(n => <span key={n} className="text-xs">{n <= b.customer_rating ? "★" : "☆"}</span>)}
+                         </div>
+                       )}
+                     </div>
+                     {b.status === "completed" && (
+                       <button onClick={() => handleRepeatRide(b)}
+                         className="w-full mt-3 py-2 rounded-xl text-xs font-bold text-center transition-all"
+                         style={{ background: PRIMARY_BG, color: PRIMARY_DARK }}>
+                         Repeat this ride
+                       </button>
+                     )}
+                   </div>
                 ))}
-              </div>
-            </div>
+                </div>
+                </div>
           )}
         </div>
         <BottomNav screen={screen} setScreen={setScreen} completedRides={completedRides} />
