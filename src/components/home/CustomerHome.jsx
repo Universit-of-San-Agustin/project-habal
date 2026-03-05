@@ -971,6 +971,7 @@ export default function CustomerHome({ user }) {
           pickupCoords={pickupCoords}
           dropoffCoords={dropoffCoords}
           onClose={() => setShowLiveMap(false)}
+          onCancel={() => { setShowLiveMap(false); setShowCancelConfirm(true); }}
         />
       )}
 
