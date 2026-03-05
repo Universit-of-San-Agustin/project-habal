@@ -60,8 +60,8 @@ export default function EarningsScreen({ tripHistory, riderData, onBack }) {
         </div>
 
         {/* Main earnings card */}
-        <div className="mx-4 mb-4 rounded-3xl p-6 text-white"
-          style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, #1a9ecb 100%)`, boxShadow: "0 8px 32px rgba(77,200,240,0.3)" }}>
+        <div className="mx-4 mt-4 mb-4 rounded-3xl p-6 text-white fade-in"
+          style={{ background: `linear-gradient(135deg, #10b981 0%, #059669 100%)`, boxShadow: "0 8px 32px rgba(16,185,129,0.3)" }}>
           <div className="text-xs font-semibold opacity-70 uppercase tracking-widest mb-2">
             {PERIODS.find(p => p.id === period)?.label} Earnings
           </div>
