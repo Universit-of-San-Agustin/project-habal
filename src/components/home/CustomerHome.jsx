@@ -414,7 +414,7 @@ export default function CustomerHome({ user }) {
   if (screen === "profile") {
     return (
       <Shell>
-        <div className="flex-1 overflow-y-auto pb-20">
+        <div className="flex-1 overflow-y-auto pb-20 fade-in">
           {/* Hero */}
           <div className="px-4 pt-14 pb-6 relative" style={{ background: `linear-gradient(160deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)` }}>
             <div className="flex items-center gap-4">
