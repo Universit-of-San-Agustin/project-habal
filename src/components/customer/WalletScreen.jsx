@@ -15,7 +15,7 @@ export default function WalletScreen({ user, bookings }) {
   return (
     <div className="flex-1 overflow-y-auto pb-24">
       {/* Wallet Card */}
-      <div className="mx-4 mt-4 rounded-3xl overflow-hidden shadow-lg"
+      <div className="mx-4 mt-4 rounded-3xl overflow-hidden shadow-lg fade-in"
         style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)` }}>
         <div className="px-6 pt-6 pb-8">
           <div className="flex items-center justify-between mb-6">
