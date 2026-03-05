@@ -232,7 +232,14 @@ export default function CustomerHome({ user }) {
   const handleSubmitRating = async () => {
     setSubmittingRating(true);
     if (activeRide?.id && rating > 0) {
-      await base44.entities.Booking.update(activeRide.id, { customer_rating: rating });
+      await base44.functions.invoke("recordRating", {
+        booking_id: activeRide.id,
+        rating,
+        comment: "",
+      }).catch(async () => {
+        // fallback: direct update
+        await base44.entities.Booking.update(activeRide.id, { customer_rating: rating }).catch(() => {});
+      });
     }
     setSubmittingRating(false);
     setActiveRide(null); setRating(0);
