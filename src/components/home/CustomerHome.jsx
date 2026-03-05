@@ -548,7 +548,7 @@ export default function CustomerHome({ user }) {
           <div className="px-4">
             <p className="text-sm text-gray-400 mb-4">{completedRides} completed rides</p>
           {/* Stats row */}
-          <div className="mb-4 grid grid-cols-3 gap-3">
+          <div className="px-4 mb-4 grid grid-cols-3 gap-3">
             {[
               { label: "Completed", value: completedRides, color: "#10b981" },
               { label: "Cancelled", value: bookings.filter(b => b.status === "cancelled").length, color: "#ef4444" },
