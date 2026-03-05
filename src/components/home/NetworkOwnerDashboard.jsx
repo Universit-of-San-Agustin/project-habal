@@ -29,6 +29,7 @@ export default function NetworkOwnerDashboard({ user }) {
   const [strikes, setStrikes] = useState([]);
   const [zones, setZones] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showLiveMap, setShowLiveMap] = useState(false);
   const knownBookingIds = useRef(new Set());
   const pollRef = useRef(null);
   const { toasts, addToast, dismiss } = useToast();
