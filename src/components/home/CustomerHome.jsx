@@ -953,6 +953,25 @@ export default function CustomerHome({ user }) {
         </div>
       )}
 
+      {/* Live Map Overlay */}
+      {showLiveMap && activeRide && (
+        <LiveRideMap
+          activeRide={activeRide}
+          user={user}
+          pickupCoords={pickupCoords}
+          dropoffCoords={dropoffCoords}
+          onClose={() => setShowLiveMap(false)}
+        />
+      )}
+
+      {/* Schedule Modal */}
+      {showScheduleModal && (
+        <ScheduleRideModal
+          onConfirm={(isoDate) => { setScheduledAt(isoDate); setShowScheduleModal(false); handleBook(true); }}
+          onCancel={() => setShowScheduleModal(false)}
+        />
+      )}
+
       {showNav && <BottomNav screen={screen} setScreen={setScreen} completedRides={completedRides} />}
     </Shell>
   );
