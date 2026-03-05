@@ -910,17 +910,18 @@ function BottomNav({ screen, setScreen, completedRides }) {
     { id: "profile",  label: "Profile",  icon: User },
   ];
   return (
-    <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex px-2 py-1" style={{ height: 64 }}>
+    <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex px-2 pb-2 pt-1"
+      style={{ height: 64, boxShadow: "0 -4px 20px rgba(77,200,240,0.08)" }}>
       {tabs.map(({ id, label, icon: Icon }) => {
-        const active = screen === id;
+        const active = screen === id || (id === "map" && ["search","confirm","searching","active"].includes(screen));
         return (
           <button key={id} onClick={() => setScreen(id)}
-            className="flex-1 flex flex-col items-center justify-center gap-1 transition-all relative">
-            <div className={`w-10 h-8 rounded-xl flex items-center justify-center transition-all ${active ? "shadow-sm" : ""}`}
+            className="flex-1 flex flex-col items-center justify-center gap-0.5 relative">
+            <div className={`w-11 h-7 rounded-2xl flex items-center justify-center transition-all duration-200`}
               style={active ? { background: PRIMARY_BG } : {}}>
-              <Icon className="w-5 h-5 transition-colors" style={{ color: active ? PRIMARY : "#9ca3af" }} />
+              <Icon className="w-5 h-5" style={{ color: active ? PRIMARY : "#c4cdd8", transition: "color 0.2s" }} />
             </div>
-            <span className="text-[10px] font-semibold transition-colors" style={{ color: active ? PRIMARY : "#9ca3af" }}>{label}</span>
+            <span className="text-[10px] font-semibold" style={{ color: active ? PRIMARY : "#c4cdd8", transition: "color 0.2s" }}>{label}</span>
           </button>
         );
       })}
