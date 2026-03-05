@@ -3,13 +3,15 @@ import { base44 } from "@/api/base44Client";
 import {
   MapPin, X, ChevronLeft, ChevronRight, Bike, User, Clock,
   Wallet, Star, LogOut, MessageCircle, Home, Phone, Shield,
-  Heart, Bell, Settings, ChevronDown, Plus, Minus, Check,
-  Navigation, Package, HelpCircle, FileText, BookOpen, Send,
-  CreditCard, ArrowUpRight, ArrowDownLeft
+  Bell, Settings, ChevronDown, Plus, Check,
+  Navigation, Send, CreditCard, ArrowUpRight, ArrowDownLeft
 } from "lucide-react";
 import MapboxMap from "./MapboxMap";
 import { useToast, ToastContainer } from "./ToastNotification";
 import ChatPanel from "../chat/ChatPanel";
+import WalletScreen from "../customer/WalletScreen";
+import SupportScreen from "../customer/SupportScreen";
+import NotificationsPanel from "../customer/NotificationsPanel";
 
 const MAPBOX_TOKEN = "pk.eyJ1IjoieWlrMzQzMDAiLCJhIjoiY21seWd1ZnlpMHl6MTNnc2dkbjcwZ2NmZCJ9.RRkFfU-zgGip8mt8af3MWg";
 const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/fe9d5d17d_habal.png";
