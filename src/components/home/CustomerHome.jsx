@@ -806,7 +806,7 @@ export default function CustomerHome({ user }) {
 
       {/* ACTIVE RIDE */}
       {screen === "active" && activeRide && (
-        <div className="absolute bottom-16 left-0 right-0 z-20">
+        <div className="absolute bottom-16 left-0 right-0 z-20 slide-up">
           <div className="bg-white rounded-t-3xl shadow-2xl px-5 pt-4 pb-5 space-y-3">
             <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-1" />
             <RideStatusBadge status={activeRide.status} />
