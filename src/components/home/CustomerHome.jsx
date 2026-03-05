@@ -611,9 +611,9 @@ export default function CustomerHome({ user }) {
                 )}
               </div>
             ))}
-          </div>
-          )} {/* end historyTab === "history" */}
-        </div>
+              </div>
+            </div>
+          )}
         <BottomNav screen={screen} setScreen={setScreen} completedRides={completedRides} />
       </Shell>
     );
