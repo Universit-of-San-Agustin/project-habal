@@ -9,7 +9,7 @@ import {
 import MapboxMap from "./MapboxMap";
 import { useToast, ToastContainer } from "./ToastNotification";
 import ChatPanel from "../chat/ChatPanel";
-import WalletScreen from "../customer/WalletScreen";
+import WalletScreen from "../customer/WalletScreen.jsx";
 import SupportScreen from "../customer/SupportScreen";
 import NotificationsPanel from "../customer/NotificationsPanel";
 
