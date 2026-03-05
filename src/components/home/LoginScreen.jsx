@@ -8,11 +8,11 @@ const PRIMARY_DARK = "#1a9ecb";
 const PRIMARY_BG   = "#EBF9FE";
 
 const DEMO_ACCOUNTS = {
-  Customer:   { email: "demo.customer@habal.app",   label: "🚖 Customer" },
-  Rider:      { email: "demo.rider@habal.app",      label: "🏍 Rider" },
-  Dispatcher: { email: "demo.dispatcher@habal.app", label: "📋 Dispatcher" },
-  Operator:   { email: "demo.operator@habal.app",   label: "🏢 Operator" },
-  Admin:      { email: "demo.admin@habal.app",      label: "🛡 Admin" },
+  Customer:   { email: "demo.customer@habal.app",   label: "🚖 Customer",   role: "user" },
+  Rider:      { email: "demo.rider@habal.app",      label: "🏍 Rider",      role: "rider" },
+  Dispatcher: { email: "demo.dispatcher@habal.app", label: "📋 Dispatcher", role: "dispatcher" },
+  Operator:   { email: "demo.operator@habal.app",   label: "🏢 Operator",   role: "operator" },
+  Admin:      { email: "demo.admin@habal.app",      label: "🛡 Admin",      role: "admin" },
 };
 
 const PHONE_RE = /^(\+63|0)9\d{9}$/;
