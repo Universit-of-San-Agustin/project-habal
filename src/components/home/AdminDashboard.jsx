@@ -219,37 +219,11 @@ export default function AdminDashboard({ user }) {
         {/* ZONES */}
         {!loading && tab === "zones" && <ZoneManagement />}
 
+        {/* ANALYTICS */}
+        {!loading && tab === "analytics" && <AnalyticsDashboard networks={networks} riders={riders} bookings={bookings} />}
+
         {/* ENFORCE */}
-        {!loading && tab === "enforce" && (
-          <div className="px-4 pt-4 pb-6 space-y-3">
-            <div className="bg-white rounded-2xl p-4 border border-gray-100">
-              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Platform KPI Thresholds</div>
-              {[
-                { metric: "Dispatch Speed", standard: "≤ 2 minutes" },
-                { metric: "Acceptance Rate", standard: "≥ 70%" },
-                { metric: "Completion Rate", standard: "≥ 85%" },
-                { metric: "Cancellation Rate", standard: "≤ 15%" },
-                { metric: "Customer Rating", standard: "≥ 4.6 / 5.0" },
-              ].map(k => (
-                <div key={k.metric} className="flex justify-between py-2.5 border-b border-gray-50 last:border-0">
-                  <span className="text-sm text-gray-700">{k.metric}</span>
-                  <span className="text-sm font-semibold" style={{ color: PRIMARY }}>{k.standard}</span>
-                </div>
-              ))}
-            </div>
-            <div className="bg-white rounded-2xl p-4 border border-gray-100">
-              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Networks with Issues</div>
-              {networks.filter(n => n.strikes > 0).length === 0 ? (
-                <p className="text-sm text-gray-400">No networks with strikes</p>
-              ) : networks.filter(n => n.strikes > 0).map(n => (
-                <div key={n.id} className="flex justify-between items-center py-2.5 border-b border-gray-50 last:border-0">
-                  <span className="text-sm text-gray-800">{n.name}</span>
-                  <span className="text-sm font-bold text-red-500">{n.strikes} strikes</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {!loading && tab === "enforce" && <EnforcementPanel networks={networks} riders={riders} onRefresh={load} />}
       </div>
     </div>
   );
