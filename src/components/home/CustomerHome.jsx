@@ -690,7 +690,7 @@ export default function CustomerHome({ user }) {
 
       {/* CONFIRM SCREEN */}
       {screen === "confirm" && (
-        <div className="absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-3xl shadow-2xl">
+        <div className="absolute bottom-0 left-0 right-0 z-20 bg-white rounded-t-3xl shadow-2xl slide-up">
           <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mt-3 mb-4" />
           <div className="px-5 pb-8">
             <div className="flex items-center justify-between mb-4">
