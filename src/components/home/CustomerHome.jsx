@@ -545,22 +545,22 @@ export default function CustomerHome({ user }) {
           {historyTab === "scheduled" ? (
             <ScheduledRidesTab user={user} />
           ) : (
-          <div className="px-4">
-            <p className="text-sm text-gray-400 mb-4">{completedRides} completed rides</p>
-          {/* Stats row */}
-          <div className="px-4 mb-4 grid grid-cols-3 gap-3">
-            {[
-              { label: "Completed", value: completedRides, color: "#10b981" },
-              { label: "Cancelled", value: bookings.filter(b => b.status === "cancelled").length, color: "#ef4444" },
-              { label: "Total", value: bookings.length, color: PRIMARY },
-            ].map(s => (
-              <div key={s.label} className="bg-white border border-gray-100 rounded-2xl p-3 text-center shadow-sm">
-                <div className="text-xl font-black" style={{ color: s.color }}>{s.value}</div>
-                <div className="text-[10px] text-gray-400 mt-0.5">{s.label}</div>
+            <div className="px-4">
+              <p className="text-sm text-gray-400 mb-4">{completedRides} completed rides</p>
+              {/* Stats row */}
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                {[
+                  { label: "Completed", value: completedRides, color: "#10b981" },
+                  { label: "Cancelled", value: bookings.filter(b => b.status === "cancelled").length, color: "#ef4444" },
+                  { label: "Total", value: bookings.length, color: PRIMARY },
+                ].map(s => (
+                  <div key={s.label} className="bg-white border border-gray-100 rounded-2xl p-3 text-center shadow-sm">
+                    <div className="text-xl font-black" style={{ color: s.color }}>{s.value}</div>
+                    <div className="text-[10px] text-gray-400 mt-0.5">{s.label}</div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div className="px-4 space-y-3 pb-4">
+              <div className="space-y-3 pb-4">
             {bookings.length === 0 ? (
               <div className="flex flex-col items-center py-20 text-gray-300">
                 <Bike className="w-16 h-16 mb-4 opacity-30" />
