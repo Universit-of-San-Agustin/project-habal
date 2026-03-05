@@ -12,7 +12,7 @@ import AdminAnalytics from "../admin/AdminAnalytics";
 import SupportTicketsPanel from "../admin/SupportTicketsPanel";
 import WalletPanel from "../admin/WalletPanel";
 import LiveMapMonitor from "../admin/LiveMapMonitor";
-import AuditLogPanel from "../admin/AuditLogPanel";
+import SensitiveLogsGate from "../admin/SensitiveLogsGate";
 
 const PRIMARY = "#4DC8F0";
 const PRIMARY_DARK = "#1a9ecb";
