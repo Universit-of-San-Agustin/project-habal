@@ -93,6 +93,9 @@ export default function CustomerHome({ user }) {
   const [rating, setRating] = useState(0);
   const [submittingRating, setSubmittingRating] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [showLiveMap, setShowLiveMap] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduledAt, setScheduledAt] = useState(null); // ISO string when scheduling
 
 
 
