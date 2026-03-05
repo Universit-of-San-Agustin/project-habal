@@ -253,7 +253,8 @@ export default function LoginScreen({ onLogin }) {
         </div>
       </div>
 
-      <Btn onClick={handleRealAuth} loading={loading} className="mt-6">Sign In</Btn>
+      {error && <p className="text-red-500 text-xs mt-2 text-center">{error}</p>}
+      <Btn onClick={handleLogin} loading={loading} className="mt-4">Sign In</Btn>
 
       {/* Divider */}
       <div className="flex items-center gap-3 my-5">
