@@ -760,7 +760,7 @@ export default function CustomerHome({ user }) {
       {/* SEARCHING */}
       {screen === "searching" && (
         <div className="absolute inset-0 z-20 bg-white flex flex-col">
-          <div className="flex-1 flex flex-col items-center justify-center px-8">
+          <div className="flex-1 flex flex-col items-center justify-center px-8 fade-in">
             <div className="relative mb-10">
               <div className="w-32 h-32 rounded-full flex items-center justify-center" style={{ background: PRIMARY_BG }}>
                 <div className="w-24 h-24 rounded-full flex items-center justify-center" style={{ background: "#D6F3FC" }}>
