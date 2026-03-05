@@ -180,28 +180,48 @@ export default function WalletScreen({ user, bookings }) {
       {/* Transactions */}
       <div className="px-4">
         <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Recent Transactions</div>
-        {completedBookings.length === 0 ? (
+        {walletTxns.length === 0 && completedBookings.length === 0 ? (
           <div className="flex flex-col items-center py-12 text-gray-300">
             <CreditCard className="w-12 h-12 mb-3 opacity-30" />
             <p className="text-sm text-gray-400">No transactions yet</p>
-            <p className="text-xs text-gray-300 mt-1">Complete a ride to see your history</p>
+            <p className="text-xs text-gray-300 mt-1">Top up or complete a ride to see history</p>
           </div>
-        ) : completedBookings.slice(0, 15).map(b => (
-          <div key={b.id} className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 mb-2 shadow-sm">
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl flex-shrink-0" style={{ background: "#fef3c7" }}>🏍</div>
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold text-gray-800 text-sm truncate">
-                Ride to {b.dropoff_address?.split(",")[0]}
+        ) : (
+          <>
+            {walletTxns.slice(0, 10).map(tx => (
+              <div key={tx.id} className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 mb-2 shadow-sm">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl flex-shrink-0"
+                  style={{ background: (tx.type === "credit" || tx.type === "refund") ? "#f0fdf4" : "#fff1f2" }}>
+                  {(tx.type === "credit" || tx.type === "refund") ? "💳" : "📤"}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-gray-800 text-sm truncate">{tx.description}</div>
+                  <div className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {tx.created_date ? new Date(tx.created_date).toLocaleDateString("en-PH", { month: "short", day: "numeric" }) : "—"}
+                  </div>
+                </div>
+                <div className={`font-black text-sm flex-shrink-0 ${(tx.type === "credit" || tx.type === "refund") ? "text-emerald-600" : "text-red-500"}`}>
+                  {(tx.type === "credit" || tx.type === "refund") ? "+" : "-"}₱{tx.amount?.toLocaleString()}
+                </div>
               </div>
-              <div className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {b.created_date ? new Date(b.created_date).toLocaleDateString("en-PH", { month: "short", day: "numeric" }) : "—"}
-                <span className="ml-1 capitalize">{b.payment_method || "cash"}</span>
+            ))}
+            {completedBookings.slice(0, 10).map(b => (
+              <div key={b.id} className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 mb-2 shadow-sm">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl flex-shrink-0" style={{ background: "#fef3c7" }}>🏍</div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-gray-800 text-sm truncate">Ride to {b.dropoff_address?.split(",")[0]}</div>
+                  <div className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {b.created_date ? new Date(b.created_date).toLocaleDateString("en-PH", { month: "short", day: "numeric" }) : "—"}
+                    <span className="ml-1 capitalize">{b.payment_method || "cash"}</span>
+                  </div>
+                </div>
+                <div className="font-black text-red-500 text-sm flex-shrink-0">-₱{b.fare_estimate}</div>
               </div>
-            </div>
-            <div className="font-black text-gray-900 text-sm flex-shrink-0">-₱{b.fare_estimate}</div>
-          </div>
-        ))}
+            ))}
+          </>
+        )}
       </div>
     </div>
   );
