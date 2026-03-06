@@ -331,7 +331,7 @@ export default function RiderDashboard({ user }) {
             {[
               { label: "Completed", value: totalCompleted, color: GREEN },
               { label: "Cancelled", value: tripHistory.filter(b => b.status === "cancelled").length, color: "#ef4444" },
-              { label: "Total", value: tripHistory.length, color: "#6366f1" },
+              { label: "Total", value: tripHistory.length, color: PRIMARY },
             ].map(s => (
               <div key={s.label} className="bg-white border border-gray-100 rounded-2xl p-3 text-center shadow-sm">
                 <div className="text-lg font-black" style={{ color: s.color }}>{s.value}</div>
