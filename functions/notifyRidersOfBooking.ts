@@ -11,25 +11,50 @@ Deno.serve(async (req) => {
 
     const db = base44.asServiceRole;
 
-    // 1. Get the booking
-    const bookings = await db.entities.Booking.filter({ booking_id }, "-created_date", 1);
-    const booking = bookings?.[0];
+    // 1. Get the booking (support both booking_id string and internal id)
+    let booking = null;
+    const byBookingId = await db.entities.Booking.filter({ booking_id }, "-created_date", 1);
+    booking = byBookingId?.[0];
     if (!booking) return Response.json({ error: 'Booking not found' }, { status: 404 });
 
-    // 2. Find all online riders in the same zone
-    const riders = await db.entities.Rider.filter({
+    // Only notify for pending/searching bookings
+    if (!["pending", "searching"].includes(booking.status)) {
+      return Response.json({ notified: 0, message: 'Booking not in notifiable state', status: booking.status });
+    }
+
+    // 2. Mark booking as searching
+    await db.entities.Booking.update(booking.id, { status: "searching" }).catch(() => {});
+
+    // 3. Find all online active riders in the same zone
+    let riders = await db.entities.Rider.filter({
       status: "active",
       online_status: "online",
       zone: booking.zone || "City Proper",
     }, "-avg_rating", 100);
 
+    // Also try without zone constraint if no riders found
     if (!riders || riders.length === 0) {
-      return Response.json({ notified: 0, message: 'No riders online in this zone' });
+      riders = await db.entities.Rider.filter({
+        status: "active",
+        online_status: "online",
+      }, "-avg_rating", 100);
     }
 
-    // 3. Create notification records for each rider
-    // In production, you'd use real-time messaging (WebSocket, Firebase, Pusher, etc.)
-    // For now, we log the notification so riders can poll for it
+    if (!riders || riders.length === 0) {
+      return Response.json({ notified: 0, message: 'No riders online' });
+    }
+
+    // 4. Clear old unread booking notifications for this booking to avoid duplicates
+    const existingNotifs = await db.entities.Notification.filter({
+      reference_id: booking.id,
+      type: "booking",
+      read_status: false,
+    }, "-created_date", 200).catch(() => []);
+    for (const n of (existingNotifs || [])) {
+      await db.entities.Notification.update(n.id, { read_status: true }).catch(() => {});
+    }
+
+    // 5. Create fresh notification records for each eligible rider
     const notifications = [];
     for (const rider of riders) {
       try {
@@ -37,7 +62,7 @@ Deno.serve(async (req) => {
           user_id: rider.id,
           user_type: "rider",
           title: "New Ride Request",
-          message: `${booking.customer_name} is requesting a ride from ${booking.pickup_address}. Accept to get ₱${booking.fare_estimate}!`,
+          message: `${booking.customer_name} needs a ride from ${booking.pickup_address}`,
           type: "booking",
           read_status: false,
           reference_id: booking.id,

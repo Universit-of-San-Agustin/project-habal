@@ -13,16 +13,11 @@ function haversineKm(lat1, lng1, lat2, lng2) {
 }
 
 // Score a rider (higher = better match)
-// Weights: proximity 50%, rating 30%, acceptance_rate 20%
 function scoreRider(rider, riderLoc, bookingLoc) {
   const distKm = haversineKm(riderLoc.lat, riderLoc.lng, bookingLoc.lat, bookingLoc.lng);
-  // Proximity: 0–1, best at 0km, drops off at 5km+
   const proximityScore = Math.max(0, 1 - distKm / 5);
-  // Rating: normalize 0–5 → 0–1
   const ratingScore = (rider.avg_rating || 4) / 5;
-  // Acceptance rate: 0–100 → 0–1
   const acceptanceScore = (rider.acceptance_rate || 80) / 100;
-
   return proximityScore * 0.5 + ratingScore * 0.3 + acceptanceScore * 0.2;
 }
 
@@ -35,29 +30,33 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'booking_id required' }, { status: 400 });
     }
 
-    // Service role for all DB ops — avoids auth errors
     const db = base44.asServiceRole;
 
     // 1. Fetch the booking
     const bookings = await db.entities.Booking.filter({ booking_id }, "-created_date", 1);
     const booking = bookings?.[0];
     if (!booking) return Response.json({ error: 'Booking not found' }, { status: 404 });
-    if (booking.rider_id) return Response.json({ message: 'Booking already assigned', booking });
+
+    // Only process pending or searching bookings
+    if (!["pending", "searching"].includes(booking.status)) {
+      return Response.json({ message: 'Booking not in matchable state', status: booking.status });
+    }
 
     // 2. Get all active + online riders in the same zone
-    const riders = await db.entities.Rider.filter({
+    let riders = await db.entities.Rider.filter({
       status: "active",
       online_status: "online",
       ...(booking.zone ? { zone: booking.zone } : {}),
     }, "-avg_rating", 50);
 
     if (!riders?.length) {
-      // No riders in zone — try any online active rider
       const allRiders = await db.entities.Rider.filter({ status: "active", online_status: "online" }, "-avg_rating", 50);
       if (!allRiders?.length) {
+        // No riders available — keep booking as searching so it can be picked up later
+        await db.entities.Booking.update(booking.id, { status: "searching" }).catch(() => {});
         return Response.json({ matched: false, reason: 'No available riders online' });
       }
-      riders.push(...allRiders);
+      riders = allRiders;
     }
 
     // 3. Get GPS locations for all candidate riders
@@ -70,35 +69,33 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 4. Geocode the booking pickup address to get coordinates
+    // 4. Geocode booking pickup address
     let bookingLat = null, bookingLng = null;
-    try {
-      const geoRes = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(booking.pickup_address)}.json?access_token=${MAPBOX_TOKEN}&limit=1&country=PH`
-      );
-      const geoData = await geoRes.json();
-      if (geoData.features?.[0]?.center) {
-        [bookingLng, bookingLat] = geoData.features[0].center;
-      }
-    } catch (_) {}
+    if (MAPBOX_TOKEN) {
+      try {
+        const geoRes = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(booking.pickup_address)}.json?access_token=${MAPBOX_TOKEN}&limit=1&country=PH`
+        );
+        const geoData = await geoRes.json();
+        if (geoData.features?.[0]?.center) {
+          [bookingLng, bookingLat] = geoData.features[0].center;
+        }
+      } catch (_) {}
+    }
 
     // 5. Score and rank riders
     let bestRider = null;
     let bestScore = -1;
 
     for (const rider of riders) {
-      // Skip riders already on a trip
       if (rider.online_status === "on_trip") continue;
-
       const loc = locMap[rider.id];
       let score;
       if (loc && bookingLat !== null) {
         score = scoreRider(rider, loc, { lat: bookingLat, lng: bookingLng });
       } else {
-        // No GPS available — fall back to rating + acceptance only
         score = ((rider.avg_rating || 4) / 5) * 0.6 + ((rider.acceptance_rate || 80) / 100) * 0.4;
       }
-
       if (score > bestScore) {
         bestScore = score;
         bestRider = rider;
@@ -109,33 +106,47 @@ Deno.serve(async (req) => {
       return Response.json({ matched: false, reason: 'No suitable rider found' });
     }
 
-    // 6. Assign booking to best rider
+    // 6. Create a notification for the best rider — DO NOT assign yet.
+    //    The rider must explicitly Accept from the popup.
     const now = new Date().toISOString();
-    const updated = await db.entities.Booking.update(booking.id, {
-      status: "assigned",
-      rider_id: bestRider.id,
-      rider_name: bestRider.full_name,
-      rider_phone: bestRider.phone || bestRider.email,
-      assigned_at: now,
+
+    // Clear any old notifications for this booking for this rider
+    const oldNotifs = await db.entities.Notification.filter({
+      user_id: bestRider.id,
+      reference_id: booking.id,
+      type: "booking",
+    }, "-created_date", 10).catch(() => []);
+    for (const n of (oldNotifs || [])) {
+      await db.entities.Notification.update(n.id, { read_status: true }).catch(() => {});
+    }
+
+    await db.entities.Notification.create({
+      user_id: bestRider.id,
+      user_type: "rider",
+      title: "New Ride Request",
+      message: `${booking.customer_name} needs a ride from ${booking.pickup_address}`,
+      type: "booking",
+      read_status: false,
+      reference_id: booking.id,
+      reference_type: "booking",
     });
 
-    // 7. Update rider online status to on_trip
-    await db.entities.Rider.update(bestRider.id, { online_status: "on_trip" });
+    // Mark booking as searching (waiting for rider to accept)
+    await db.entities.Booking.update(booking.id, { status: "searching" });
 
-    // 8. Log booking event
     await db.entities.BookingEvent.create({
       booking_id: booking.id,
       event_type: "RIDER_ASSIGNED",
       actor_role: "system",
       actor_name: "Auto-Match",
-      details: `Matched rider ${bestRider.full_name} (score: ${bestScore.toFixed(2)})`,
+      details: `Dispatched to rider ${bestRider.full_name} (score: ${bestScore.toFixed(2)}) — awaiting acceptance`,
       timestamp: now,
     });
 
     return Response.json({
       matched: true,
       rider: { id: bestRider.id, name: bestRider.full_name, score: bestScore },
-      booking: updated,
+      status: 'notification_sent',
     });
 
   } catch (error) {
