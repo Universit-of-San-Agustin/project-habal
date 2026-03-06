@@ -635,6 +635,7 @@ export default function CustomerHome({ user }) {
 
   // ── HISTORY ─────────────────────────────────────────────────
   const [historyTab, setHistoryTab] = useState("history");
+  const [selectedRide, setSelectedRide] = useState(null);
   if (screen === "history") {
     return (
       <Shell>
