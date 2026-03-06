@@ -679,13 +679,14 @@ export default function CustomerHome({ user }) {
                     </button>
                   </div>
                 ) : bookings.map(b => (
-                   <div key={b.id} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                   <button key={b.id} onClick={() => setSelectedRide(b)}
+                     className="w-full bg-white border border-gray-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow text-left">
                      <div className="flex items-start justify-between mb-3">
                        <div className="flex items-center gap-3">
                          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: PRIMARY_BG }}>🏍</div>
                          <div className="flex-1">
                            <div className="font-bold text-gray-900 text-sm">{b.booking_id || b.id?.slice(0, 8)}</div>
-                           <div className="text-xs text-gray-500">{b.created_date ? new Date(b.created_date).toLocaleDateString("en-PH", { month: "short", day: "numeric" }) : ""}</div>
+                           <div className="text-xs text-gray-500">{b.created_date ? new Date(b.created_date).toLocaleDateString("en-PH", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : ""}</div>
                          </div>
                        </div>
                        <StatusPill status={b.status} />
@@ -705,18 +706,11 @@ export default function CustomerHome({ user }) {
                        {b.fare_estimate && <span className="font-bold text-gray-900">₱{b.fare_estimate}</span>}
                        {b.customer_rating && (
                          <div className="flex gap-0.5">
-                           {[1,2,3,4,5].map(n => <span key={n} className="text-xs">{n <= b.customer_rating ? "★" : "☆"}</span>)}
+                           {[1,2,3,4,5].map(n => <span key={n} className="text-xs" style={{ color: n <= b.customer_rating ? "#f59e0b" : "#e5e7eb" }}>★</span>)}
                          </div>
                        )}
                      </div>
-                     {b.status === "completed" && (
-                       <button onClick={() => handleRepeatRide(b)}
-                         className="w-full mt-3 py-2 rounded-xl text-xs font-bold text-center transition-all"
-                         style={{ background: PRIMARY_BG, color: PRIMARY_DARK }}>
-                         Repeat this ride
-                       </button>
-                     )}
-                   </div>
+                   </button>
                 ))}
                 </div>
                 </div>
