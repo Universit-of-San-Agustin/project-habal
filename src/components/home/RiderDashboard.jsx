@@ -10,6 +10,10 @@ import MapboxMap from "./MapboxMap";
 import ChatPanel from "../chat/ChatPanel";
 
 const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/fe9d5d17d_habal.png";
+const PRIMARY = "#4DC8F0";
+const PRIMARY_DARK = "#1a9ecb";
+const PRIMARY_BG = "#EBF9FE";
+// Keep green for positive/earnings accents only
 const GREEN = "#10b981";
 const GREEN_DARK = "#059669";
 const GREEN_BG = "#f0fdf4";
