@@ -373,6 +373,11 @@ export default function MapboxMap({
           0%   { transform: scale(1); opacity: 0.8; }
           100% { transform: scale(2.2); opacity: 0; }
         }
+        @keyframes pinDrop {
+          0%   { transform: translateY(-16px); opacity: 0; }
+          60%  { transform: translateY(3px); }
+          100% { transform: translateY(0); opacity: 1; }
+        }
       `}</style>
       <div ref={containerRef} className={className} />
     </>
