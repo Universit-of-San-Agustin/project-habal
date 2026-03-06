@@ -621,7 +621,7 @@ export default function RiderDashboard({ user }) {
           <div className="px-4 mt-4">
             <div className="flex items-center justify-between mb-3">
               <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Recent Trips</div>
-              <button onClick={() => setScreen("history")} className="text-xs font-semibold" style={{ color: GREEN }}>See all</button>
+              <button onClick={() => setScreen("history")} className="text-xs font-semibold" style={{ color: PRIMARY }}>See all</button>
             </div>
             {tripHistory.slice(0, 3).map(b => (
               <div key={b.id} className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 mb-2 shadow-sm">
