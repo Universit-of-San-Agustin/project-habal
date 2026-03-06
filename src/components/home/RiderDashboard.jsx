@@ -412,8 +412,8 @@ export default function RiderDashboard({ user }) {
               <ChevronLeft className="w-5 h-5 text-gray-700" />
             </button>
             <div className="bg-white rounded-2xl shadow-md px-3 py-2 pointer-events-auto">
-              <div className={`flex items-center gap-2 text-sm font-bold ${isOnline ? "text-emerald-600" : "text-gray-500"}`}>
-                <div className={`w-2 h-2 rounded-full ${isOnline ? "bg-emerald-500 animate-pulse" : "bg-gray-400"}`} />
+              <div className="flex items-center gap-2 text-sm font-bold" style={{ color: isOnline ? PRIMARY_DARK : "#6b7280" }}>
+                <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: isOnline ? PRIMARY : "#9ca3af" }} />
                 {isOnline ? "Online" : "Offline"}
               </div>
             </div>
