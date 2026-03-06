@@ -787,25 +787,32 @@ export default function CustomerHome({ user }) {
       )}
 
       {/* Map Bottom Bar */}
-      {screen === "map" && (
+      {screen === "map" && !pinMode && (
         <div className="absolute bottom-16 left-0 right-0 z-10 px-4 pb-3">
-          {pickup && (
-            <div className="bg-white rounded-xl shadow-md border border-gray-100 px-4 py-3 flex items-center gap-3 mb-2">
-              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: PRIMARY }} />
-              <div className="flex-1 min-w-0">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Pickup</div>
-                <div className="text-sm font-medium text-gray-800 truncate">{pickup}</div>
-              </div>
+          {/* Pickup row */}
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 px-3 py-2.5 flex items-center gap-2.5 mb-2">
+            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: PRIMARY }} />
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Pickup</div>
+              <div className="text-sm font-medium text-gray-800 truncate">{pickup || "Your current location"}</div>
             </div>
-          )}
-          <button onClick={() => setScreen("search")}
+            <button onClick={() => { setSearchMode("pickup"); setScreen("search"); setSuggestions([]); }}
+              className="text-xs font-bold px-2.5 py-1 rounded-lg flex-shrink-0"
+              style={{ background: PRIMARY_BG, color: PRIMARY_DARK }}>Edit</button>
+            <button onClick={() => setPinMode("pickup")}
+              className="text-xs font-bold px-2 py-1 rounded-lg flex-shrink-0 border border-gray-200 text-gray-500 hover:bg-gray-50">
+              📌
+            </button>
+          </div>
+          {/* Destination row */}
+          <button onClick={() => { setSearchMode("dropoff"); setScreen("search"); setSuggestions([]); }}
             className="w-full bg-white rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow px-4 py-4 flex items-center gap-3 text-left">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-lg" style={{ background: PRIMARY_BG }}>
               📍
             </div>
             <div className="flex-1">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Where to?</div>
-              <div className="text-sm font-medium text-gray-700 mt-0.5">Enter destination</div>
+              <div className="text-sm font-medium text-gray-700 mt-0.5">{dropoff || "Enter destination"}</div>
             </div>
             <ChevronRight className="w-5 h-5 text-gray-300" />
           </button>
