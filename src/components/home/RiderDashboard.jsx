@@ -595,8 +595,8 @@ export default function RiderDashboard({ user }) {
           <div className="grid grid-cols-2 gap-3">
             <button onClick={() => setScreen("map")}
               className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3.5 shadow-sm">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: GREEN_BG }}>
-                <Navigation className="w-5 h-5" style={{ color: GREEN }} />
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: PRIMARY_BG }}>
+                <Navigation className="w-5 h-5" style={{ color: PRIMARY }} />
               </div>
               <div className="text-left">
                 <div className="font-semibold text-gray-800 text-sm">Open Map</div>
