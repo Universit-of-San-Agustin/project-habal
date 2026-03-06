@@ -762,11 +762,11 @@ function RiderProfileScreen({ user, riderData, setRiderData, screen, setScreen, 
       {IncomingPopup}
       <div className="flex-1 overflow-y-auto pb-20">
         {/* Hero */}
-        <div className="px-4 pt-12 pb-6" style={{ background: `linear-gradient(160deg, ${GREEN} 0%, ${GREEN_DARK} 100%)` }}>
+        <div className="px-4 pt-12 pb-6" style={{ background: `linear-gradient(160deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)` }}>
           <div className="flex flex-col items-center">
             <div className="w-20 h-20 rounded-3xl bg-white/20 border-2 border-white/30 flex items-center justify-center text-4xl mb-3">🏍</div>
             <div className="font-bold text-white text-lg">{user?.full_name}</div>
-            <div className="text-green-100 text-xs mt-0.5">{user?.email}</div>
+            <div className="text-blue-100 text-xs mt-0.5">{user?.email}</div>
             <div className="flex items-center gap-2 mt-3">
               <span className="px-3 py-1 bg-white/20 rounded-full text-white text-[10px] font-bold">
                 {riderData?.avg_rating ? `⭐ ${riderData.avg_rating.toFixed(1)}` : "⭐ New"}
