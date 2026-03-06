@@ -803,7 +803,7 @@ function RiderProfileScreen({ user, riderData, setRiderData, screen, setScreen, 
         <div className="px-4 pb-4 space-y-2">
           <button onClick={handleSave} disabled={saving || !riderData?.id}
             className="w-full py-4 text-white font-bold rounded-2xl text-sm disabled:opacity-60"
-            style={{ background: `linear-gradient(135deg, ${GREEN} 0%, ${GREEN_DARK} 100%)` }}>
+            style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)`, boxShadow: `0 4px 12px ${PRIMARY}35` }}>
             {saved ? "✓ Saved!" : saving ? "Saving..." : "Save Changes"}
           </button>
           <button onClick={() => base44.auth.logout()}
