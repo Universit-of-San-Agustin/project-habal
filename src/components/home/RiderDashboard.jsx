@@ -625,7 +625,7 @@ export default function RiderDashboard({ user }) {
             </div>
             {tripHistory.slice(0, 3).map(b => (
               <div key={b.id} className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 mb-2 shadow-sm">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-lg flex-shrink-0">🏍</div>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0" style={{ background: PRIMARY_BG }}>🏍</div>
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-gray-800 text-sm truncate">{b.customer_name}</div>
                   <div className="text-xs text-gray-400 truncate">{b.dropoff_address?.split(",")[0]}</div>
