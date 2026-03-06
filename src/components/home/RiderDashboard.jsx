@@ -548,15 +548,15 @@ export default function RiderDashboard({ user }) {
         {activeBooking && (
           <button onClick={() => setScreen("map")}
             className="mx-4 mt-4 w-[calc(100%-2rem)] flex items-center gap-3 rounded-2xl px-4 py-3.5 shadow-sm border-2"
-            style={{ background: GREEN_BG, borderColor: GREEN + "40" }}>
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: GREEN }}>
+            style={{ background: PRIMARY_BG, borderColor: PRIMARY + "40" }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: PRIMARY }}>
               <Bike className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 text-left">
-              <div className="font-bold text-emerald-700 text-sm">Active Trip</div>
-              <div className="text-xs text-emerald-600/70 mt-0.5 truncate">{activeBooking.customer_name} · {activeBooking.status}</div>
+              <div className="font-bold text-sm" style={{ color: PRIMARY_DARK }}>Active Trip</div>
+              <div className="text-xs mt-0.5 truncate" style={{ color: PRIMARY_DARK + "b0" }}>{activeBooking.customer_name} · {activeBooking.status}</div>
             </div>
-            <div className="text-xs font-bold px-3 py-1.5 bg-emerald-500 text-white rounded-xl">View →</div>
+            <div className="text-xs font-bold px-3 py-1.5 text-white rounded-xl" style={{ background: PRIMARY }}>View →</div>
           </button>
         )}
 
