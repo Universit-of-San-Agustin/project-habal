@@ -297,7 +297,7 @@ export default function RiderDashboard({ user }) {
             </button>
             <button onClick={handleAccept} disabled={processing}
               className="flex-1 py-4 text-white font-bold rounded-2xl flex items-center justify-center gap-2 text-base disabled:opacity-50 shadow-lg"
-              style={{ background: `linear-gradient(135deg, ${GREEN} 0%, ${GREEN_DARK} 100%)`, boxShadow: "0 6px 24px rgba(16,185,129,0.35)" }}>
+              style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)`, boxShadow: `0 6px 24px ${PRIMARY}50` }}>
               {processing
                 ? <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
                 : <><CheckCircle className="w-5 h-5" /> Accept</>}
