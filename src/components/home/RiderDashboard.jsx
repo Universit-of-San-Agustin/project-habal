@@ -361,7 +361,7 @@ export default function RiderDashboard({ user }) {
               </div>
               <div className="space-y-1 mb-2">
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <div className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
+                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: PRIMARY }} />
                   <span className="truncate">{b.pickup_address}</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
