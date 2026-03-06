@@ -673,8 +673,8 @@ function BottomNav({ screen, setScreen, hasActive }) {
     { id: "profile",  label: "Profile",  icon: User },
   ];
   return (
-    <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex px-2 pb-2 pt-1"
-      style={{ height: 64, boxShadow: "0 -4px 20px rgba(16,185,129,0.07)" }}>
+    <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex px-2 pb-2 pt-2"
+      style={{ height: 64, boxShadow: "0 -2px 12px rgba(0,0,0,0.06)" }}>
       {tabs.map(({ id, label, icon: Icon }) => {
         const active = screen === id;
         return (
@@ -683,11 +683,11 @@ function BottomNav({ screen, setScreen, hasActive }) {
             {id === "map" && hasActive && (
               <div className="absolute top-1 right-1/4 w-2 h-2 rounded-full bg-red-500 animate-pulse" />
             )}
-            <div className="w-11 h-7 rounded-2xl flex items-center justify-center transition-all duration-200"
-              style={active ? { background: GREEN_BG } : {}}>
-              <Icon className="w-5 h-5" style={{ color: active ? GREEN : "#c4cdd8", transition: "color 0.2s" }} />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200"
+              style={active ? { background: PRIMARY_BG } : {}}>
+              <Icon className="w-5 h-5" style={{ color: active ? PRIMARY : "#b0b5c0", transition: "color 0.2s" }} />
             </div>
-            <span className="text-[10px] font-semibold" style={{ color: active ? GREEN : "#c4cdd8", transition: "color 0.2s" }}>{label}</span>
+            <span className="text-[10px] font-semibold leading-none" style={{ color: active ? PRIMARY : "#b0b5c0", transition: "color 0.2s" }}>{label}</span>
           </button>
         );
       })}
