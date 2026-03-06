@@ -519,7 +519,7 @@ export default function RiderDashboard({ user }) {
       {IncomingPopup}
       <div className="flex-1 overflow-y-auto pb-20">
         {/* Header */}
-        <div className="px-4 pt-12 pb-5" style={{ background: `linear-gradient(160deg, ${GREEN} 0%, ${GREEN_DARK} 100%)` }}>
+        <div className="px-4 pt-12 pb-5" style={{ background: `linear-gradient(160deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)` }}>
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-white/20 border-2 border-white/30 flex items-center justify-center text-2xl font-bold text-white">
@@ -535,8 +535,10 @@ export default function RiderDashboard({ user }) {
           {/* Online toggle */}
           <button
             onClick={() => setIsOnline(o => !o)}
-            className={`w-full py-3.5 rounded-2xl font-bold text-base flex items-center justify-center gap-3 transition-all ${isOnline ? "bg-white text-emerald-600" : "bg-white/20 text-white border-2 border-white/30"}`}>
-            <div className={`w-3 h-3 rounded-full ${isOnline ? "bg-emerald-500 shadow-md" : "bg-white/50"}`} />
+            className={`w-full py-3.5 rounded-2xl font-bold text-base flex items-center justify-center gap-3 transition-all ${isOnline ? "bg-white" : "bg-white/20 text-white border-2 border-white/30"}`}
+            style={isOnline ? { color: PRIMARY_DARK } : {}}>
+            <div className={`w-3 h-3 rounded-full ${isOnline ? "shadow-md" : "bg-white/50"}`}
+              style={isOnline ? { background: PRIMARY_DARK } : {}} />
             {isOnline ? "● You are Online" : "○ You are Offline"}
             <span className="text-xs font-normal opacity-60">(tap to {isOnline ? "go offline" : "go online"})</span>
           </button>
