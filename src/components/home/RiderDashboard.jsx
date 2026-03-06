@@ -492,10 +492,10 @@ export default function RiderDashboard({ user }) {
             <div className="bg-white/95 backdrop-blur-sm rounded-t-3xl px-5 py-5 shadow-2xl">
               <div className="flex items-center gap-3">
                 <div className="relative w-10 h-10 flex-shrink-0">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: GREEN_BG }}>
-                    <Bike className="w-5 h-5" style={{ color: GREEN }} />
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: PRIMARY_BG }}>
+                    <Bike className="w-5 h-5" style={{ color: PRIMARY }} />
                   </div>
-                  {isOnline && <div className="absolute inset-0 rounded-full animate-ping" style={{ background: "rgba(16,185,129,0.2)", animationDuration: "2s" }} />}
+                  {isOnline && <div className="absolute inset-0 rounded-full animate-ping" style={{ background: `${PRIMARY}33`, animationDuration: "2s" }} />}
                 </div>
                 <div>
                   <div className="font-bold text-gray-900 text-sm">{isOnline ? "Waiting for ride requests" : "You are offline"}</div>
