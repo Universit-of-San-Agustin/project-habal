@@ -653,7 +653,7 @@ function Shell({ children, noScroll }) {
 
 function ScreenHeader({ title, onBack }) {
   return (
-    <div className="flex items-center gap-3 px-4 pt-12 pb-4 bg-white border-b border-gray-100">
+    <div className="flex items-center gap-3 px-4 pt-12 pb-4 border-b border-gray-100">
       {onBack && (
         <button onClick={onBack} className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center">
           <ChevronLeft className="w-4 h-4 text-gray-600" />
