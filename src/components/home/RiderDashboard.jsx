@@ -176,10 +176,23 @@ export default function RiderDashboard({ user }) {
     if (!incomingBooking) return;
     if (timerRef.current) clearTimeout(timerRef.current);
     setProcessing(true);
-    await base44.entities.Booking.update(incomingBooking.id, { status: "assigned", assigned_at: new Date().toISOString() });
-    await base44.entities.BookingEvent.create({ booking_id: incomingBooking.id, event_type: "RIDER_ACCEPTED", actor_role: "rider", actor_name: user?.full_name, timestamp: new Date().toISOString() });
+    // Assign booking to this rider now that they've accepted
+    const updated = await base44.entities.Booking.update(incomingBooking.id, {
+      status: "assigned",
+      rider_id: riderData.id,
+      rider_name: user?.full_name,
+      rider_phone: riderData?.phone || user?.email,
+      assigned_at: new Date().toISOString(),
+    });
+    await base44.entities.BookingEvent.create({
+      booking_id: incomingBooking.id,
+      event_type: "RIDER_ACCEPTED",
+      actor_role: "rider",
+      actor_name: user?.full_name,
+      timestamp: new Date().toISOString(),
+    });
     await base44.entities.Rider.update(riderData.id, { online_status: "on_trip" }).catch(() => {});
-    setActiveBooking({ ...incomingBooking, status: "assigned" });
+    setActiveBooking(updated || { ...incomingBooking, status: "assigned", rider_id: riderData.id, rider_name: user?.full_name });
     setIncomingBooking(null);
     setProcessing(false);
     setScreen("map");
