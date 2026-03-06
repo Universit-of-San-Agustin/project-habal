@@ -200,6 +200,9 @@ export default function CustomerHome({ user }) {
     setPickup(addr);
   }, []);
 
+  const [searchMode, setSearchMode] = useState("dropoff"); // "pickup" | "dropoff"
+  const [pickupInput, setPickupInput] = useState("");
+
   const handleDropoffChange = useCallback((value) => {
     setDropoffInput(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -209,23 +212,67 @@ export default function CustomerHome({ user }) {
     }, 350);
   }, []);
 
+  const handlePickupInputChange = useCallback((value) => {
+    setPickupInput(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      if (value.length >= 3) setSuggestions(await forwardGeocode(value));
+      else setSuggestions([]);
+    }, 350);
+  }, []);
+
+  // Recalculate fare whenever both coords are known (debounced)
+  const triggerFareCalc = useCallback((pCoords, dCoords, pAddr, dAddr) => {
+    if (!pCoords || !dCoords) return;
+    if (fareDebounceRef.current) clearTimeout(fareDebounceRef.current);
+    setFareLoading(true);
+    setFareEstimate(null);
+    fareDebounceRef.current = setTimeout(async () => {
+      const fareData = await calculateRealFare(pCoords, dCoords, pAddr, dAddr);
+      setFareLoading(false);
+      setFareEstimate(fareData?.fare || 40);
+    }, 400);
+  }, []);
+
   const selectSuggestion = useCallback(async (s) => {
-    const dCoords = { lng: s.center[0], lat: s.center[1] };
-    setDropoff(s.place_name);
-    setDropoffInput(s.place_name);
-    setDropoffCoords(dCoords);
+    const coords = { lng: s.center[0], lat: s.center[1] };
     setSuggestions([]);
-    setFareEstimate(null); // show loading
-    setScreen("confirm");
-    // Calculate real fare in background
-    const fareData = await calculateRealFare(pickupCoords, dCoords, pickup, s.place_name);
-    if (fareData?.fare) {
-      setFareEstimate(fareData.fare);
+    if (searchMode === "pickup") {
+      setPickup(s.place_name);
+      setPickupInput(s.place_name);
+      setPickupCoords(coords);
+      setSearchMode("dropoff");
+      // If dropoff already set, recalculate
+      if (dropoffCoords) {
+        triggerFareCalc(coords, dropoffCoords, s.place_name, dropoff);
+      }
     } else {
-      // Fallback to a minimum fare if backend fails
-      setFareEstimate(40);
+      setDropoff(s.place_name);
+      setDropoffInput(s.place_name);
+      setDropoffCoords(coords);
+      setFareEstimate(null);
+      setScreen("confirm");
+      triggerFareCalc(pickupCoords, coords, pickup, s.place_name);
     }
-  }, [pickupCoords, pickup]);
+  }, [searchMode, pickupCoords, dropoffCoords, pickup, dropoff, triggerFareCalc]);
+
+  // Handle pin placement from map
+  const handlePinPlaced = useCallback(async ({ lng, lat, address }) => {
+    if (pinMode === "pickup") {
+      setPickup(address);
+      setPickupInput(address);
+      setPickupCoords({ lng, lat });
+      setPinMode(null);
+      if (dropoffCoords) triggerFareCalc({ lng, lat }, dropoffCoords, address, dropoff);
+    } else if (pinMode === "dropoff") {
+      setDropoff(address);
+      setDropoffInput(address);
+      setDropoffCoords({ lng, lat });
+      setPinMode(null);
+      setScreen("confirm");
+      triggerFareCalc(pickupCoords, { lng, lat }, pickup, address);
+    }
+  }, [pinMode, pickupCoords, dropoffCoords, pickup, dropoff, triggerFareCalc]);
 
   const handleRepeatRide = async (b) => {
     setPickup(b.pickup_address);
