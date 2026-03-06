@@ -7,10 +7,21 @@ import RiderDashboard from "../components/home/RiderDashboard";
 import DispatcherDashboard from "../components/home/DispatcherDashboard";
 import NetworkOwnerDashboard from "../components/home/NetworkOwnerDashboard";
 import AdminDashboard from "../components/home/AdminDashboard";
+import DemoRoleSwitcher from "../components/home/DemoRoleSwitcher";
+
+// Demo users for each role — mirrors the demo logins in LoginScreen
+const DEMO_USERS = {
+  customer: { id: "demo-customer", full_name: "Demo Customer", email: "demo.customer@habal.app", role: "user" },
+  rider:    { id: "demo-rider",    full_name: "Demo Rider",    email: "demo.rider@habal.app",    role: "rider" },
+  operator: { id: "demo-operator", full_name: "Demo Operator", email: "demo.operator@habal.app", role: "operator" },
+  admin:    { id: "demo-admin",    full_name: "Demo Admin",    email: "demo.admin@habal.app",     role: "admin" },
+};
 
 export default function Home() {
   const [phase, setPhase] = useState("splash"); // splash | login | app
   const [user, setUser] = useState(null);
+  const [demoRole, setDemoRole] = useState(null); // null = use real role
+  const [isDemoSession, setIsDemoSession] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -18,6 +29,9 @@ export default function Home() {
         const me = await base44.auth.me();
         setUser(me);
         setPhase("app");
+        // Auto-enable demo switcher for demo accounts
+        const demoEmails = Object.values(DEMO_USERS).map(u => u.email);
+        if (demoEmails.includes(me?.email)) setIsDemoSession(true);
       } catch {
         setPhase("login");
       }
@@ -29,28 +43,45 @@ export default function Home() {
     if (demoUser) {
       setUser(demoUser);
       setPhase("app");
+      setIsDemoSession(true); // All LoginScreen logins are demo
     } else {
       base44.auth.redirectToLogin(window.location.href);
     }
   };
 
+  const handleDemoSwitch = (roleKey) => {
+    setDemoRole(roleKey);
+    setUser(DEMO_USERS[roleKey]);
+  };
+
   if (phase === "splash") return <SplashScreen />;
   if (phase === "login") return <LoginScreen onLogin={handleLogin} />;
 
-  const role = user?.role;
+  // Determine effective role
+  const activeUser = demoRole ? DEMO_USERS[demoRole] : user;
+  const role = activeUser?.role;
 
-  // Rider: go online/offline, accept assignments, update trip statuses
-  if (role === "rider") return <RiderDashboard user={user} />;
+  // Current demo role key for the switcher highlight
+  const currentDemoRoleKey = demoRole ||
+    (user?.email === DEMO_USERS.rider.email    ? "rider"    :
+     user?.email === DEMO_USERS.operator.email ? "operator" :
+     user?.email === DEMO_USERS.admin.email    ? "admin"    : "customer");
 
-  // Dispatcher: assign/reassign bookings, broadcast to riders, view logs
-  if (role === "dispatcher") return <DispatcherDashboard user={user} />;
+  return (
+    <>
+      {role === "rider"                              && <RiderDashboard user={activeUser} key={`rider-${activeUser?.id}`} />}
+      {role === "dispatcher"                         && <DispatcherDashboard user={activeUser} key={`dispatcher-${activeUser?.id}`} />}
+      {(role === "operator" || role === "network_owner") && <NetworkOwnerDashboard user={activeUser} key={`operator-${activeUser?.id}`} />}
+      {role === "admin"                              && <AdminDashboard user={activeUser} key={`admin-${activeUser?.id}`} />}
+      {role !== "rider" && role !== "dispatcher" && role !== "operator" && role !== "network_owner" && role !== "admin"
+        && <CustomerHome user={activeUser} key={`customer-${activeUser?.id}`} />}
 
-  // Network Owner (operator): full roster management, analytics, compliance
-  if (role === "operator" || role === "network_owner") return <NetworkOwnerDashboard user={user} />;
-
-  // Admin: approve networks, verify riders, enforce penalties, manage zones
-  if (role === "admin") return <AdminDashboard user={user} />;
-
-  // Default: Customer — book rides, track, history, wallet, ratings
-  return <CustomerHome user={user} />;
+      {isDemoSession && (
+        <DemoRoleSwitcher
+          currentRole={currentDemoRoleKey}
+          onSwitch={handleDemoSwitch}
+        />
+      )}
+    </>
+  );
 }
