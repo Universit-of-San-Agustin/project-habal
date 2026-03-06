@@ -793,7 +793,10 @@ function RiderProfileScreen({ user, riderData, setRiderData, screen, setScreen, 
               <label className="block text-xs font-semibold text-gray-500 mb-1.5">{label}</label>
               <input value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
                 placeholder={placeholder}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20" />
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-sky-300/30"
+                style={{ borderColor: undefined }}
+                onFocus={e => e.target.style.borderColor = PRIMARY}
+                onBlur={e => e.target.style.borderColor = ""} />
             </div>
           ))}
         </div>
