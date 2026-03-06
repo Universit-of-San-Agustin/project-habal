@@ -195,9 +195,11 @@ export default function CustomerHome({ user }) {
   }, [activeRide?.id, activeRide?.status]);
 
   const handleGeolocate = useCallback(async (lng, lat) => {
-    setPickupCoords({ lng, lat });
+    const coords = { lng, lat };
+    setPickupCoords(coords);
     const addr = await reverseGeocode(lng, lat);
     setPickup(addr);
+    setPickupInput(addr);
   }, []);
 
   const [searchMode, setSearchMode] = useState("dropoff"); // "pickup" | "dropoff"
