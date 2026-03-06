@@ -643,7 +643,7 @@ export default function RiderDashboard({ user }) {
 
 function Shell({ children, noScroll }) {
   return (
-    <div className="fixed inset-0 flex flex-col bg-gray-50 max-w-md mx-auto overflow-hidden">
+    <div className="fixed inset-0 flex flex-col bg-white max-w-md mx-auto overflow-hidden">
       <div className={`flex-1 relative ${noScroll ? "" : "overflow-y-auto"}`}>
         {children}
       </div>
