@@ -90,58 +90,87 @@ export default function RiderDashboard({ user }) {
     base44.entities.Rider.update(riderData.id, { online_status: isOnline ? "online" : "offline" }).catch(() => {});
   }, [isOnline, riderData?.id]);
 
+  // When rider comes online, immediately check for any pending/searching bookings in their zone
+  useEffect(() => {
+    if (!riderData?.id || !isOnline || activeBooking) return;
+    const checkPendingBookings = async () => {
+      // Look for unassigned bookings in the rider's zone
+      const zone = riderData?.zone || "City Proper";
+      const pendingBookings = await base44.entities.Booking.filter({
+        status: "pending",
+        zone,
+      }, "-created_date", 5).catch(() => []);
+
+      const searchingBookings = await base44.entities.Booking.filter({
+        status: "searching",
+        zone,
+      }, "-created_date", 5).catch(() => []);
+
+      const allPending = [...(pendingBookings || []), ...(searchingBookings || [])];
+      for (const b of allPending) {
+        if (!seenBookingsRef.current.has(b.id)) {
+          // Re-dispatch this booking to this newly-online rider
+          await base44.functions.invoke("notifyRidersOfBooking", { booking_id: b.booking_id || b.id }).catch(() => {});
+          break; // Only re-dispatch once per online event
+        }
+      }
+    };
+    checkPendingBookings();
+  }, [isOnline, riderData?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Poll for new booking notifications (from Notification entity)
   useEffect(() => {
     if (!riderData?.id || !isOnline || activeBooking) return;
+
     const poll = async () => {
-      // Check for unread booking notifications
+      // Check for unread booking notifications addressed to this rider
       const notifs = await base44.entities.Notification.filter({
         user_id: riderData.id,
         read_status: false,
         type: "booking",
       }, "-created_date", 5).catch(() => []);
 
-      if (notifs && notifs.length > 0) {
-        const notif = notifs[0]; // Most recent
-        // Fetch the actual booking
-        const bookings = await base44.entities.Booking.filter(
-          { id: notif.reference_id }, "-created_date", 1
-        ).catch(() => []);
+      if (!notifs || notifs.length === 0) return;
 
-        const booking = bookings?.[0];
-        if (booking && !seenBookingsRef.current.has(booking.id)) {
-          seenBookingsRef.current.add(booking.id);
-          // Assign booking to this rider immediately
-          await base44.entities.Booking.update(booking.id, {
-            status: "assigned",
-            rider_id: riderData.id,
-            rider_name: user?.full_name,
-            rider_phone: user?.email,
-            assigned_at: new Date().toISOString(),
-          }).catch(() => {});
-          
-          setIncomingBooking(booking);
-          // Mark notification as read
-          await base44.entities.Notification.update(notif.id, { read_status: true }).catch(() => {});
-          
-          // Auto-decline after 30s if no action
-          timerRef.current = setTimeout(async () => {
-            await base44.entities.Booking.update(booking.id, {
-              status: "pending",
-              rider_id: null,
-              rider_name: null,
-              rider_phone: null,
-            }).catch(() => {});
-            await base44.entities.Rider.update(riderData.id, { online_status: "online" }).catch(() => {});
-            setIncomingBooking(null);
-          }, 30000);
-        }
+      const notif = notifs[0];
+
+      // Fetch the booking by its internal id (reference_id is the booking's DB id)
+      // Use a broad recent list and find by id since filter({id}) isn't supported
+      const recentBookings = await base44.entities.Booking.list("-created_date", 100).catch(() => []);
+      const booking = recentBookings?.find(b => b.id === notif.reference_id);
+
+      if (!booking) {
+        // Stale notification — mark read and skip
+        await base44.entities.Notification.update(notif.id, { read_status: true }).catch(() => {});
+        return;
       }
+
+      // Only show popup for bookings that are still unassigned (pending/searching)
+      if (!["pending", "searching"].includes(booking.status)) {
+        await base44.entities.Notification.update(notif.id, { read_status: true }).catch(() => {});
+        return;
+      }
+
+      if (seenBookingsRef.current.has(booking.id)) return;
+      seenBookingsRef.current.add(booking.id);
+
+      // Mark notification as read immediately so other riders don't double-pop
+      await base44.entities.Notification.update(notif.id, { read_status: true }).catch(() => {});
+
+      // Show the popup — do NOT assign yet; wait for explicit Accept
+      setIncomingBooking(booking);
+
+      // Auto-decline after 30s if no action taken
+      timerRef.current = setTimeout(() => {
+        setIncomingBooking(null);
+        seenBookingsRef.current.delete(booking.id); // Allow retry
+      }, 30000);
     };
+
     poll();
-    const interval = setInterval(poll, 2000); // Check every 2 seconds
+    const interval = setInterval(poll, 2500);
     return () => { clearInterval(interval); if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [riderData?.id, isOnline, activeBooking, user?.full_name, user?.email]);
+  }, [riderData?.id, isOnline, activeBooking]);
 
   const handleAccept = async () => {
     if (!incomingBooking) return;
