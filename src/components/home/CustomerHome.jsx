@@ -15,6 +15,7 @@ import NotificationsPanel from "../customer/NotificationsPanel";
 import LiveRideMap from "../customer/LiveRideMap";
 import ScheduleRideModal from "../customer/ScheduleRideModal";
 import ScheduledRidesTab from "../customer/ScheduledRidesTab";
+import RideDetailModal from "../customer/RideDetailModal";
 
 // Mapbox token is stored server-side. MapboxMap component reads from env.
 // For client-side geocoding we use the public token only for display (MapboxMap handles it).
