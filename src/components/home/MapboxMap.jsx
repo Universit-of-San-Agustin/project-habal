@@ -160,14 +160,24 @@ export default function MapboxMap({
   dropoffMarker,
   riderMarker,
   followRider = false,
+  // Pin placement mode: "pickup" | "dropoff" | null
+  pinMode = null,
+  onPinPlaced = null,
 }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const pickupMarkerRef = useRef(null);
   const dropoffMarkerRef = useRef(null);
   const riderMarkerRef = useRef(null);
+  const draftMarkerRef = useRef(null);
   const landmarkMarkersRef = useRef([]);
   const prevRiderPos = useRef(null);
+  const pinModeRef = useRef(pinMode);
+  const onPinPlacedRef = useRef(onPinPlaced);
+
+  // Keep refs in sync so the click handler always sees latest values
+  useEffect(() => { pinModeRef.current = pinMode; }, [pinMode]);
+  useEffect(() => { onPinPlacedRef.current = onPinPlaced; }, [onPinPlaced]);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -175,13 +185,12 @@ export default function MapboxMap({
     mapboxgl.accessToken = MAPBOX_TOKEN;
     const map = new mapboxgl.Map({
       container: containerRef.current,
-      // Streets-v12 has the richest POI + road label data for PH
       style: "mapbox://styles/mapbox/streets-v12",
       center,
       zoom,
       attributionControl: false,
       localIdeographFontFamily: "'Poppins', 'Noto Sans', sans-serif",
-      language: "en", // prefer English labels (works best for PH landmarks)
+      language: "en",
     });
 
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
@@ -200,11 +209,56 @@ export default function MapboxMap({
       map.on("load", () => geoCtrl.trigger());
     }
 
-    map.on("load", () => {
-      // Boost all label layers for Panay/Iloilo legibility
-      enhanceMapStyle(map);
+    // Click-to-pin handler
+    map.on("click", async (e) => {
+      if (!pinModeRef.current || !onPinPlacedRef.current) return;
+      const { lng, lat } = e.lngLat;
 
-      // Add custom landmark markers (show at zoom >= 13)
+      // Show a draft marker immediately
+      if (draftMarkerRef.current) { draftMarkerRef.current.remove(); draftMarkerRef.current = null; }
+      const isPickup = pinModeRef.current === "pickup";
+      const color = isPickup ? "#22c55e" : "#f97316";
+      const label = isPickup ? "📍 Pick Up" : "🏁 Drop Off";
+      const el = document.createElement("div");
+      el.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center">
+          <div style="background:${color};color:white;font-size:10px;font-weight:700;font-family:'Poppins',sans-serif;padding:3px 8px;border-radius:12px;box-shadow:0 2px 8px ${color}80;white-space:nowrap;animation:pinDrop .3s ease-out">${label}</div>
+          <div style="width:2px;height:8px;background:${color}"></div>
+          <div style="width:10px;height:10px;background:${color};border-radius:50%;border:2px solid white;box-shadow:0 0 0 3px ${color}50"></div>
+        </div>`;
+      draftMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "bottom" })
+        .setLngLat([lng, lat])
+        .addTo(map);
+
+      // Reverse geocode to get a human-readable address
+      try {
+        const res = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&limit=1&types=poi,address,neighborhood,locality,place`
+        );
+        const data = await res.json();
+        const feat = data.features?.[0];
+        let address = feat?.place_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        // Fallback: if result is too generic (just coords), use first part of context
+        if (!feat?.place_name) {
+          address = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        }
+        onPinPlacedRef.current({ lng, lat, address });
+      } catch {
+        onPinPlacedRef.current({ lng, lat, address: `${lat.toFixed(5)}, ${lng.toFixed(5)}` });
+      }
+    });
+
+    // Change cursor in pin mode
+    map.on("mousemove", () => {
+      if (pinModeRef.current) {
+        map.getCanvas().style.cursor = "crosshair";
+      } else {
+        map.getCanvas().style.cursor = "";
+      }
+    });
+
+    map.on("load", () => {
+      enhanceMapStyle(map);
       const showMarkers = () => {
         const z = map.getZoom();
         landmarkMarkersRef.current.forEach((m) => {
@@ -212,7 +266,6 @@ export default function MapboxMap({
           el.style.display = z >= 12 ? "flex" : "none";
         });
       };
-
       landmarkMarkersRef.current = createLandmarkMarkers(map);
       showMarkers();
       map.on("zoom", showMarkers);
@@ -222,6 +275,7 @@ export default function MapboxMap({
     return () => {
       landmarkMarkersRef.current.forEach((m) => m.remove());
       landmarkMarkersRef.current = [];
+      if (draftMarkerRef.current) { draftMarkerRef.current.remove(); draftMarkerRef.current = null; }
       map.remove();
       mapRef.current = null;
     };
