@@ -717,6 +717,13 @@ export default function CustomerHome({ user }) {
           )}
         </div>
         <BottomNav screen={screen} setScreen={setScreen} completedRides={completedRides} />
+        {selectedRide && (
+          <RideDetailModal
+            booking={selectedRide}
+            onClose={() => setSelectedRide(null)}
+            onRepeat={handleRepeatRide}
+          />
+        )}
       </Shell>
     );
   }
