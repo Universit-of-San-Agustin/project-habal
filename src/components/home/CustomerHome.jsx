@@ -636,7 +636,8 @@ export default function CustomerHome({ user }) {
   }
 
   // ── HISTORY ─────────────────────────────────────────────────
-  if (screen === "history") { return (
+  if (screen === "history") {
+    return (
       <Shell>
         <ScreenHeader title="Your Rides" />
         <div className="flex-1 overflow-y-auto pb-20">
