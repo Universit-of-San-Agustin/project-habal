@@ -125,6 +125,10 @@ export default function CustomerHome({ user }) {
   const [showLiveMap, setShowLiveMap] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduledAt, setScheduledAt] = useState(null); // ISO string when scheduling
+  // Pin placement: "pickup" | "dropoff" | null
+  const [pinMode, setPinMode] = useState(null);
+  const [fareLoading, setFareLoading] = useState(false);
+  const fareDebounceRef = useRef(null);
 
 
 
