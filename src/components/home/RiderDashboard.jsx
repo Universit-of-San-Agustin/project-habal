@@ -349,7 +349,7 @@ export default function RiderDashboard({ user }) {
             <div key={b.id} className="bg-white border border-gray-100 rounded-2xl p-4 mb-3 shadow-sm">
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-lg">🏍</div>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg" style={{ background: PRIMARY_BG }}>🏍</div>
                   <div>
                     <div className="font-bold text-gray-900 text-sm">{b.customer_name}</div>
                     <div className="text-[10px] font-mono text-gray-400">{b.booking_id || b.id?.slice(0, 8)}</div>
