@@ -201,9 +201,16 @@ export default function RiderDashboard({ user }) {
   const handleDecline = async () => {
     if (timerRef.current) clearTimeout(timerRef.current);
     if (incomingBooking) {
-      await base44.entities.Booking.update(incomingBooking.id, { status: "pending", rider_id: null, rider_name: null, rider_phone: null }).catch(() => {});
+      // Reset booking to searching so another rider can pick it up
+      await base44.entities.Booking.update(incomingBooking.id, {
+        status: "searching",
+        rider_id: null,
+        rider_name: null,
+        rider_phone: null,
+      }).catch(() => {});
       await base44.entities.Rider.update(riderData.id, { online_status: "online" }).catch(() => {});
-      base44.functions.invoke("matchRider", { booking_id: incomingBooking.booking_id || incomingBooking.id }).catch(() => {});
+      // Re-dispatch to other available riders
+      base44.functions.invoke("notifyRidersOfBooking", { booking_id: incomingBooking.booking_id || incomingBooking.id }).catch(() => {});
     }
     setIncomingBooking(null);
   };
