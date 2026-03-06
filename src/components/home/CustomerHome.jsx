@@ -640,7 +640,7 @@ export default function CustomerHome({ user }) {
     return (
       <Shell>
         <ScreenHeader title="Your Rides" />
-        <div className="flex-1 overflow-y-auto pb-20">
+        <div className="flex-1 overflow-y-auto pb-20 fade-in">
           {/* Tabs */}
           <div className="px-4 pt-4 flex gap-2 mb-4">
             {[["history","Completed"],["scheduled","Scheduled"]].map(([id, lbl]) => (
