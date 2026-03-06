@@ -130,6 +130,8 @@ export default function CustomerHome({ user }) {
   const [pinMode, setPinMode] = useState(null);
   const [fareLoading, setFareLoading] = useState(false);
   const fareDebounceRef = useRef(null);
+  const [historyTab, setHistoryTab] = useState("history");
+  const [selectedRide, setSelectedRide] = useState(null);
 
 
 
