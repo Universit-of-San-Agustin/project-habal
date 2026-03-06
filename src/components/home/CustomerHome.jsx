@@ -745,8 +745,26 @@ export default function CustomerHome({ user }) {
       {/* Map */}
       <div className="absolute inset-0" style={{ bottom: showNav ? 64 : 0 }}>
         <MapboxMap className="w-full h-full" onGeolocate={handleGeolocate}
-          pickupMarker={pickupCoords} dropoffMarker={dropoffCoords} riderMarker={riderLocation} />
+          pickupMarker={pickupCoords} dropoffMarker={dropoffCoords} riderMarker={riderLocation}
+          pinMode={pinMode} onPinPlaced={handlePinPlaced} />
       </div>
+
+      {/* Pin mode overlay instruction */}
+      {pinMode && (
+        <div className="absolute top-0 left-0 right-0 z-30 px-4 pt-12 pb-3 pointer-events-none">
+          <div className="bg-gray-900/85 backdrop-blur-md text-white rounded-2xl px-4 py-3 flex items-center gap-3 shadow-2xl pointer-events-auto">
+            <span className="text-2xl">{pinMode === "pickup" ? "📍" : "🏁"}</span>
+            <div className="flex-1">
+              <div className="font-bold text-sm">Tap on map to set {pinMode === "pickup" ? "pickup" : "drop-off"}</div>
+              <div className="text-xs text-gray-300 mt-0.5">Tap anywhere on the map</div>
+            </div>
+            <button onClick={() => setPinMode(null)}
+              className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
+              <X className="w-4 h-4 text-white" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Map Top Header */}
       {screen === "map" && (
