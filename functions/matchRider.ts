@@ -32,9 +32,12 @@ Deno.serve(async (req) => {
 
     const db = base44.asServiceRole;
 
-    // 1. Fetch the booking
-    const bookings = await db.entities.Booking.filter({ booking_id }, "-created_date", 1);
-    const booking = bookings?.[0];
+    // 1. Fetch the booking — support both booking_id string and DB id
+    let bookingRows = await db.entities.Booking.filter({ booking_id }, "-created_date", 1);
+    if (!bookingRows?.length) {
+      bookingRows = await db.entities.Booking.filter({ id: booking_id }, "-created_date", 1);
+    }
+    const booking = bookingRows?.[0];
     if (!booking) return Response.json({ error: 'Booking not found' }, { status: 404 });
 
     // Only process pending or searching bookings
