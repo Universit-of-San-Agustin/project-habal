@@ -138,10 +138,9 @@ export default function RiderDashboard({ user }) {
 
       const notif = notifs[0];
 
-      // Fetch the booking by its internal id (reference_id is the booking's DB id)
-      // Use a broad recent list and find by id since filter({id}) isn't supported
-      const recentBookings = await base44.entities.Booking.list("-created_date", 100).catch(() => []);
-      const booking = recentBookings?.find(b => b.id === notif.reference_id);
+      // Fetch the booking directly by its DB id
+      const bookingRows = await base44.entities.Booking.filter({ id: notif.reference_id }, "-created_date", 1).catch(() => []);
+      const booking = bookingRows?.[0];
 
       if (!booking) {
         // Stale notification — mark read and skip
@@ -232,7 +231,12 @@ export default function RiderDashboard({ user }) {
     if (newStatus === "completed") {
       setActiveBooking(null);
       if (riderData?.id) {
-        await base44.entities.Rider.update(riderData.id, { online_status: "online" }).catch(() => {});
+        await base44.entities.Rider.update(riderData.id, {
+          online_status: "online",
+          total_trips: (riderData.total_trips || 0) + 1,
+          completed_trips: (riderData.completed_trips || 0) + 1,
+        }).catch(() => {});
+        setRiderData(r => r ? { ...r, total_trips: (r.total_trips||0)+1, completed_trips: (r.completed_trips||0)+1 } : r);
         base44.entities.Booking.filter({ rider_id: riderData.id }, "-created_date", 50).then(setTripHistory).catch(() => {});
       }
       setScreen("home");

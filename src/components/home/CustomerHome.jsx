@@ -352,7 +352,7 @@ export default function CustomerHome({ user }) {
     setSubmittingRating(true);
     if (activeRide?.id && rating > 0) {
       await base44.functions.invoke("recordRating", {
-        booking_id: activeRide.id,
+        booking_id: activeRide.booking_id || activeRide.id,
         rating,
         comment: "",
       }).catch(async () => {
