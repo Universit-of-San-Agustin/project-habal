@@ -20,7 +20,7 @@ const DEMO_USERS = {
 };
 
 export default function Home() {
-  const [phase, setPhase] = useState("splash"); // splash | login | app
+  const [phase, setPhase] = useState("splash"); // splash | login | app | not_registered
   const [user, setUser] = useState(null);
   const [demoRole, setDemoRole] = useState(null); // null = use real role
   const [isDemoSession, setIsDemoSession] = useState(false);
