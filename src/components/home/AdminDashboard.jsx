@@ -69,29 +69,29 @@ export default function AdminDashboard({ user }) {
     }).catch(() => {});
   };
 
+  const confirm = (label, fn) => setConfirmAction({ label, fn });
+
   const approveNetwork = async (net) => {
     setProcessing(true);
     await base44.entities.Network.update(net.id, { status: "approved", verified_badge: true });
     writeAuditLog("NETWORK_APPROVED", "network", net, "Network approved and verified");
-    await load();
-    setSelectedNetwork(null);
-    setProcessing(false);
+    await load(); setSelectedNetwork(null); setProcessing(false);
   };
   const suspendNetwork = async (net) => {
-    setProcessing(true);
-    await base44.entities.Network.update(net.id, { status: "suspended" });
-    writeAuditLog("NETWORK_SUSPENDED", "network", net, "Network suspended by admin");
-    await load();
-    setSelectedNetwork(null);
-    setProcessing(false);
+    confirm(`Suspend network "${net.name}"?`, async () => {
+      setProcessing(true);
+      await base44.entities.Network.update(net.id, { status: "suspended" });
+      writeAuditLog("NETWORK_SUSPENDED", "network", net, "Network suspended by admin");
+      await load(); setSelectedNetwork(null); setProcessing(false);
+    });
   };
   const banNetwork = async (net) => {
-    setProcessing(true);
-    await base44.entities.Network.update(net.id, { status: "banned" });
-    writeAuditLog("NETWORK_BANNED", "network", net, "Network banned by admin");
-    await load();
-    setSelectedNetwork(null);
-    setProcessing(false);
+    confirm(`Permanently ban network "${net.name}"? This cannot be undone.`, async () => {
+      setProcessing(true);
+      await base44.entities.Network.update(net.id, { status: "banned" });
+      writeAuditLog("NETWORK_BANNED", "network", net, "Network banned by admin");
+      await load(); setSelectedNetwork(null); setProcessing(false);
+    });
   };
 
   // Rider actions
@@ -99,25 +99,23 @@ export default function AdminDashboard({ user }) {
     setProcessing(true);
     await base44.entities.Rider.update(rider.id, { status: "active" });
     writeAuditLog("RIDER_APPROVED", "rider", { id: rider.id, full_name: rider.full_name }, "Rider verified and activated");
-    await load();
-    setSelectedRider(null);
-    setProcessing(false);
+    await load(); setSelectedRider(null); setProcessing(false);
   };
   const suspendRider = async (rider) => {
-    setProcessing(true);
-    await base44.entities.Rider.update(rider.id, { status: "suspended", online_status: "offline" });
-    writeAuditLog("RIDER_SUSPENDED", "rider", { id: rider.id, full_name: rider.full_name }, "Rider suspended by admin");
-    await load();
-    setSelectedRider(null);
-    setProcessing(false);
+    confirm(`Suspend rider "${rider.full_name}"?`, async () => {
+      setProcessing(true);
+      await base44.entities.Rider.update(rider.id, { status: "suspended", online_status: "offline" });
+      writeAuditLog("RIDER_SUSPENDED", "rider", { id: rider.id, full_name: rider.full_name }, "Rider suspended by admin");
+      await load(); setSelectedRider(null); setProcessing(false);
+    });
   };
   const banRider = async (rider) => {
-    setProcessing(true);
-    await base44.entities.Rider.update(rider.id, { status: "banned", online_status: "offline" });
-    writeAuditLog("RIDER_BANNED", "rider", { id: rider.id, full_name: rider.full_name }, "Rider banned by admin");
-    await load();
-    setSelectedRider(null);
-    setProcessing(false);
+    confirm(`Permanently ban rider "${rider.full_name}"? This cannot be undone.`, async () => {
+      setProcessing(true);
+      await base44.entities.Rider.update(rider.id, { status: "banned", online_status: "offline" });
+      writeAuditLog("RIDER_BANNED", "rider", { id: rider.id, full_name: rider.full_name }, "Rider banned by admin");
+      await load(); setSelectedRider(null); setProcessing(false);
+    });
   };
 
   // Stats
@@ -150,6 +148,26 @@ export default function AdminDashboard({ user }) {
       {/* Live Map Monitor Overlay */}
       {showLiveMap && (
         <LiveMapMonitor onClose={() => setShowLiveMap(false)} />
+      )}
+
+      {/* Confirm Dialog */}
+      {confirmAction && (
+        <div className="absolute inset-0 z-[60] bg-black/50 flex items-center justify-center px-6">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
+            <div className="text-2xl mb-3 text-center">⚠️</div>
+            <p className="text-sm font-semibold text-gray-800 text-center mb-5">{confirmAction.label}</p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmAction(null)}
+                className="flex-1 py-3 border-2 border-gray-200 rounded-2xl text-sm font-bold text-gray-600">
+                Cancel
+              </button>
+              <button onClick={async () => { const fn = confirmAction.fn; setConfirmAction(null); await fn(); }}
+                className="flex-1 py-3 bg-red-500 text-white rounded-2xl text-sm font-bold">
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Network Detail Modal */}
