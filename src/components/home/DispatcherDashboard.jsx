@@ -19,11 +19,12 @@ export default function DispatcherDashboard({ user }) {
   const { toasts, addToast, dismiss } = useToast();
 
   const load = async () => {
-    const [bks, rdrs] = await Promise.all([
+    const [pendingBks, searchingBks, rdrs] = await Promise.all([
       base44.entities.Booking.filter({ status: "pending" }, "-created_date", 20).catch(() => []),
+      base44.entities.Booking.filter({ status: "searching" }, "-created_date", 20).catch(() => []),
       base44.entities.Rider.filter({ online_status: "online" }, "-updated_date", 50).catch(() => []),
     ]);
-    const newBks = bks || [];
+    const newBks = [...(pendingBks || []), ...(searchingBks || [])];
     // Detect truly new bookings after first load
     if (knownBookingIds.current.size > 0) {
       newBks.forEach(b => {

@@ -5,10 +5,11 @@ const PRIMARY_DARK = "#1a9ecb";
 const PRIMARY_BG = "#EBF9FE";
 
 const DEMO_ROLES = [
-  { key: "customer",     label: "Customer",   emoji: "👤", color: "#4DC8F0" },
-  { key: "rider",        label: "Rider",       emoji: "🏍", color: "#10b981" },
-  { key: "operator",     label: "Operator",    emoji: "🏢", color: "#8b5cf6" },
-  { key: "admin",        label: "Admin",       emoji: "🛡️",  color: "#f59e0b" },
+  { key: "customer",   label: "Customer",   emoji: "👤", color: "#4DC8F0" },
+  { key: "rider",      label: "Rider",      emoji: "🏍", color: "#10b981" },
+  { key: "dispatcher", label: "Dispatcher", emoji: "📋", color: "#3b82f6" },
+  { key: "operator",   label: "Operator",   emoji: "🏢", color: "#8b5cf6" },
+  { key: "admin",      label: "Admin",      emoji: "🛡️",  color: "#f59e0b" },
 ];
 
 export default function DemoRoleSwitcher({ currentRole, onSwitch }) {

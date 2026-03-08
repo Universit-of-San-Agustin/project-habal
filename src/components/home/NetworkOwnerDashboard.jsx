@@ -48,7 +48,7 @@ export default function NetworkOwnerDashboard({ user }) {
     if (net) {
       const [rdrs, bks, stks, zns] = await Promise.all([
         base44.entities.Rider.filter({ network_id: net.id }, "-created_date", 100).catch(() => []),
-        base44.entities.Booking.filter({ network_id: net.id }, "-created_date", 50).catch(() => []),
+        base44.entities.Booking.filter({ zone: net.zone }, "-created_date", 50).catch(() => []),
         base44.entities.Strike.filter({ target_id: net.id }, "-created_date", 20).catch(() => []),
         base44.entities.Zone.list("-created_date", 10).catch(() => []),
       ]);

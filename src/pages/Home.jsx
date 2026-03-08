@@ -14,7 +14,8 @@ const DEMO_USERS = {
   customer: { id: "demo-customer", full_name: "Demo Customer", email: "demo.customer@habal.app", role: "user" },
   rider:    { id: "demo-rider",    full_name: "Demo Rider",    email: "demo.rider@habal.app",    role: "rider" },
   operator: { id: "demo-operator", full_name: "Demo Operator", email: "demo.operator@habal.app", role: "operator" },
-  admin:    { id: "demo-admin",    full_name: "Demo Admin",    email: "demo.admin@habal.app",     role: "admin" },
+  admin:      { id: "demo-admin",      full_name: "Demo Admin",      email: "demo.admin@habal.app",      role: "admin" },
+  dispatcher: { id: "demo-dispatcher", full_name: "Demo Dispatcher", email: "demo.dispatcher@habal.app", role: "dispatcher" },
 };
 
 export default function Home() {

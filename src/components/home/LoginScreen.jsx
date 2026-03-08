@@ -56,7 +56,7 @@ export default function LoginScreen({ onLogin }) {
   const handleForgot = () => {
     if (!form.email || !EMAIL_RE.test(form.email)) { setError("Please enter a valid email address."); return; }
     setError("");
-    setScreen("otp");
+    handleRealAuth(); // Routes to the real auth provider which handles password reset
   };
 
   const handleOtpVerify = () => {

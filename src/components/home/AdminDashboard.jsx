@@ -31,6 +31,8 @@ export default function AdminDashboard({ user }) {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [showLiveMap, setShowLiveMap] = useState(false);
+  const [networkFilter, setNetworkFilter] = useState("all");
+  const [confirmAction, setConfirmAction] = useState(null); // { label, fn }
 
   // Detail modals
   const [selectedNetwork, setSelectedNetwork] = useState(null);
