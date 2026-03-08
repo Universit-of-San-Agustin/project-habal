@@ -12,8 +12,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: "booking_id and rating are required" }, { status: 400 });
     }
 
-    // Get booking for context
-    const bookings = await base44.asServiceRole.entities.Booking.filter({ booking_id }, "-created_date", 1);
+    // Get booking for context — support both booking_id string and DB id
+    let bookings = await base44.asServiceRole.entities.Booking.filter({ booking_id }, "-created_date", 1).catch(() => []);
+    if (!bookings?.length) {
+      // Fallback: booking_id may actually be the DB id
+      bookings = await base44.asServiceRole.entities.Booking.filter({ id: booking_id }, "-created_date", 1).catch(() => []);
+    }
     const booking = bookings?.[0];
 
     // Create rating record
