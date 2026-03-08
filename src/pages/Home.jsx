@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import SplashScreen from "../components/home/SplashScreen";
 import LoginScreen from "../components/home/LoginScreen";
+import UserNotRegisteredError from "../components/UserNotRegisteredError";
 import CustomerHome from "../components/home/CustomerHome";
 import RiderDashboard from "../components/home/RiderDashboard";
 import DispatcherDashboard from "../components/home/DispatcherDashboard";
