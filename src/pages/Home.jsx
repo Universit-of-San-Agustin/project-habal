@@ -64,9 +64,10 @@ export default function Home() {
 
   // Current demo role key for the switcher highlight
   const currentDemoRoleKey = demoRole ||
-    (user?.email === DEMO_USERS.rider.email    ? "rider"    :
-     user?.email === DEMO_USERS.operator.email ? "operator" :
-     user?.email === DEMO_USERS.admin.email    ? "admin"    : "customer");
+    (user?.email === DEMO_USERS.rider.email       ? "rider"      :
+     user?.email === DEMO_USERS.dispatcher?.email ? "dispatcher" :
+     user?.email === DEMO_USERS.operator.email    ? "operator"   :
+     user?.email === DEMO_USERS.admin.email       ? "admin"      : "customer");
 
   return (
     <>

@@ -77,7 +77,11 @@ export default function RiderDashboard({ user }) {
     setCountdown(30);
     countdownRef.current = setInterval(() => {
       setCountdown(c => {
-        if (c <= 1) { clearInterval(countdownRef.current); return 0; }
+        if (c <= 1) {
+          clearInterval(countdownRef.current);
+          setIncomingBooking(null); // auto-dismiss on timeout
+          return 0;
+        }
         return c - 1;
       });
     }, 1000);
