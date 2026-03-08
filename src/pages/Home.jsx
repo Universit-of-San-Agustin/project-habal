@@ -63,6 +63,7 @@ export default function Home() {
 
   if (phase === "splash") return <SplashScreen />;
   if (phase === "login") return <LoginScreen onLogin={handleLogin} />;
+  if (phase === "not_registered") return <UserNotRegisteredError />;
 
   // Determine effective role
   const activeUser = demoRole ? DEMO_USERS[demoRole] : user;
