@@ -467,10 +467,14 @@ export default function AdminDashboard({ user }) {
           <div className="px-4 pt-4 pb-8 space-y-3">
             <div className="flex gap-2 overflow-x-auto pb-1">
               {["all","pending","approved","suspended","banned"].map(f => (
-                <NetworkFilter key={f} value={f} networks={networks} onSelect={setSelectedNetwork} onSetFilter={() => {}} />
+                <NetworkFilter key={f} value={f} active={networkFilter === f} onClick={() => setNetworkFilter(f)} />
               ))}
             </div>
-            <NetworkList networks={networks} bookings={bookings} onSelect={setSelectedNetwork} />
+            <NetworkList
+              networks={networkFilter === "all" ? networks : networks.filter(n => n.status === networkFilter)}
+              bookings={bookings}
+              onSelect={setSelectedNetwork}
+            />
           </div>
         )}
 
@@ -624,8 +628,15 @@ function NetworkList({ networks, bookings, onSelect }) {
   );
 }
 
-function NetworkFilter({ value, networks, onSelect }) {
-  return null; // simplified — full filter handled by NetworkList
+function NetworkFilter({ value, active, onClick }) {
+  const counts = { all: "All", pending: "Pending", approved: "Active", suspended: "Suspended", banned: "Banned" };
+  return (
+    <button onClick={onClick}
+      className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all"
+      style={active ? { background: PRIMARY, color: "#fff" } : { background: "#f3f4f6", color: "#6b7280" }}>
+      {counts[value] || value}
+    </button>
+  );
 }
 
 function StatusPill({ status }) {
