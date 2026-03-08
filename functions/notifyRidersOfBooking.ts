@@ -54,11 +54,10 @@ Deno.serve(async (req) => {
       await db.entities.Notification.update(n.id, { read_status: true }).catch(() => {});
     }
 
-    // 5. Create fresh notification records for each eligible rider
-    const notifications = [];
-    for (const rider of riders) {
-      try {
-        await db.entities.Notification.create({
+    // 5. Create fresh notification records for each eligible rider — in parallel
+    const results = await Promise.allSettled(
+      riders.map(rider =>
+        db.entities.Notification.create({
           user_id: rider.id,
           user_type: "rider",
           title: "New Ride Request",
@@ -67,12 +66,12 @@ Deno.serve(async (req) => {
           read_status: false,
           reference_id: booking.id,
           reference_type: "booking",
-        });
-        notifications.push({ rider_id: rider.id, rider_name: rider.full_name });
-      } catch (e) {
-        console.error(`Failed to notify rider ${rider.id}:`, e.message);
-      }
-    }
+        }).then(() => ({ rider_id: rider.id, rider_name: rider.full_name }))
+      )
+    );
+    const notifications = results
+      .filter(r => r.status === "fulfilled")
+      .map(r => r.value);
 
     return Response.json({
       notified: notifications.length,
