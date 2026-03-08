@@ -40,6 +40,7 @@ export default function NetworkOwnerDashboard({ user }) {
   const [selectedRider, setSelectedRider] = useState(null);
   const [assigningBooking, setAssigningBooking] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   const load = async () => {
     const nets = await base44.entities.Network.filter({ owner_email: user?.email }, "-created_date", 1).catch(() => []);
@@ -101,13 +102,18 @@ export default function NetworkOwnerDashboard({ user }) {
   };
 
   const handleSuspendRider = async (rider) => {
-    setProcessing(true);
-    await base44.entities.Rider.update(rider.id, { status: "suspended", online_status: "offline" });
-    writeAuditLog("RIDER_SUSPENDED", "rider", rider.id, rider.full_name, "Rider suspended by network operator");
-    await load();
-    addToast({ type: "alert", title: "Rider Suspended", message: `${rider.full_name} has been suspended` });
-    setProcessing(false);
-    setSelectedRider(null);
+    setConfirmAction({
+      label: `Suspend ${rider.full_name}? They will be taken offline.`,
+      fn: async () => {
+        setProcessing(true);
+        await base44.entities.Rider.update(rider.id, { status: "suspended", online_status: "offline" });
+        writeAuditLog("RIDER_SUSPENDED", "rider", rider.id, rider.full_name, "Rider suspended by network operator");
+        await load();
+        addToast({ type: "alert", title: "Rider Suspended", message: `${rider.full_name} has been suspended` });
+        setProcessing(false);
+        setSelectedRider(null);
+      }
+    });
   };
 
   const handleIssueStrike = async (riderId, riderName) => {
@@ -193,6 +199,26 @@ export default function NetworkOwnerDashboard({ user }) {
       {trackingBooking && <LiveRiderMap booking={trackingBooking} onClose={() => setTrackingBooking(null)} />}
       {showLiveMap && network && (
         <LiveMapMonitor onClose={() => setShowLiveMap(false)} networkId={network.id} />
+      )}
+
+      {/* Confirm Dialog */}
+      {confirmAction && (
+        <div className="absolute inset-0 z-[60] bg-black/50 flex items-center justify-center px-6">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
+            <div className="text-2xl mb-3 text-center">⚠️</div>
+            <p className="text-sm font-semibold text-gray-800 text-center mb-5">{confirmAction.label}</p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmAction(null)}
+                className="flex-1 py-3 border-2 border-gray-200 rounded-2xl text-sm font-bold text-gray-600">
+                Cancel
+              </button>
+              <button onClick={async () => { const fn = confirmAction.fn; setConfirmAction(null); await fn(); }}
+                className="flex-1 py-3 bg-red-500 text-white rounded-2xl text-sm font-bold">
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Assign Rider Modal */}
