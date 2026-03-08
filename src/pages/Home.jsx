@@ -34,8 +34,13 @@ export default function Home() {
         // Auto-enable demo switcher for demo accounts
         const demoEmails = Object.values(DEMO_USERS).map(u => u.email);
         if (demoEmails.includes(me?.email)) setIsDemoSession(true);
-      } catch {
-        setPhase("login");
+      } catch (err) {
+        const msg = err?.message || "";
+        if (msg.includes("Authentication required to view users") || msg.includes("not registered")) {
+          setPhase("not_registered");
+        } else {
+          setPhase("login");
+        }
       }
     }, 2800);
     return () => clearTimeout(timer);
