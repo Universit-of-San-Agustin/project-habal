@@ -86,6 +86,14 @@ export default function Home() {
     const timer = setTimeout(async () => {
       try {
         const me = await base44.auth.me();
+        console.log("🔐 AUTH STATE:", {
+          authenticated: !!me,
+          user_id: me?.id,
+          email: me?.email,
+          full_name: me?.full_name,
+          role: me?.role,
+          is_demo_account: Object.values(DEMO_USERS).map(u => u.email).includes(me?.email),
+        });
         setUser(me);
         setPhase("app");
         // Auto-enable demo switcher ONLY if DEMO_MODE is enabled AND user is a demo account
@@ -94,6 +102,10 @@ export default function Home() {
           if (demoEmails.includes(me?.email)) setIsDemoSession(true);
         }
       } catch (err) {
+        console.log("❌ AUTH ERROR:", {
+          message: err?.message,
+          error: err,
+        });
         const msg = err?.message || "";
         if (msg.includes("Authentication required to view users") || msg.includes("not registered")) {
           setPhase("not_registered");
