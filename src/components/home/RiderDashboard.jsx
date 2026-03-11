@@ -34,9 +34,10 @@ export default function RiderDashboard({ user }) {
   const timerRef = useRef(null);
   const countdownRef = useRef(null);
 
-  // Load data
+  // Load data - use email for persistent demo accounts
   useEffect(() => {
-    base44.entities.Rider.filter({ email: user?.email }, "-created_date", 1)
+    if (!user?.email) return;
+    base44.entities.Rider.filter({ email: user.email }, "-created_date", 1)
       .then(async rows => {
         const rider = rows?.[0] || null;
         setRiderData(rider);
@@ -176,26 +177,27 @@ export default function RiderDashboard({ user }) {
   }, [riderData?.id, isOnline, activeBooking]);
 
   const handleAccept = async () => {
-    if (!incomingBooking) return;
+    if (!incomingBooking || !riderData?.id) return;
     if (timerRef.current) clearTimeout(timerRef.current);
     setProcessing(true);
-    // Assign booking to this rider now that they've accepted
+    // Assign booking to this rider using actual DB ID for persistence
     const updated = await base44.entities.Booking.update(incomingBooking.id, {
       status: "assigned",
-      rider_id: riderData.id,
-      rider_name: user?.full_name,
-      rider_phone: riderData?.phone || user?.email,
+      rider_id: riderData.id, // Use actual rider DB ID
+      rider_name: riderData.full_name,
+      rider_phone: riderData.phone || user?.email,
       assigned_at: new Date().toISOString(),
     });
     await base44.entities.BookingEvent.create({
       booking_id: incomingBooking.id,
       event_type: "RIDER_ACCEPTED",
       actor_role: "rider",
-      actor_name: user?.full_name,
+      actor_id: riderData.id,
+      actor_name: riderData.full_name,
       timestamp: new Date().toISOString(),
     });
     await base44.entities.Rider.update(riderData.id, { online_status: "on_trip" }).catch(() => {});
-    setActiveBooking(updated || { ...incomingBooking, status: "assigned", rider_id: riderData.id, rider_name: user?.full_name });
+    setActiveBooking(updated || { ...incomingBooking, status: "assigned", rider_id: riderData.id, rider_name: riderData.full_name });
     setIncomingBooking(null);
     setProcessing(false);
     setScreen("map");
