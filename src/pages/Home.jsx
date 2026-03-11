@@ -11,7 +11,16 @@ import AdminDashboard from "../components/home/AdminDashboard";
 import DemoRoleSwitcher from "../components/home/DemoRoleSwitcher";
 import DemoDataInitializer from "../components/demo/DemoDataInitializer";
 
-// DEMO_MODE: Set to true to enable role switching for testing/demos
+/**
+ * HABAL Platform - Production Entry Point
+ * 
+ * DEMO_MODE Configuration:
+ * - Set to TRUE: Enables dashboard-based demo role switcher for testing/investor demos
+ * - Set to FALSE: Production mode - all demo features hidden
+ * 
+ * Demo accounts use REAL database records (not simulated data).
+ * The switcher allows instant role changes for presentation purposes.
+ */
 const DEMO_MODE = true;
 
 // Demo users for testing — only active when DEMO_MODE = true
