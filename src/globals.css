@@ -5,14 +5,34 @@
 /* ── Google Fonts ──────────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
-/* ── Design tokens ─────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   HABAL PLATFORM DESIGN SYSTEM
+   Production-Ready Global Styles & Design Tokens
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Design Tokens ─────────────────────────────────────────── */
 :root {
+  /* Primary Brand Colors */
   --primary:      #4DC8F0;
   --primary-dark: #1a9ecb;
   --primary-bg:   #EBF9FE;
   --accent:       #1a9ecb;
 
-  /* shadcn overrides */
+  /* Semantic Colors */
+  --success:      #10b981;
+  --success-dark: #059669;
+  --success-bg:   #f0fdf4;
+  --warning:      #f59e0b;
+  --warning-dark: #d97706;
+  --warning-bg:   #fffbeb;
+  --error:        #ef4444;
+  --error-dark:   #dc2626;
+  --error-bg:     #fef2f2;
+  --info:         #3b82f6;
+  --info-dark:    #2563eb;
+  --info-bg:      #eff6ff;
+
+  /* shadcn/ui overrides */
   --background:   0 0% 100%;
   --foreground:   220 13% 10%;
   --card:         0 0% 100%;
@@ -35,7 +55,7 @@
   --radius:       0.75rem;
 }
 
-/* ── Base ───────────────────────────────────────────────────── */
+/* ── Base Styles ───────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
   @apply border-border outline-ring/50;
@@ -47,15 +67,23 @@ html, body, #root {
   color: hsl(var(--foreground));
   font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Global button defaults ────────────────────────────────── */
+/* ── Typography ────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+}
+
+/* ── Buttons ───────────────────────────────────────────────── */
 button {
   font-family: 'Poppins', sans-serif;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* ── Utility classes ────────────────────────────────────────── */
+/* Primary Button */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -70,12 +98,13 @@ button {
   border-radius: 9999px;
   border: none;
   box-shadow: 0 4px 16px rgba(77, 200, 240, 0.35);
-  transition: opacity 0.15s, box-shadow 0.15s;
+  transition: opacity 0.15s, box-shadow 0.15s, transform 0.12s;
 }
 .btn-primary:hover   { opacity: 0.92; box-shadow: 0 6px 24px rgba(77,200,240,0.45); }
-.btn-primary:active  { opacity: 0.85; }
+.btn-primary:active  { opacity: 0.85; transform: scale(0.97); }
 .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
 
+/* Secondary Button */
 .btn-secondary {
   display: inline-flex;
   align-items: center;
@@ -90,19 +119,24 @@ button {
   border-radius: 9999px;
   border: 2px solid rgba(77,200,240,0.3);
   box-shadow: 0 2px 8px rgba(77,200,240,0.15);
-  transition: background 0.15s, box-shadow 0.15s;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.12s;
 }
 .btn-secondary:hover { background: #d6f2fb; }
+.btn-secondary:active { transform: scale(0.97); }
 
-/* ── Card default ───────────────────────────────────────────── */
+/* ── Cards ─────────────────────────────────────────────────── */
 .card-base {
   background: #ffffff;
   border: 1px solid #f0f4f8;
   border-radius: 1rem;
   box-shadow: 0 2px 12px rgba(77,200,240,0.08);
+  transition: box-shadow 0.2s;
+}
+.card-base:hover {
+  box-shadow: 0 4px 20px rgba(77,200,240,0.12);
 }
 
-/* ── Input default ──────────────────────────────────────────── */
+/* ── Inputs ────────────────────────────────────────────────── */
 .input-base {
   width: 100%;
   padding: 0.75rem 1rem;
@@ -121,12 +155,16 @@ button {
   box-shadow: 0 0 0 3px rgba(77,200,240,0.15);
 }
 
-/* ── Scrollbar ──────────────────────────────────────────────── */
+/* ── Scrollbar ─────────────────────────────────────────────── */
 ::-webkit-scrollbar       { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(77,200,240,0.3); border-radius: 99px; }
+::-webkit-scrollbar-thumb { 
+  background: rgba(77,200,240,0.3); 
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(77,200,240,0.5); }
 
-/* ── Smooth transitions ─────────────────────────────────────── */
+/* ── Animations ────────────────────────────────────────────── */
 .fade-in {
   animation: fadeIn 0.25s ease-out both;
 }
@@ -143,7 +181,17 @@ button {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Spinner ────────────────────────────────────────────────── */
+.bounce-in {
+  animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) both;
+}
+@keyframes bounceIn {
+  0%   { transform: scale(0.3); opacity: 0; }
+  50%  { transform: scale(1.05); }
+  70%  { transform: scale(0.9); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ── Loading Spinner ───────────────────────────────────────── */
 .spinner {
   width: 1.5rem; height: 1.5rem;
   border: 2.5px solid var(--primary-bg);
@@ -155,7 +203,7 @@ button {
   to { transform: rotate(360deg); }
 }
 
-/* ── Skeleton shimmer ───────────────────────────────────────── */
+/* ── Skeleton Shimmer ──────────────────────────────────────── */
 .skeleton {
   background: linear-gradient(90deg, #f0f4f8 25%, #e8f4fb 50%, #f0f4f8 75%);
   background-size: 200% 100%;
@@ -167,12 +215,60 @@ button {
   100% { background-position:  200% 0; }
 }
 
-/* ── Tap highlight ──────────────────────────────────────────── */
-button, [role="button"] {
-  -webkit-tap-highlight-color: transparent;
-  transition: opacity 0.12s, transform 0.12s;
+/* ── Status Indicators ─────────────────────────────────────── */
+.status-online {
+  color: var(--success);
 }
-button:active:not(:disabled) {
+.status-offline {
+  color: #9ca3af;
+}
+.status-warning {
+  color: var(--warning);
+}
+.status-error {
+  color: var(--error);
+}
+
+/* ── Tap Feedback ──────────────────────────────────────────── */
+button:active:not(:disabled),
+[role="button"]:active:not(:disabled) {
   opacity: 0.82;
   transform: scale(0.97);
+}
+
+/* ── Mobile Optimizations ──────────────────────────────────── */
+@media (max-width: 640px) {
+  /* Prevent zoom on input focus (iOS) */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* ── Utility Classes ───────────────────────────────────────── */
+.text-gradient-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.shadow-primary {
+  box-shadow: 0 4px 16px rgba(77, 200, 240, 0.25);
+}
+
+.border-primary {
+  border-color: var(--primary);
+}
+
+/* ── Print Styles ──────────────────────────────────────────── */
+@media print {
+  .no-print {
+    display: none !important;
+  }
 }

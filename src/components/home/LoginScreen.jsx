@@ -24,6 +24,7 @@ export default function LoginScreen({ onLogin }) {
 
   const handleRealAuth = () => {
     setLoading(true);
+    // Redirect to Base44 OAuth - will return to current URL after authentication
     base44.auth.redirectToLogin(window.location.href);
   };
 
@@ -241,17 +242,12 @@ export default function LoginScreen({ onLogin }) {
 
       {/* Social */}
       <div className="flex justify-center gap-4 mb-5">
-        {[
-          { label: "G", color: "#4285F4", title: "Google" },
-          { label: "f", color: "#1877F2", title: "Facebook" },
-        ].map(s => (
-          <button key={s.label} onClick={handleRealAuth}
-            className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center transition-shadow hover:shadow-md"
-            title={s.title}
-            style={{ border: "1.5px solid #e8f0f5", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
-            <span className="text-base font-bold" style={{ color: s.color }}>{s.label}</span>
-          </button>
-        ))}
+        <button onClick={handleRealAuth}
+          className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center transition-shadow hover:shadow-md"
+          title="Sign in with Google"
+          style={{ border: "1.5px solid #e8f0f5", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+          <span className="text-base font-bold" style={{ color: "#4285F4" }}>G</span>
+        </button>
       </div>
 
       <p className="text-center text-gray-400 text-sm mb-6">

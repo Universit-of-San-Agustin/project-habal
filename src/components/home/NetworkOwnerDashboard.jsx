@@ -329,9 +329,9 @@ export default function NetworkOwnerDashboard({ user }) {
               </div>
             )}
             <button onClick={() => setShowLiveMap(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-white text-[10px] font-bold"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-white text-xs font-bold shadow-md"
               style={{ background: `linear-gradient(135deg, ${GREEN} 0%, #059669 100%)` }}>
-              <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
               Live Map
             </button>
             <button onClick={load} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: PRIMARY_BG }}>

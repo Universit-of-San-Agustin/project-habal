@@ -55,23 +55,20 @@ export default function RiderDashboard({ user }) {
       }).catch(() => {});
   }, [user]);
 
-  // GPS broadcast - enhanced with booking context and higher frequency during active trips
+  // GPS broadcast - CRITICAL: High-frequency continuous tracking (2-3s)
   useEffect(() => {
     if (!riderData?.id || !isOnline) return;
     
-    const updateInterval = activeBooking ? 2000 : 5000; // 2s during trip, 5s when idle
-    let lastUpdate = 0;
+    // PRODUCTION SPEC: 2s during active trip, 3s when idle online
+    const updateInterval = activeBooking ? 2000 : 3000;
     
     const watchId = navigator.geolocation?.watchPosition(
       ({ coords: { longitude: lng, latitude: lat, heading, speed } }) => {
-        const now = Date.now();
-        if (now - lastUpdate < updateInterval) return;
-        lastUpdate = now;
-        
         const locationData = {
           lat,
           lng,
           rider_name: user?.full_name,
+          rider_id: riderData.id,
           heading: heading || 0,
           speed: speed || 0,
           booking_id: activeBooking?.id || null,
@@ -80,20 +77,34 @@ export default function RiderDashboard({ user }) {
             : "idle"
         };
         
+        // Upsert location with minimal latency
         base44.entities.RiderLocation.filter({ rider_id: riderData.id }, "-updated_date", 1).then(locs => {
           if (locs?.[0]) {
-            base44.entities.RiderLocation.update(locs[0].id, locationData);
+            base44.entities.RiderLocation.update(locs[0].id, locationData).catch(err => 
+              console.error("❌ GPS update failed:", err)
+            );
           } else {
-            base44.entities.RiderLocation.create({ rider_id: riderData.id, ...locationData });
+            base44.entities.RiderLocation.create({ rider_id: riderData.id, ...locationData }).catch(err => 
+              console.error("❌ GPS create failed:", err)
+            );
           }
-        }).catch(err => console.error("GPS update failed:", err));
+        });
       },
       (error) => {
-        console.warn("GPS error:", error.message);
+        console.error("❌ GPS ERROR:", error.message, error.code);
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { 
+        enableHighAccuracy: true, 
+        timeout: 8000,
+        maximumAge: 0 // Force fresh location every time
+      }
     );
-    return () => navigator.geolocation?.clearWatch(watchId);
+    
+    console.log(`📍 RIDER GPS: Tracking started (${updateInterval}ms interval)`);
+    return () => {
+      navigator.geolocation?.clearWatch(watchId);
+      console.log("📍 RIDER GPS: Tracking stopped");
+    };
   }, [riderData?.id, isOnline, activeBooking?.id, activeBooking?.status, user?.full_name]);
 
   // Countdown for incoming booking
