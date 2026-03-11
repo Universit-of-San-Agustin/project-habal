@@ -158,8 +158,12 @@ export default function CustomerHome({ user }) {
       .catch(() => {});
   }, [user]);
 
+  // Enhanced real-time tracking with 2s polling during active rides
   useEffect(() => {
     if (!activeRide?.id || !["searching", "assigned", "otw", "arrived", "in_progress"].includes(activeRide.status)) return;
+    
+    const pollInterval = ["assigned", "otw", "arrived", "in_progress"].includes(activeRide.status) ? 2000 : 4000;
+    
     const interval = setInterval(async () => {
       const rows = await base44.entities.Booking.filter({ booking_id: activeRide.booking_id }, "-created_date", 1);
       const updated = rows?.[0];
@@ -168,7 +172,12 @@ export default function CustomerHome({ user }) {
       if (updated.rider_id) {
         const locs = await base44.entities.RiderLocation.filter({ rider_id: updated.rider_id }, "-updated_date", 1).catch(() => []);
         if (locs?.[0]) {
-          const loc = { lat: locs[0].lat, lng: locs[0].lng };
+          const loc = { 
+            lat: locs[0].lat, 
+            lng: locs[0].lng,
+            heading: locs[0].heading || 0,
+            speed: locs[0].speed || 0
+          };
           setRiderLocation(loc);
           const isEnRoutePickup = ["assigned", "otw", "arrived"].includes(updated.status);
           const isInProgress = updated.status === "in_progress";
@@ -198,9 +207,9 @@ export default function CustomerHome({ user }) {
       setActiveRide(updated);
       if (updated.status === "completed") { setScreen("rate"); clearInterval(interval); }
       if (updated.status === "cancelled") { setActiveRide(null); setScreen("map"); clearInterval(interval); }
-    }, 4000);
+    }, pollInterval);
     return () => clearInterval(interval);
-  }, [activeRide?.id, activeRide?.status]);
+  }, [activeRide?.id, activeRide?.status, dropoffCoords]);
 
   const handleGeolocate = useCallback(async (lng, lat) => {
     const coords = { lng, lat };

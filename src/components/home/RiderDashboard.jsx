@@ -55,20 +55,46 @@ export default function RiderDashboard({ user }) {
       }).catch(() => {});
   }, [user]);
 
-  // GPS broadcast
+  // GPS broadcast - enhanced with booking context and higher frequency during active trips
   useEffect(() => {
     if (!riderData?.id || !isOnline) return;
+    
+    const updateInterval = activeBooking ? 2000 : 5000; // 2s during trip, 5s when idle
+    let lastUpdate = 0;
+    
     const watchId = navigator.geolocation?.watchPosition(
-      ({ coords: { longitude: lng, latitude: lat } }) => {
+      ({ coords: { longitude: lng, latitude: lat, heading, speed } }) => {
+        const now = Date.now();
+        if (now - lastUpdate < updateInterval) return;
+        lastUpdate = now;
+        
+        const locationData = {
+          lat,
+          lng,
+          rider_name: user?.full_name,
+          heading: heading || 0,
+          speed: speed || 0,
+          booking_id: activeBooking?.id || null,
+          status: activeBooking ? 
+            (activeBooking.status === "in_progress" ? "en_route_dropoff" : "en_route_pickup") 
+            : "idle"
+        };
+        
         base44.entities.RiderLocation.filter({ rider_id: riderData.id }, "-updated_date", 1).then(locs => {
-          if (locs?.[0]) base44.entities.RiderLocation.update(locs[0].id, { lat, lng, rider_name: user?.full_name });
-          else base44.entities.RiderLocation.create({ rider_id: riderData.id, rider_name: user?.full_name, lat, lng });
-        });
+          if (locs?.[0]) {
+            base44.entities.RiderLocation.update(locs[0].id, locationData);
+          } else {
+            base44.entities.RiderLocation.create({ rider_id: riderData.id, ...locationData });
+          }
+        }).catch(err => console.error("GPS update failed:", err));
       },
-      () => {}, { enableHighAccuracy: true }
+      (error) => {
+        console.warn("GPS error:", error.message);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
     return () => navigator.geolocation?.clearWatch(watchId);
-  }, [riderData?.id, isOnline]);
+  }, [riderData?.id, isOnline, activeBooking?.id, activeBooking?.status, user?.full_name]);
 
   // Countdown for incoming booking
   useEffect(() => {
