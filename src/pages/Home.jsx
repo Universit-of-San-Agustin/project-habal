@@ -10,6 +10,7 @@ import NetworkOwnerDashboard from "../components/home/NetworkOwnerDashboard";
 import AdminDashboard from "../components/home/AdminDashboard";
 import DemoRoleSwitcher from "../components/home/DemoRoleSwitcher";
 import DemoDataInitializer from "../components/demo/DemoDataInitializer";
+import DemoModeIndicator from "../components/demo/DemoModeIndicator";
 
 /**
  * ═══════════════════════════════════════════════════════════════
@@ -91,8 +92,15 @@ export default function Home() {
 
   const handleDemoSwitch = (roleKey) => {
     if (!DEMO_MODE) return;
+    // Switch role context while maintaining the real user session
+    // This allows testing different role perspectives with the same database
     setDemoRole(roleKey);
-    setUser(DEMO_USERS[roleKey]);
+    const switchedUser = {
+      ...user, // Keep real user data (id, timestamps, etc.)
+      ...DEMO_USERS[roleKey], // Override display name and role
+      _originalUser: user, // Store original for reference
+    };
+    setUser(switchedUser);
   };
 
   if (phase === "splash") return <SplashScreen />;
@@ -122,12 +130,15 @@ export default function Home() {
       {role !== "rider" && role !== "dispatcher" && role !== "operator" && role !== "network_owner" && role !== "admin"
         && <CustomerHome user={activeUser} key={`customer-${activeUser?.id}`} />}
 
-      {/* Demo Role Switcher - only shown when DEMO_MODE=true AND logged in as demo account */}
+      {/* Demo Mode UI - only shown when DEMO_MODE=true AND logged in as demo account */}
       {DEMO_MODE && isDemoSession && (
-        <DemoRoleSwitcher
-          currentRole={currentDemoRoleKey}
-          onSwitch={handleDemoSwitch}
-        />
+        <>
+          <DemoModeIndicator currentRole={currentDemoRoleKey} />
+          <DemoRoleSwitcher
+            currentRole={currentDemoRoleKey}
+            onSwitch={handleDemoSwitch}
+          />
+        </>
       )}
     </>
   );

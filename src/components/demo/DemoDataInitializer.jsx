@@ -2,8 +2,19 @@ import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 
 /**
- * Auto-initializes demo data on first load for demo accounts.
- * Ensures persistent demo environment with realistic historical data.
+ * Production-Safe Demo Data Initializer
+ * 
+ * PURPOSE: Seeds REAL, PERSISTENT demo data for testing and presentations
+ * 
+ * CRITICAL DESIGN PRINCIPLES:
+ * 1. All demo data is REAL database records (not simulated)
+ * 2. Demo accounts interact with the same production database as regular users
+ * 3. Demo riders can accept real bookings from regular customers
+ * 4. Real riders can accept bookings from demo customers
+ * 5. All real-time systems (dispatch, GPS tracking, chat) work normally
+ * 
+ * This creates a seamless testing environment where demo users and regular users
+ * coexist in the same system without any separation or simulation.
  */
 export default function DemoDataInitializer({ user }) {
   const [initialized, setInitialized] = useState(false);
