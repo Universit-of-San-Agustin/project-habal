@@ -30,13 +30,33 @@ export default function LoginScreen({ onLogin }) {
     base44.auth.redirectToLogin(window.location.href);
   };
 
-  const handleDemoLogin = () => {
+  const handleDemoLogin = async () => {
     setLoading(true);
-    // Flag demo mode before OAuth redirect
-    localStorage.setItem("demo_session", "true");
-    localStorage.setItem("demo_login_time", new Date().toISOString());
-    // Redirect to OAuth - after authentication, app will check demo_session flag
-    base44.auth.redirectToLogin(window.location.href);
+    setError("");
+    try {
+      // Sign in using Base44 auth with demo credentials
+      const user = await base44.auth.signIn({
+        email: "demo@habal.app",
+        password: "demo1234"
+      });
+
+      if (!user) {
+        throw new Error("Demo login failed");
+      }
+
+      // Store demo state
+      localStorage.setItem("demo_mode", "true");
+      localStorage.setItem("demo_role", "customer");
+
+      console.log("✅ DEMO LOGIN SUCCESS:", { email: user.email, role: "customer" });
+
+      // Redirect AFTER authentication succeeds
+      window.location.href = "/";
+    } catch (err) {
+      console.error("Demo login error:", err);
+      setError("Unable to start demo session. Please try again.");
+      setLoading(false);
+    }
   };
 
   const handleLogin = () => {
