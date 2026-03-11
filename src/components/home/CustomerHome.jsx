@@ -9,6 +9,7 @@ import {
 import MapboxMap from "./MapboxMap";
 import { useToast, ToastContainer } from "./ToastNotification";
 import ChatPanel from "../chat/ChatPanel";
+import CommunicationPanel from "../booking/CommunicationPanel";
 import WalletScreen from "../customer/WalletScreen.jsx";
 import SupportScreen from "../customer/SupportScreen";
 import NotificationsPanel from "../customer/NotificationsPanel";
@@ -132,6 +133,8 @@ export default function CustomerHome({ user }) {
   const fareDebounceRef = useRef(null);
   const [historyTab, setHistoryTab] = useState("history");
   const [selectedRide, setSelectedRide] = useState(null);
+  const [bookingNotes, setBookingNotes] = useState(""); // Customer notes for rider
+  const [showComms, setShowComms] = useState(false); // Communication panel
 
 
 
@@ -309,6 +312,7 @@ export default function CustomerHome({ user }) {
       status: isScheduled ? "scheduled" : "pending",
       payment_method: paymentMethod,
       fare_estimate: fareEstimate,
+      notes: bookingNotes.trim() || null, // Add customer notes
       ...(isScheduled && scheduledAt ? { is_scheduled: true, scheduled_at: scheduledAt } : {}),
     });
     await base44.entities.BookingEvent.create({
@@ -815,6 +819,20 @@ export default function CustomerHome({ user }) {
               📌
             </button>
           </div>
+
+          {/* Notes input (optional) */}
+          {dropoff && (
+            <div className="bg-white rounded-xl shadow-md border border-gray-100 px-3 py-2.5 mb-2">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Notes for Rider (Optional)</div>
+              <input
+                value={bookingNotes}
+                onChange={(e) => setBookingNotes(e.target.value)}
+                placeholder="e.g., 'Pick me up at side gate', 'I'm wearing a red shirt'"
+                className="w-full text-sm bg-transparent border-none focus:outline-none text-gray-800 placeholder-gray-400"
+                maxLength={200}
+              />
+            </div>
+          )}
           {/* Destination row */}
           <button onClick={() => { setSearchMode("dropoff"); setScreen("search"); setSuggestions([]); }}
             className="w-full bg-white rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow px-4 py-4 flex items-center gap-3 text-left">
@@ -1197,10 +1215,10 @@ export default function CustomerHome({ user }) {
                 <Navigation className="w-4 h-4" /> Live Map
               </button>
               {activeRide.rider_name && (
-                <button onClick={() => setShowChat(true)}
+                <button onClick={() => setShowComms(true)}
                   className="flex-1 py-3 rounded-2xl text-sm font-bold flex items-center justify-center gap-1.5 border-2"
                   style={{ borderColor: PRIMARY + "40", color: PRIMARY_DARK }}>
-                  <MessageCircle className="w-4 h-4" /> Chat
+                  <MessageCircle className="w-4 h-4" /> Contact
                 </button>
               )}
               {["pending", "searching", "assigned", "otw"].includes(activeRide.status) && (
@@ -1210,8 +1228,13 @@ export default function CustomerHome({ user }) {
                 </button>
               )}
             </div>
-            {showChat && activeRide && (
-              <ChatPanel bookingId={activeRide.booking_id || activeRide.id} currentUser={user} senderRole="customer" onClose={() => setShowChat(false)} />
+            {showComms && activeRide && (
+              <CommunicationPanel
+                booking={activeRide}
+                currentUser={user}
+                userRole="customer"
+                onClose={() => setShowComms(false)}
+              />
             )}
           </div>
           {showCancelConfirm && <CancelModal onCancel={handleCancelRide} onKeep={() => setShowCancelConfirm(false)} />}

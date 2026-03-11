@@ -8,6 +8,7 @@ import {
 import EarningsScreen from "../rider/EarningsScreen";
 import MapboxMap from "./MapboxMap";
 import ChatPanel from "../chat/ChatPanel";
+import CommunicationPanel from "../booking/CommunicationPanel";
 
 const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/fe9d5d17d_habal.png";
 const PRIMARY = "#4DC8F0";
@@ -27,6 +28,7 @@ export default function RiderDashboard({ user }) {
   const [isOnline, setIsOnline] = useState(false);
   const [tripHistory, setTripHistory] = useState([]);
   const [showChat, setShowChat] = useState(false);
+  const [showComms, setShowComms] = useState(false);
   const [countdown, setCountdown] = useState(30);
   const [pickupCoords, setPickupCoords] = useState(null);
   const [dropoffCoords, setDropoffCoords] = useState(null);
@@ -355,6 +357,16 @@ export default function RiderDashboard({ user }) {
               </div>
             )}
           </div>
+          {/* Customer Notes */}
+          {incomingBooking.notes && (
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 mb-4">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-sm">📝</span>
+                <div className="font-bold text-amber-900 text-xs">Customer Notes:</div>
+              </div>
+              <div className="text-sm text-gray-700 leading-snug">{incomingBooking.notes}</div>
+            </div>
+          )}
           {/* Route */}
           <div className="bg-gray-50 rounded-2xl p-4 mb-5 space-y-3">
             <div className="flex items-start gap-3">
@@ -521,7 +533,7 @@ export default function RiderDashboard({ user }) {
                     {activeBooking.payment_method?.toUpperCase() || "CASH"} · {activeBooking.fare_estimate ? `₱${activeBooking.fare_estimate}` : "—"}
                   </div>
                 </div>
-                <button onClick={() => setShowChat(true)}
+                <button onClick={() => setShowComms(true)}
                   className="w-10 h-10 rounded-xl flex items-center justify-center"
                   style={{ background: "#eff6ff" }}>
                   <MessageCircle className="w-5 h-5 text-blue-500" />
@@ -591,8 +603,13 @@ export default function RiderDashboard({ user }) {
             </div>
           </div>
         )}
-        {showChat && activeBooking && (
-          <ChatPanel bookingId={activeBooking.booking_id || activeBooking.id} currentUser={user} senderRole="rider" onClose={() => setShowChat(false)} />
+        {showComms && activeBooking && (
+          <CommunicationPanel
+            booking={activeBooking}
+            currentUser={user}
+            userRole="rider"
+            onClose={() => setShowComms(false)}
+          />
         )}
         <BottomNav screen={screen} setScreen={setScreen} hasActive={!!activeBooking} />
       </Shell>
