@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import SplashScreen from "../components/home/SplashScreen";
 import LoginScreen from "../components/home/LoginScreen";
-import UserNotRegisteredError from "../components/UserNotRegisteredError";
+// Removed unused UserNotRegisteredError import
 import CustomerHome from "../components/home/CustomerHome";
 import RiderDashboard from "../components/home/RiderDashboard";
 import DispatcherDashboard from "../components/home/DispatcherDashboard";
@@ -82,62 +82,98 @@ export default function Home() {
   const [demoRole, setDemoRole] = useState(null); // null = use real role
   const [isDemoSession, setIsDemoSession] = useState(false);
 
+  // Session validation on mount
   useEffect(() => {
-    const timer = setTimeout(async () => {
+    const validateSession = async () => {
       try {
+        console.log("🔍 SESSION VALIDATION: Checking authentication state...");
         const me = await base44.auth.me();
-        console.log("🔐 AUTH STATE:", {
-          authenticated: !!me,
-          user_id: me?.id,
-          email: me?.email,
-          full_name: me?.full_name,
-          role: me?.role,
-          is_demo_account: Object.values(DEMO_USERS).map(u => u.email).includes(me?.email),
+        
+        // Validate session completeness
+        if (!me || !me.id || !me.email) {
+          console.warn("⚠️ INCOMPLETE SESSION: Missing user data");
+          setPhase("login");
+          return;
+        }
+
+        console.log("✅ SESSION VALID:", {
+          authenticated: true,
+          user_id: me.id,
+          email: me.email,
+          full_name: me.full_name,
+          role: me.role,
+          timestamp: new Date().toISOString(),
         });
+
         setUser(me);
         setPhase("app");
-        // Auto-enable demo switcher if user is a demo account (via is_demo_account flag OR demo email)
+        
+        // Auto-enable demo switcher if user is a demo account
         const demoEmails = Object.values(DEMO_USERS).map(u => u.email);
         const isDemoUser = me?.is_demo_account === true || demoEmails.includes(me?.email);
         if (isDemoUser) {
           setIsDemoSession(true);
-          console.log("🧪 DEMO MODE ENABLED:", { email: me?.email, role: me?.role });
+          console.log("🧪 DEMO MODE ENABLED:", { email: me.email, role: me.role });
         }
       } catch (err) {
-        console.log("❌ NO SESSION:", {
+        console.log("❌ AUTHENTICATION FAILED:", {
           message: err?.message,
-          error: err,
+          code: err?.code,
+          timestamp: new Date().toISOString(),
         });
-        // No session or authentication failed → Always show login page
-        // The "not_registered" screen should ONLY appear when a user IS authenticated
-        // but lacks database registration (handled separately by dashboards)
+        // ANY authentication failure → redirect to login page
+        // Never show "Access Restricted" for logged-out users
         setPhase("login");
       }
-    }, 2800);
+    };
+
+    // Show splash screen, then validate
+    const timer = setTimeout(validateSession, 2800);
     return () => clearTimeout(timer);
   }, []);
 
   const handleLogin = () => {
+    console.log("🔐 LOGIN REDIRECT: Initiating authentication flow");
+    // Redirect to Base44 OAuth - returns to current URL after authentication
     base44.auth.redirectToLogin(window.location.href);
   };
 
   const handleDemoSwitch = async (roleKey) => {
     if (!DEMO_MODE) return;
-    console.log("🔄 SWITCHING ROLE:", { from: user?.role, to: DEMO_USERS[roleKey]?.role });
-    // Update the user's role in the database for persistent demo switching
+    console.log("🔄 ROLE SWITCH INITIATED:", { 
+      from: user?.role, 
+      to: DEMO_USERS[roleKey]?.role,
+      user_email: user?.email,
+    });
+    
     try {
       const newRole = DEMO_USERS[roleKey]?.role;
+      
+      // Update user role in database
       await base44.auth.updateMe({ role: newRole });
+      
+      // Re-validate session
       const updatedUser = await base44.auth.me();
-      console.log("✅ ROLE SWITCHED:", { email: updatedUser?.email, role: updatedUser?.role });
+      
+      console.log("✅ ROLE SWITCH COMPLETE:", { 
+        email: updatedUser.email, 
+        new_role: updatedUser.role,
+        timestamp: new Date().toISOString(),
+      });
+      
       setUser(updatedUser);
-      setDemoRole(null); // Clear demo role override since real user now has the role
-      // Force re-render
+      setDemoRole(null);
+      
+      // Brief loading state for smooth transition
       setPhase("loading");
       setTimeout(() => setPhase("app"), 100);
     } catch (err) {
-      console.error("❌ ROLE SWITCH FAILED:", err);
-      // Fallback to local role switching if DB update fails
+      console.error("❌ ROLE SWITCH FAILED:", {
+        error: err.message,
+        attempted_role: DEMO_USERS[roleKey]?.role,
+      });
+      
+      // Fallback to local role override
       setDemoRole(roleKey);
     }
   };
@@ -147,9 +183,24 @@ export default function Home() {
   if (phase === "login") return <LoginScreen onLogin={handleLogin} />;
   if (phase === "loading") return <SplashScreen />; // Brief loading state during role switch
 
-  // Determine effective role from actual user data (DB role takes precedence)
-  const effectiveRole = user?.role || "user";
+  // CRITICAL: Only render dashboards when user is authenticated and has valid session
+  if (!user || !user.id) {
+    console.warn("⚠️ RENDER BLOCKED: No valid user session");
+    return null;
+  }
+
+  // Determine effective role from database (strict role validation)
+  const effectiveRole = user.role || "user";
   const activeUser = user;
+
+  console.log("🎯 DASHBOARD ROUTING:", {
+    user_id: user.id,
+    email: user.email,
+    effective_role: effectiveRole,
+    rendering: effectiveRole === "admin" ? "AdminDashboard" : 
+               effectiveRole === "rider" ? "RiderDashboard" :
+               ["operator", "dispatcher", "network_owner"].includes(effectiveRole) ? "NetworkOwnerDashboard" : "CustomerHome",
+  });
 
   // Map database role to demo switcher key
   const roleToKeyMap = {
