@@ -197,7 +197,8 @@ export default function Home() {
       setUser(updatedUser);
       setDemoRole(null);
       
-      // Brief loading state for smooth transition
+      // Scroll to top and show loading state for smooth transition
+      window.scrollTo({ top: 0, behavior: "smooth" });
       setPhase("loading");
       setTimeout(() => setPhase("app"), 100);
     } catch (err) {
