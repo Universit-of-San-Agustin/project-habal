@@ -166,21 +166,24 @@ export default function Home() {
   };
 
   const handleDemoSwitch = async (roleKey) => {
-    if (!DEMO_MODE) return;
+    if (!DEMO_MODE || !isDemoSession) return;
+    
+    const newRole = DEMO_USERS[roleKey]?.role;
     console.log("🔄 ROLE SWITCH INITIATED:", { 
       from: user?.role, 
-      to: DEMO_USERS[roleKey]?.role,
+      to: newRole,
       user_email: user?.email,
     });
     
     try {
-      const newRole = DEMO_USERS[roleKey]?.role;
-      
       // Update user role in database
       await base44.auth.updateMe({ role: newRole });
       
       // Re-validate session
       const updatedUser = await base44.auth.me();
+      
+      // Store new demo role
+      localStorage.setItem("demo_role", newRole);
       
       console.log("✅ ROLE SWITCH COMPLETE:", { 
         email: updatedUser.email, 
@@ -198,7 +201,7 @@ export default function Home() {
     } catch (err) {
       console.error("❌ ROLE SWITCH FAILED:", {
         error: err.message,
-        attempted_role: DEMO_USERS[roleKey]?.role,
+        attempted_role: newRole,
       });
       
       // Fallback to local role override
