@@ -11,7 +11,10 @@ import AdminDashboard from "../components/home/AdminDashboard";
 import DemoRoleSwitcher from "../components/home/DemoRoleSwitcher";
 import DemoDataInitializer from "../components/demo/DemoDataInitializer";
 
-// Demo users for each role — mirrors the demo logins in LoginScreen
+// DEMO_MODE: Set to true to enable role switching for testing/demos
+const DEMO_MODE = true;
+
+// Demo users for testing — only active when DEMO_MODE = true
 const DEMO_USERS = {
   customer: { id: "demo-customer", full_name: "Demo Customer", email: "demo.customer@habal.app", role: "user" },
   rider:    { id: "demo-rider",    full_name: "Demo Rider",    email: "demo.rider@habal.app",    role: "rider" },
@@ -32,9 +35,11 @@ export default function Home() {
         const me = await base44.auth.me();
         setUser(me);
         setPhase("app");
-        // Auto-enable demo switcher for demo accounts
-        const demoEmails = Object.values(DEMO_USERS).map(u => u.email);
-        if (demoEmails.includes(me?.email)) setIsDemoSession(true);
+        // Auto-enable demo switcher ONLY if DEMO_MODE is enabled AND user is a demo account
+        if (DEMO_MODE) {
+          const demoEmails = Object.values(DEMO_USERS).map(u => u.email);
+          if (demoEmails.includes(me?.email)) setIsDemoSession(true);
+        }
       } catch (err) {
         const msg = err?.message || "";
         if (msg.includes("Authentication required to view users") || msg.includes("not registered")) {
@@ -47,17 +52,12 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleLogin = (demoUser) => {
-    if (demoUser) {
-      setUser(demoUser);
-      setPhase("app");
-      setIsDemoSession(true); // All LoginScreen logins are demo
-    } else {
-      base44.auth.redirectToLogin(window.location.href);
-    }
+  const handleLogin = () => {
+    base44.auth.redirectToLogin(window.location.href);
   };
 
   const handleDemoSwitch = (roleKey) => {
+    if (!DEMO_MODE) return;
     setDemoRole(roleKey);
     setUser(DEMO_USERS[roleKey]);
   };
@@ -89,7 +89,8 @@ export default function Home() {
       {role !== "rider" && role !== "dispatcher" && role !== "operator" && role !== "network_owner" && role !== "admin"
         && <CustomerHome user={activeUser} key={`customer-${activeUser?.id}`} />}
 
-      {isDemoSession && (
+      {/* Demo Role Switcher - only shown when DEMO_MODE=true AND logged in as demo account */}
+      {DEMO_MODE && isDemoSession && (
         <DemoRoleSwitcher
           currentRole={currentDemoRoleKey}
           onSwitch={handleDemoSwitch}

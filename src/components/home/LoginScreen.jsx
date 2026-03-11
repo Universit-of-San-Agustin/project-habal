@@ -7,14 +7,6 @@ const PRIMARY      = "#4DC8F0";
 const PRIMARY_DARK = "#1a9ecb";
 const PRIMARY_BG   = "#EBF9FE";
 
-const DEMO_ACCOUNTS = {
-  Customer:   { email: "demo.customer@habal.app",   label: "🚖 Customer",   role: "user" },
-  Rider:      { email: "demo.rider@habal.app",      label: "🏍 Rider",      role: "rider" },
-  Dispatcher: { email: "demo.dispatcher@habal.app", label: "📋 Dispatcher", role: "dispatcher" },
-  Operator:   { email: "demo.operator@habal.app",   label: "🏢 Operator",   role: "operator" },
-  Admin:      { email: "demo.admin@habal.app",      label: "🛡 Admin",      role: "admin" },
-};
-
 const PHONE_RE = /^(\+63|0)9\d{9}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -28,9 +20,6 @@ export default function LoginScreen({ onLogin }) {
     firstName: "", lastName: "", username: "", phone: "", dob: "",
     otp: ["", "", "", "", "", ""],
   });
-  const [demoLoading, setDemoLoading] = useState(null);
-  const [demoError, setDemoError]     = useState("");
-
   const set = (key, val) => { setForm(f => ({ ...f, [key]: val })); setError(""); };
 
   const handleRealAuth = () => {
@@ -64,22 +53,6 @@ export default function LoginScreen({ onLogin }) {
     if (code.length < 6) { setError("Please enter the full 6-digit code."); return; }
     setError("");
     setScreen("otp_success");
-  };
-
-  const handleDemoRole = async (roleName) => {
-    const account = DEMO_ACCOUNTS[roleName];
-    if (!account) return;
-    setDemoLoading(roleName);
-    setDemoError("");
-    // Build a synthetic demo user that matches the expected shape
-    const demoUser = {
-      id: `demo-${roleName.toLowerCase()}`,
-      email: account.email,
-      full_name: `Demo ${roleName}`,
-      role: account.role,
-    };
-    // Small delay for UX feel
-    setTimeout(() => onLogin(demoUser), 400);
   };
 
   // ── REGISTER ─────────────────────────────────────────────────
@@ -286,32 +259,7 @@ export default function LoginScreen({ onLogin }) {
         <button onClick={() => setScreen("register")} className="font-semibold" style={{ color: PRIMARY }}>Register Now</button>
       </p>
 
-      {/* Demo roles */}
-      <div className="rounded-3xl p-5" style={{ background: PRIMARY_BG, border: `1.5px solid rgba(77,200,240,0.2)` }}>
-        <p className="text-center text-xs font-bold uppercase tracking-widest mb-0.5" style={{ color: PRIMARY }}>Try a Demo Role</p>
-        <p className="text-center text-[10px] text-gray-400 mb-4">Explore the app without signing up</p>
-        {demoError && <p className="text-center text-xs text-red-400 mb-2">{demoError}</p>}
-        <div className="grid grid-cols-2 gap-2">
-          {Object.entries(DEMO_ACCOUNTS).map(([roleName, account]) => (
-            <button key={roleName} onClick={() => handleDemoRole(roleName)} disabled={demoLoading === roleName}
-              className={`py-3 rounded-2xl text-sm font-semibold text-gray-700 bg-white border transition-all disabled:opacity-60 ${roleName === "Admin" ? "col-span-2" : ""}`}
-              style={{
-                borderColor: "rgba(77,200,240,0.25)",
-                boxShadow: "0 2px 6px rgba(77,200,240,0.1)",
-                fontFamily: "'Poppins', sans-serif",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = PRIMARY; e.currentTarget.style.background = "rgba(77,200,240,0.07)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(77,200,240,0.25)"; e.currentTarget.style.background = "#fff"; }}>
-              {demoLoading === roleName
-                ? <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin mx-auto" style={{ borderColor: `rgba(77,200,240,0.3)`, borderTopColor: PRIMARY }} />
-                : account.label}
-            </button>
-          ))}
-        </div>
-        <p className="text-center text-[10px] text-gray-400 mt-3">
-          Password: <span className="font-mono font-bold" style={{ color: PRIMARY }}>Demo@1234</span>
-        </p>
-      </div>
+
     </Shell>
   );
 }
