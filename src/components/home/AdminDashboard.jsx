@@ -404,6 +404,9 @@ export default function AdminDashboard({ user }) {
         {/* ── OVERVIEW ── */}
         {!loading && tab === "overview" && (
           <div className="px-4 pt-4 pb-8 space-y-4">
+            {/* System Validation */}
+            <SystemValidationReport />
+            
             {/* Alert banner */}
             {totalAlerts > 0 && (
               <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
