@@ -96,10 +96,12 @@ export default function Home() {
         });
         setUser(me);
         setPhase("app");
-        // Auto-enable demo switcher ONLY if DEMO_MODE is enabled AND user is a demo account
-        if (DEMO_MODE) {
-          const demoEmails = Object.values(DEMO_USERS).map(u => u.email);
-          if (demoEmails.includes(me?.email)) setIsDemoSession(true);
+        // Auto-enable demo switcher if user is a demo account (via is_demo_account flag OR demo email)
+        const demoEmails = Object.values(DEMO_USERS).map(u => u.email);
+        const isDemoUser = me?.is_demo_account === true || demoEmails.includes(me?.email);
+        if (isDemoUser) {
+          setIsDemoSession(true);
+          console.log("🧪 DEMO MODE ENABLED:", { email: me?.email, role: me?.role });
         }
       } catch (err) {
         console.log("❌ AUTH ERROR:", {
