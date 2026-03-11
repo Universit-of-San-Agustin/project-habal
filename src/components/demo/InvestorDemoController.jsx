@@ -5,13 +5,33 @@ import { COLORS } from "../shared/AppleDesignTokens";
 
 const PRIMARY = COLORS.primary;
 
-// Iloilo City zones with realistic coordinates
+// Iloilo Smart City - Realistic zones with landmarks and coordinates
 const ZONES = {
-  Jaro: { center: [10.7202, 122.5621], radius: 0.015 },
-  Mandurriao: { center: [10.7081, 122.5453], radius: 0.012 },
-  "City Proper": { center: [10.6935, 122.5685], radius: 0.01 },
-  "La Paz": { center: [10.7156, 122.5531], radius: 0.013 },
-  Arevalo: { center: [10.6998, 122.5394], radius: 0.011 },
+  Jaro: { 
+    center: [10.7202, 122.5621], 
+    radius: 0.015,
+    landmarks: ["Jaro Plaza", "SM City Iloilo", "Jaro Cathedral", "West Visayas State University"]
+  },
+  Mandurriao: { 
+    center: [10.7081, 122.5453], 
+    radius: 0.012,
+    landmarks: ["Iloilo International Airport", "Festive Walk Parade", "Megaworld Boulevard", "University of San Agustin"]
+  },
+  "City Proper": { 
+    center: [10.6935, 122.5685], 
+    radius: 0.01,
+    landmarks: ["Iloilo City Hall", "Molo Church", "Plaza Libertad", "Robinsons Place Iloilo"]
+  },
+  "La Paz": { 
+    center: [10.7156, 122.5531], 
+    radius: 0.013,
+    landmarks: ["La Paz Public Market", "Iloilo Central Market", "Atria Park District", "Smallville Complex"]
+  },
+  Arevalo: { 
+    center: [10.6998, 122.5394], 
+    radius: 0.011,
+    landmarks: ["Arevalo Plaza", "Iloilo River Esplanade", "Fort San Pedro", "Central Philippine University"]
+  },
 };
 
 const RIDER_NAMES = [
@@ -138,14 +158,18 @@ export default function InvestorDemoController({ user }) {
       const pickup = getRandomLocationInZone(pickupZone);
       const dropoff = getRandomLocationInZone(dropoffZone);
       
+      // Get realistic landmarks for pickup/dropoff
+      const pickupLandmark = ZONES[pickupZone].landmarks[Math.floor(Math.random() * ZONES[pickupZone].landmarks.length)];
+      const dropoffLandmark = ZONES[dropoffZone].landmarks[Math.floor(Math.random() * ZONES[dropoffZone].landmarks.length)];
+      
       const distance = calculateDistance(pickup.lat, pickup.lng, dropoff.lat, dropoff.lng);
       const fare = Math.round(distance * 15 + 40); // Base fare + per-km rate
       
       const booking = {
         customer_name: CUSTOMER_NAMES[Math.floor(Math.random() * CUSTOMER_NAMES.length)],
         customer_phone: `+639${Math.floor(Math.random() * 900000000 + 100000000)}`,
-        pickup_address: `${pickupZone}, Iloilo City`,
-        dropoff_address: `${dropoffZone}, Iloilo City`,
+        pickup_address: `${pickupLandmark}, ${pickupZone}, Iloilo City`,
+        dropoff_address: `${dropoffLandmark}, ${dropoffZone}, Iloilo City`,
         zone: pickupZone,
         status: "pending",
         fare_estimate: fare,
@@ -158,7 +182,7 @@ export default function InvestorDemoController({ user }) {
       await base44.entities.Booking.create(booking);
       setStats(s => ({ ...s, bookings: s.bookings + 1 }));
       
-      console.log("📍 Demo booking created:", booking.pickup_address, "→", booking.dropoff_address);
+      console.log("📍 Smart City Demo Booking:", pickupLandmark, "→", dropoffLandmark);
       
       // Auto-assign rider after 3 seconds
       setTimeout(() => autoAssignRider(booking), 3000);
@@ -256,18 +280,60 @@ export default function InvestorDemoController({ user }) {
     try {
       const locations = await base44.entities.RiderLocation.filter({ is_demo_data: true });
       
-      // Update each rider location
+      // Smart City movement simulation - realistic road-based patterns
       await Promise.all(locations.map(async (loc) => {
-        const movement = 0.0005; // Small movement increment
-        const newLat = loc.lat + (Math.random() - 0.5) * movement;
-        const newLng = loc.lng + (Math.random() - 0.5) * movement;
-        const newHeading = (loc.heading + (Math.random() - 0.5) * 30) % 360;
+        // Simulate road-network movement (cardinal directions preferred)
+        const direction = Math.floor(Math.random() * 8); // 8 compass directions
+        const movement = 0.0003 + Math.random() * 0.0002; // Variable speed
+        
+        let latDelta = 0;
+        let lngDelta = 0;
+        let heading = loc.heading;
+        
+        // Simulate movement along road grid
+        if (direction === 0) { // North
+          latDelta = movement;
+          heading = 0;
+        } else if (direction === 1) { // Northeast
+          latDelta = movement * 0.7;
+          lngDelta = movement * 0.7;
+          heading = 45;
+        } else if (direction === 2) { // East
+          lngDelta = movement;
+          heading = 90;
+        } else if (direction === 3) { // Southeast
+          latDelta = -movement * 0.7;
+          lngDelta = movement * 0.7;
+          heading = 135;
+        } else if (direction === 4) { // South
+          latDelta = -movement;
+          heading = 180;
+        } else if (direction === 5) { // Southwest
+          latDelta = -movement * 0.7;
+          lngDelta = -movement * 0.7;
+          heading = 225;
+        } else if (direction === 6) { // West
+          lngDelta = -movement;
+          heading = 270;
+        } else { // Northwest
+          latDelta = movement * 0.7;
+          lngDelta = -movement * 0.7;
+          heading = 315;
+        }
+        
+        // Add slight randomness to simulate real traffic patterns
+        latDelta += (Math.random() - 0.5) * 0.0001;
+        lngDelta += (Math.random() - 0.5) * 0.0001;
+        
+        const newLat = loc.lat + latDelta;
+        const newLng = loc.lng + lngDelta;
+        const speed = Math.random() * 15 + 15; // 15-30 km/h urban speed
         
         return base44.entities.RiderLocation.update(loc.id, {
           lat: newLat,
           lng: newLng,
-          heading: newHeading,
-          speed: Math.random() * 20 + 10, // 10-30 km/h
+          heading: heading,
+          speed: speed,
         });
       }));
     } catch (err) {
@@ -313,8 +379,8 @@ export default function InvestorDemoController({ user }) {
               <TrendingUp className="w-4 h-4" style={{ color: PRIMARY }} />
             </div>
             <div className="flex-1">
-              <div className="text-sm font-bold text-gray-900">Investor Demo Mode</div>
-              <div className="text-[10px] text-gray-400">Live simulation controls</div>
+              <div className="text-sm font-bold text-gray-900">Smart City Demo</div>
+              <div className="text-[10px] text-gray-400">Iloilo live simulation</div>
             </div>
           </div>
         </div>
