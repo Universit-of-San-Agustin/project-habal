@@ -30,35 +30,13 @@ export default function LoginScreen({ onLogin }) {
     base44.auth.redirectToLogin(window.location.href);
   };
 
-  const handleDemoLogin = async () => {
+  const handleDemoLogin = () => {
     setLoading(true);
-    setError("");
-    try {
-      // Create demo session by calling backend function
-      const response = await base44.functions.invoke('demoLogin', {
-        demo_account: 'customer',
-      });
-
-      if (response.data?.success) {
-        const demoUser = response.data.user;
-        
-        // Store demo session flags
-        localStorage.setItem("demo_session", "true");
-        localStorage.setItem("demo_login_time", new Date().toISOString());
-        localStorage.setItem("demo_user_id", demoUser.id);
-        localStorage.setItem("demo_user_email", demoUser.email);
-        
-        // Redirect to OAuth with return URL set to customer dashboard
-        base44.auth.redirectToLogin(window.location.href);
-      } else {
-        setError("Demo login failed. Please try again.");
-        setLoading(false);
-      }
-    } catch (err) {
-      console.error("Demo login error:", err);
-      setError("Demo session creation failed. Please try again.");
-      setLoading(false);
-    }
+    // Flag demo mode before OAuth redirect
+    localStorage.setItem("demo_session", "true");
+    localStorage.setItem("demo_login_time", new Date().toISOString());
+    // Redirect to OAuth - after authentication, app will check demo_session flag
+    base44.auth.redirectToLogin(window.location.href);
   };
 
   const handleLogin = () => {
