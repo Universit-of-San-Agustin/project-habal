@@ -17,6 +17,25 @@ import DemoModeIndicator from "../components/demo/DemoModeIndicator";
  * HABAL Platform - Production Entry Point
  * ═══════════════════════════════════════════════════════════════
  * 
+ * 🏗️ ARCHITECTURE OVERVIEW
+ * 
+ * This is the root entry point for the HABAL platform.
+ * Entry flow: Splash Screen → Authentication Check → Dashboard
+ * 
+ * AUTHENTICATION FLOW:
+ * 1. App loads → Show splash screen
+ * 2. Validate session via base44.auth.me()
+ * 3. If NO valid session → Login page
+ * 4. If valid session exists → Role-based dashboard
+ * 
+ * ⚠️ CRITICAL ROUTING RULES:
+ * - Logged out users → ALWAYS see login page
+ * - "Access Restricted" → ONLY for authenticated users lacking permissions
+ * - Never auto-redirect to admin dashboard
+ * - Logout → ALWAYS returns to login page
+ * 
+ * ═══════════════════════════════════════════════════════════════
+ * 
  * 🔧 PRODUCTION CONFIGURATION
  * 
  * DEMO_MODE: Controls demo testing features
@@ -28,29 +47,32 @@ import DemoModeIndicator from "../components/demo/DemoModeIndicator";
  * 
  * ═══════════════════════════════════════════════════════════════
  * 
- * 📊 PRODUCTION-INTEGRATED DEMO SYSTEM:
+ * 📊 DATA PERSISTENCE SYSTEM:
  * 
  * ✅ ALL DATA IS REAL - Demo accounts use the same production database
  * ✅ NO SIMULATION - All bookings, trips, and events are real records
+ * ✅ DATA PERSISTS ACROSS ROLES - Bookings remain when switching accounts
  * ✅ CROSS-USER INTERACTION - Demo riders can accept real customer bookings
  * ✅ REAL-TIME SYNC - GPS tracking, dispatch, and chat work normally
  * ✅ TRUE WORKFLOWS - Every action follows production business logic
  * 
  * DEMO ROLE SWITCHER:
  * - Allows instant role perspective changes for testing/presentations
- * - Maintains real database session (no data reset on role switch)
+ * - Maintains real database (NO data reset on role switch)
  * - Users can experience Customer → Rider → Operator → Admin flows
  * - Perfect for investor demos and QA testing
  * 
- * EXAMPLE WORKFLOW:
+ * INVESTOR DEMO EXAMPLE:
  * 1. Login as demo.customer@habal.app
- * 2. Create a real booking (stored in Booking entity)
- * 3. Switch to Rider role via demo switcher
- * 4. Accept the booking (real dispatch system)
- * 5. Switch to Operator role
- * 6. Monitor the trip in real-time (live GPS tracking)
- * 7. Switch to Admin role
- * 8. View audit logs of all actions
+ * 2. Create a real booking (persisted in Booking entity)
+ * 3. Logout
+ * 4. Login as demo.rider@habal.app
+ * 5. Accept the SAME booking (data persisted)
+ * 6. Logout
+ * 7. Login as demo.operator@habal.app
+ * 8. Monitor the SAME trip in real-time
+ * 9. Login as demo.admin@habal.app
+ * 10. View audit logs of ALL actions
  * 
  * 🎭 DEMO ACCOUNTS:
  * - demo.customer@habal.app   → Customer booking flow
@@ -82,22 +104,26 @@ export default function Home() {
   const [demoRole, setDemoRole] = useState(null); // null = use real role
   const [isDemoSession, setIsDemoSession] = useState(false);
 
-  // Session validation on mount
+  // Session validation on mount - Root entry point always validates auth
   useEffect(() => {
     const validateSession = async () => {
       try {
         console.log("🔍 SESSION VALIDATION: Checking authentication state...");
         const me = await base44.auth.me();
         
-        // Validate session completeness
-        if (!me || !me.id || !me.email) {
-          console.warn("⚠️ INCOMPLETE SESSION: Missing user data");
+        // Strict session validation - all fields must exist
+        if (!me || !me.id || !me.email || !me.role) {
+          console.warn("⚠️ INCOMPLETE SESSION: Missing required user data", {
+            has_user: !!me,
+            has_id: !!me?.id,
+            has_email: !!me?.email,
+            has_role: !!me?.role,
+          });
           setPhase("login");
           return;
         }
 
-        console.log("✅ SESSION VALID:", {
-          authenticated: true,
+        console.log("✅ SESSION VALID - User authenticated:", {
           user_id: me.id,
           email: me.email,
           full_name: me.full_name,
@@ -116,18 +142,18 @@ export default function Home() {
           console.log("🧪 DEMO MODE ENABLED:", { email: me.email, role: me.role });
         }
       } catch (err) {
-        console.log("❌ AUTHENTICATION FAILED:", {
-          message: err?.message,
+        console.log("❌ NO VALID SESSION - Redirecting to login:", {
+          error: err?.message,
           code: err?.code,
           timestamp: new Date().toISOString(),
         });
-        // ANY authentication failure → redirect to login page
-        // Never show "Access Restricted" for logged-out users
+        // ANY authentication failure → Always redirect to login page
+        // NEVER show "Access Restricted" for users without valid sessions
         setPhase("login");
       }
     };
 
-    // Show splash screen, then validate
+    // Show splash screen briefly, then validate authentication
     const timer = setTimeout(validateSession, 2800);
     return () => clearTimeout(timer);
   }, []);
@@ -178,7 +204,17 @@ export default function Home() {
     }
   };
 
-  // Authentication flow: splash → login → app
+  // ═══════════════════════════════════════════════════════════════
+  // AUTHENTICATION ROUTING PHASE SYSTEM
+  // ═══════════════════════════════════════════════════════════════
+  // Phase flow: splash → login → app
+  // 
+  // splash:  Initial loading animation (2.8s)
+  // login:   Login page - ALWAYS shown when no valid session exists
+  // loading: Brief transition state during demo role switching
+  // app:     Authenticated - render role-based dashboard
+  // ═══════════════════════════════════════════════════════════════
+  
   if (phase === "splash") return <SplashScreen />;
   if (phase === "login") return <LoginScreen onLogin={handleLogin} />;
   if (phase === "loading") return <SplashScreen />; // Brief loading state during role switch
@@ -193,13 +229,14 @@ export default function Home() {
   const effectiveRole = user.role || "user";
   const activeUser = user;
 
-  console.log("🎯 DASHBOARD ROUTING:", {
+  console.log("🎯 ROLE-BASED DASHBOARD ROUTING:", {
     user_id: user.id,
     email: user.email,
     effective_role: effectiveRole,
-    rendering: effectiveRole === "admin" ? "AdminDashboard" : 
+    dashboard: effectiveRole === "admin" ? "AdminDashboard" : 
                effectiveRole === "rider" ? "RiderDashboard" :
                ["operator", "dispatcher", "network_owner"].includes(effectiveRole) ? "NetworkOwnerDashboard" : "CustomerHome",
+    timestamp: new Date().toISOString(),
   });
 
   // Map database role to demo switcher key
@@ -218,7 +255,22 @@ export default function Home() {
       {/* Auto-initialize demo data ONLY for demo accounts on first login */}
       {DEMO_MODE && <DemoDataInitializer user={activeUser} />}
 
-      {/* Role-based dashboard routing with strict role enforcement */}
+      {/* ═══════════════════════════════════════════════════════════════
+          ROLE-BASED DASHBOARD ROUTING
+          ═══════════════════════════════════════════════════════════════
+          Each user role is routed to their specific dashboard.
+          Dashboards are isolated - no cross-role access without proper permissions.
+          
+          Role Mapping:
+          - rider → RiderDashboard
+          - operator/dispatcher/network_owner → NetworkOwnerDashboard
+          - admin → AdminDashboard
+          - user (customer) → CustomerHome
+          
+          Key feature: Each dashboard component is keyed by user ID to ensure
+          complete UI reset when switching between accounts.
+          ═══════════════════════════════════════════════════════════════ */}
+      
       {effectiveRole === "rider" && <RiderDashboard user={activeUser} key={`rider-${activeUser?.id}`} />}
       {(effectiveRole === "dispatcher" || effectiveRole === "operator" || effectiveRole === "network_owner") && (
         <NetworkOwnerDashboard user={activeUser} key={`operator-${activeUser?.id}`} />
