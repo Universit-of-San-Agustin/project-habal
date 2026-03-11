@@ -139,11 +139,18 @@ export default function RiderDashboard({ user }) {
 
       const notif = notifs[0];
 
+      console.log("🔔 RIDER: New notification received", {
+        notification_id: notif.id,
+        reference_id: notif.reference_id,
+        title: notif.title,
+      });
+
       // Fetch the booking directly by its DB id
       const bookingRows = await base44.entities.Booking.filter({ id: notif.reference_id }, "-created_date", 1).catch(() => []);
       const booking = bookingRows?.[0];
 
       if (!booking) {
+        console.warn("⚠️ RIDER: Stale notification, booking not found", { reference_id: notif.reference_id });
         // Stale notification — mark read and skip
         await base44.entities.Notification.update(notif.id, { read_status: true }).catch(() => {});
         return;
@@ -151,12 +158,15 @@ export default function RiderDashboard({ user }) {
 
       // Only show popup for bookings that are still unassigned (pending/searching)
       if (!["pending", "searching"].includes(booking.status)) {
+        console.log("ℹ️ RIDER: Booking already assigned", { booking_id: booking.id, status: booking.status });
         await base44.entities.Notification.update(notif.id, { read_status: true }).catch(() => {});
         return;
       }
 
       if (seenBookingsRef.current.has(booking.id)) return;
       seenBookingsRef.current.add(booking.id);
+
+      console.log("✅ RIDER: Showing booking popup", { booking_id: booking.id, customer: booking.customer_name });
 
       // Mark notification as read immediately so other riders don't double-pop
       await base44.entities.Notification.update(notif.id, { read_status: true }).catch(() => {});
@@ -166,13 +176,14 @@ export default function RiderDashboard({ user }) {
 
       // Auto-decline after 30s if no action taken
       timerRef.current = setTimeout(() => {
+        console.log("⏰ RIDER: Auto-timeout for booking", { booking_id: booking.id });
         setIncomingBooking(null);
         seenBookingsRef.current.delete(booking.id); // Allow retry
       }, 30000);
     };
 
     poll();
-    const interval = setInterval(poll, 2500);
+    const interval = setInterval(poll, 2000); // Poll every 2s for faster response
     return () => { clearInterval(interval); if (timerRef.current) clearTimeout(timerRef.current); };
   }, [riderData?.id, isOnline, activeBooking]);
 
@@ -180,6 +191,9 @@ export default function RiderDashboard({ user }) {
     if (!incomingBooking || !riderData?.id) return;
     if (timerRef.current) clearTimeout(timerRef.current);
     setProcessing(true);
+    
+    console.log("✅ RIDER: Accepting booking", { booking_id: incomingBooking.id, rider_id: riderData.id });
+    
     // Assign booking to this rider using actual DB ID for persistence
     const updated = await base44.entities.Booking.update(incomingBooking.id, {
       status: "assigned",
@@ -188,6 +202,7 @@ export default function RiderDashboard({ user }) {
       rider_phone: riderData.phone || user?.email,
       assigned_at: new Date().toISOString(),
     });
+    
     await base44.entities.BookingEvent.create({
       booking_id: incomingBooking.id,
       event_type: "RIDER_ACCEPTED",
@@ -196,7 +211,11 @@ export default function RiderDashboard({ user }) {
       actor_name: riderData.full_name,
       timestamp: new Date().toISOString(),
     });
+    
     await base44.entities.Rider.update(riderData.id, { online_status: "on_trip" }).catch(() => {});
+    
+    console.log("🎉 RIDER: Booking accepted successfully");
+    
     setActiveBooking(updated || { ...incomingBooking, status: "assigned", rider_id: riderData.id, rider_name: riderData.full_name });
     setIncomingBooking(null);
     setProcessing(false);
@@ -206,6 +225,8 @@ export default function RiderDashboard({ user }) {
   const handleDecline = async () => {
     if (timerRef.current) clearTimeout(timerRef.current);
     if (incomingBooking) {
+      console.log("❌ RIDER: Declining booking", { booking_id: incomingBooking.id });
+      
       // Reset booking to searching so another rider can pick it up
       await base44.entities.Booking.update(incomingBooking.id, {
         status: "searching",
@@ -213,9 +234,13 @@ export default function RiderDashboard({ user }) {
         rider_name: null,
         rider_phone: null,
       }).catch(() => {});
+      
       await base44.entities.Rider.update(riderData.id, { online_status: "online" }).catch(() => {});
-      // Re-dispatch to other available riders
-      base44.functions.invoke("notifyRidersOfBooking", { booking_id: incomingBooking.booking_id || incomingBooking.id }).catch(() => {});
+      
+      // Re-dispatch to other available riders using DB id
+      base44.functions.invoke("notifyRidersOfBooking", { booking_id: incomingBooking.id }).catch(() => {});
+      
+      console.log("🔄 RIDER: Booking re-dispatched to other riders");
     }
     setIncomingBooking(null);
   };
