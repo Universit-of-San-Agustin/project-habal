@@ -12,6 +12,7 @@ import DemoRoleSwitcher from "../components/home/DemoRoleSwitcher";
 import DemoDataInitializer from "../components/demo/DemoDataInitializer";
 import DemoModeIndicator from "../components/demo/DemoModeIndicator";
 import InvestorDemoController from "../components/demo/InvestorDemoController";
+import DispatchActivityFeed from "../components/demo/DispatchActivityFeed";
 
 /**
  * ═══════════════════════════════════════════════════════════════
