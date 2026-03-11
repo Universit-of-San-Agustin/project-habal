@@ -89,10 +89,12 @@ export default function RiderDashboard({ user }) {
     return () => clearInterval(countdownRef.current);
   }, [incomingBooking?.id]);
 
-  // Update online_status
+  // Update online_status and log state changes
   useEffect(() => {
     if (!riderData?.id) return;
-    base44.entities.Rider.update(riderData.id, { online_status: isOnline ? "online" : "offline" }).catch(() => {});
+    const newStatus = isOnline ? "online" : "offline";
+    console.log(`🔄 RIDER STATUS: ${riderData.full_name} is now ${newStatus}`);
+    base44.entities.Rider.update(riderData.id, { online_status: newStatus }).catch(() => {});
   }, [isOnline, riderData?.id]);
 
   // When rider comes online, immediately check for any pending/searching bookings in their zone
@@ -618,14 +620,24 @@ export default function RiderDashboard({ user }) {
           </div>
           {/* Online toggle */}
           <button
-            onClick={() => setIsOnline(o => !o)}
+            onClick={() => {
+              const newState = !isOnline;
+              console.log(`🎛 RIDER: Toggling status to ${newState ? "ONLINE" : "OFFLINE"}`);
+              setIsOnline(newState);
+            }}
             className={`w-full py-3.5 rounded-2xl font-bold text-base flex items-center justify-center gap-3 transition-all ${isOnline ? "bg-white" : "bg-white/20 text-white border-2 border-white/30"}`}
             style={isOnline ? { color: PRIMARY_DARK } : {}}>
-            <div className={`w-3 h-3 rounded-full ${isOnline ? "shadow-md" : "bg-white/50"}`}
+            <div className={`w-3 h-3 rounded-full ${isOnline ? "shadow-md animate-pulse" : "bg-white/50"}`}
               style={isOnline ? { background: PRIMARY_DARK } : {}} />
             {isOnline ? "● You are Online" : "○ You are Offline"}
             <span className="text-xs font-normal opacity-60">(tap to {isOnline ? "go offline" : "go online"})</span>
           </button>
+          {isOnline && (
+            <div className="mt-2 px-3 py-2 rounded-xl flex items-center gap-2 text-xs font-semibold bg-white/20 text-white">
+              <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+              <span>Listening for ride requests...</span>
+            </div>
+          )}
         </div>
 
         {/* Active trip alert */}
