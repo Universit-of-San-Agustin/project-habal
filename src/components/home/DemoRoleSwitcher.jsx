@@ -22,9 +22,10 @@ export default function DemoRoleSwitcher({ currentRole, onSwitch }) {
       {/* Role menu */}
       {open && (
         <div className="pointer-events-auto bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
-          style={{ minWidth: 160 }}>
-          <div className="px-3 py-2 border-b border-gray-100">
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Switch Demo Role</div>
+          style={{ minWidth: 180 }}>
+          <div className="px-3 py-2 border-b border-gray-100" style={{ background: PRIMARY_BG }}>
+            <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: PRIMARY_DARK }}>🧪 Demo Testing Mode</div>
+            <div className="text-[9px] text-gray-400 mt-0.5">Switch roles instantly</div>
           </div>
           {DEMO_ROLES.map(role => {
             const isActive = role.key === currentRole;
@@ -50,16 +51,17 @@ export default function DemoRoleSwitcher({ currentRole, onSwitch }) {
       {/* Floating button */}
       <button
         onClick={() => setOpen(o => !o)}
-        className="pointer-events-auto w-12 h-12 rounded-full flex flex-col items-center justify-center shadow-lg transition-transform active:scale-90"
+        className="pointer-events-auto w-14 h-14 rounded-full flex flex-col items-center justify-center shadow-xl transition-all active:scale-95 hover:shadow-2xl"
         style={{
           background: open
             ? `linear-gradient(135deg, ${PRIMARY_DARK} 0%, #0e7ea3 100%)`
             : `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY_DARK} 100%)`,
-          boxShadow: `0 4px 16px ${PRIMARY}60`,
+          boxShadow: `0 6px 20px ${PRIMARY}70`,
+          border: "2px solid rgba(255,255,255,0.3)"
         }}
-        title="Switch Demo Role">
-        <span className="text-base leading-none">{current.emoji}</span>
-        <span className="text-white font-bold leading-none mt-0.5" style={{ fontSize: 8 }}>DEMO</span>
+        title="Demo Role Switcher - Testing Mode">
+        <span className="text-lg leading-none">{current.emoji}</span>
+        <span className="text-white font-bold leading-none mt-1" style={{ fontSize: 9 }}>🧪 TEST</span>
       </button>
     </div>
   );
