@@ -112,9 +112,6 @@ export default function Home() {
       try {
         console.log("🔍 SESSION VALIDATION: Checking authentication state...");
         
-        // Check for demo session flag
-        const demoSession = localStorage.getItem("demo_session");
-        
         const me = await base44.auth.me();
         
         // Strict session validation - all fields must exist
@@ -140,18 +137,11 @@ export default function Home() {
         setUser(me);
         setPhase("app");
         
-        // Auto-enable demo switcher if user is a demo account OR demo session active
-        const demoEmails = Object.values(DEMO_USERS).map(u => u.email);
-        const isDemoUser = me?.is_demo_account === true || demoEmails.includes(me?.email) || !!demoSession;
-        if (isDemoUser) {
+        // Auto-enable demo mode if demo flag is set
+        const demoMode = localStorage.getItem("demo_mode");
+        if (demoMode === "true") {
           setIsDemoSession(true);
-          console.log("🧪 DEMO MODE ENABLED:", { email: me.email, role: me.role, demoSession: !!demoSession });
-          
-          // Clean up demo flags after session established
-          localStorage.removeItem("demo_session");
-          localStorage.removeItem("demo_login_time");
-          localStorage.removeItem("demo_user_id");
-          localStorage.removeItem("demo_user_email");
+          console.log("🧪 DEMO MODE ENABLED:", { email: me.email, role: me.role });
         }
       } catch (err) {
         console.log("❌ NO VALID SESSION - Redirecting to login:", {
@@ -160,7 +150,6 @@ export default function Home() {
           timestamp: new Date().toISOString(),
         });
         // ANY authentication failure → Always redirect to login page
-        // NEVER show "Access Restricted" for users without valid sessions
         setPhase("login");
       }
     };
