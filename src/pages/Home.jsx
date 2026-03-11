@@ -114,7 +114,6 @@ export default function Home() {
         
         // Check for demo session flag
         const demoSession = localStorage.getItem("demo_session");
-        const demoLoginTime = localStorage.getItem("demo_login_time");
         
         const me = await base44.auth.me();
         
@@ -147,6 +146,12 @@ export default function Home() {
         if (isDemoUser) {
           setIsDemoSession(true);
           console.log("🧪 DEMO MODE ENABLED:", { email: me.email, role: me.role, demoSession: !!demoSession });
+          
+          // Clean up demo flags after session established
+          localStorage.removeItem("demo_session");
+          localStorage.removeItem("demo_login_time");
+          localStorage.removeItem("demo_user_id");
+          localStorage.removeItem("demo_user_email");
         }
       } catch (err) {
         console.log("❌ NO VALID SESSION - Redirecting to login:", {
