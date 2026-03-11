@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Play, Square, RotateCcw, Users, Navigation, TrendingUp } from "lucide-react";
+import { Play, Square, RotateCcw, TrendingUp, Minimize2, Maximize2, GripVertical, User, Bike, Building2, Shield } from "lucide-react";
 import { COLORS } from "../shared/AppleDesignTokens";
 
 const PRIMARY = COLORS.primary;
@@ -45,11 +45,18 @@ const CUSTOMER_NAMES = [
   "Elena Reyes", "Rosa Flores", "Lucia Torres", "Gabriela Silva", "Valentina Morales"
 ];
 
-export default function InvestorDemoController({ user }) {
+export default function InvestorDemoController({ user, onRoleSwitch, currentRole }) {
   const [isActive, setIsActive] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [position, setPosition] = useState({ x: window.innerWidth - 340, y: window.innerHeight - 480 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [opacity, setOpacity] = useState(1);
   const [stats, setStats] = useState({ riders: 0, bookings: 0, trips: 0 });
   const [loading, setLoading] = useState(false);
   
+  const widgetRef = useRef(null);
+  const autoHideTimer = useRef(null);
   const intervalRefs = useRef({
     riders: null,
     bookings: null,
@@ -60,6 +67,46 @@ export default function InvestorDemoController({ user }) {
   const hasPermission = ["admin", "operator", "network_owner"].includes(user?.role) || 
                         user?.email?.includes("demo.");
 
+  // Auto-hide behavior
+  useEffect(() => {
+    const resetAutoHide = () => {
+      setOpacity(1);
+      if (autoHideTimer.current) clearTimeout(autoHideTimer.current);
+      autoHideTimer.current = setTimeout(() => setOpacity(0.6), 10000);
+    };
+    
+    if (!isMinimized) {
+      resetAutoHide();
+      window.addEventListener('mousemove', resetAutoHide);
+      return () => {
+        window.removeEventListener('mousemove', resetAutoHide);
+        if (autoHideTimer.current) clearTimeout(autoHideTimer.current);
+      };
+    }
+  }, [isMinimized]);
+
+  // Dragging logic
+  useEffect(() => {
+    if (!isDragging) return;
+    
+    const handleMouseMove = (e) => {
+      setPosition({
+        x: e.clientX - dragOffset.x,
+        y: e.clientY - dragOffset.y,
+      });
+    };
+    
+    const handleMouseUp = () => setIsDragging(false);
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragOffset]);
+
   useEffect(() => {
     if (isActive) {
       startDemoSimulation();
@@ -68,6 +115,17 @@ export default function InvestorDemoController({ user }) {
     }
     return () => stopDemoSimulation();
   }, [isActive]);
+
+  const handleDragStart = (e) => {
+    if (widgetRef.current) {
+      const rect = widgetRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      });
+      setIsDragging(true);
+    }
+  };
 
   const startDemoSimulation = async () => {
     console.log("🎬 INVESTOR DEMO MODE: Starting simulation...");
@@ -369,12 +427,55 @@ export default function InvestorDemoController({ user }) {
 
   if (!hasPermission) return null;
 
+  // Minimized state
+  if (isMinimized) {
+    return (
+      <div
+        ref={widgetRef}
+        className="fixed z-[9998] cursor-move"
+        style={{
+          left: position.x,
+          top: position.y,
+          opacity: opacity,
+          transition: isDragging ? 'none' : 'opacity 0.3s',
+        }}
+        onMouseDown={handleDragStart}>
+        <button
+          onClick={() => setIsMinimized(false)}
+          className="w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 border-2 border-white"
+          style={{ 
+            background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY}dd 100%)`,
+            boxShadow: `0 6px 20px ${PRIMARY}60`,
+          }}>
+          <TrendingUp className="w-6 h-6 text-white" />
+          {isActive && (
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
+          )}
+        </button>
+      </div>
+    );
+  }
+
+  // Expanded state
   return (
-    <div className="fixed top-4 right-4 z-[9998] max-w-xs">
+    <div
+      ref={widgetRef}
+      className="fixed z-[9998] w-80"
+      style={{
+        left: position.x,
+        top: position.y,
+        opacity: opacity,
+        transition: isDragging ? 'none' : 'opacity 0.3s',
+        cursor: isDragging ? 'grabbing' : 'default',
+      }}>
       <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
-        {/* Header */}
-        <div className="px-4 py-3 border-b border-gray-100" style={{ background: PRIMARY + "10" }}>
+        {/* Header - Draggable */}
+        <div 
+          className="px-4 py-3 border-b border-gray-100 cursor-grab active:cursor-grabbing"
+          style={{ background: PRIMARY + "10" }}
+          onMouseDown={handleDragStart}>
           <div className="flex items-center gap-2">
+            <GripVertical className="w-4 h-4 text-gray-400" />
             <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: PRIMARY + "20" }}>
               <TrendingUp className="w-4 h-4" style={{ color: PRIMARY }} />
             </div>
@@ -382,8 +483,46 @@ export default function InvestorDemoController({ user }) {
               <div className="text-sm font-bold text-gray-900">Smart City Demo</div>
               <div className="text-[10px] text-gray-400">Iloilo live simulation</div>
             </div>
+            <button
+              onClick={() => setIsMinimized(true)}
+              className="w-7 h-7 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors">
+              <Minimize2 className="w-4 h-4 text-gray-600" />
+            </button>
           </div>
         </div>
+
+        {/* Role Switcher */}
+        {onRoleSwitch && (
+          <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Quick Role Switch</div>
+            <div className="grid grid-cols-4 gap-1">
+              {[
+                { key: "customer", label: "Customer", icon: User },
+                { key: "rider", label: "Rider", icon: Bike },
+                { key: "operator", label: "Operator", icon: Building2 },
+                { key: "admin", label: "Admin", icon: Shield },
+              ].map(({ key, label, icon: Icon }) => {
+                const isActive = currentRole === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => onRoleSwitch(key)}
+                    className="flex flex-col items-center gap-1 py-2 rounded-lg transition-all text-xs font-semibold"
+                    style={isActive ? { 
+                      background: PRIMARY + "20", 
+                      color: PRIMARY 
+                    } : { 
+                      background: "white", 
+                      color: "#6b7280" 
+                    }}>
+                    <Icon className="w-4 h-4" />
+                    <span className="text-[9px]">{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Stats */}
         <div className="px-4 py-3 bg-gray-50 grid grid-cols-3 gap-2">
@@ -409,7 +548,7 @@ export default function InvestorDemoController({ user }) {
             className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white text-sm transition-all disabled:opacity-50"
             style={{ background: isActive ? "#ef4444" : PRIMARY, boxShadow: `0 4px 12px ${isActive ? "#ef444440" : PRIMARY + "40"}` }}>
             {isActive ? <Square className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            {isActive ? "Stop Simulation" : "Start Simulation"}
+            {isActive ? "Pause Simulation" : "Start Simulation"}
           </button>
           
           <button

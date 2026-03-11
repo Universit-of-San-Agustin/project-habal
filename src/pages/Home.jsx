@@ -282,7 +282,11 @@ export default function Home() {
       )}
 
       {/* Investor Demo Mode Controller - shown to admins and operators */}
-      <InvestorDemoController user={activeUser} />
+      <InvestorDemoController 
+        user={activeUser} 
+        onRoleSwitch={DEMO_MODE && isDemoSession ? handleDemoSwitch : null}
+        currentRole={currentDemoRoleKey}
+      />
 
       {/* Demo Mode UI - only shown when DEMO_MODE=true AND logged in as demo account */}
       {DEMO_MODE && isDemoSession && (
