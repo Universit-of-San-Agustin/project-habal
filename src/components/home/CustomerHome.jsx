@@ -327,10 +327,16 @@ export default function CustomerHome({ user }) {
     setActiveRide(b);
     if (pickupCoords) etaTargetRef.current = pickupCoords;
     setScreen("searching");
+    // CRITICAL: Use the DB id (b.id) for notifications to ensure proper reference linking
+    console.log("🚀 DISPATCH: Created booking", { db_id: b.id, booking_id: bookingId, zone: detectedZone });
     // Notify eligible riders of the new booking
-    base44.functions.invoke("notifyRidersOfBooking", { booking_id: bookingId }).catch(() => {});
+    base44.functions.invoke("notifyRidersOfBooking", { booking_id: b.id }).catch(err => {
+      console.error("❌ DISPATCH FAILED: notifyRidersOfBooking", err);
+    });
     // Then match to best rider
-    base44.functions.invoke("matchRider", { booking_id: bookingId }).catch(() => {});
+    base44.functions.invoke("matchRider", { booking_id: b.id }).catch(err => {
+      console.error("❌ DISPATCH FAILED: matchRider", err);
+    });
     setTimeout(() => setScreen(prev => prev === "searching" ? "active" : prev), 5000);
   };
 

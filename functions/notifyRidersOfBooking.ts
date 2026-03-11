@@ -11,14 +11,29 @@ Deno.serve(async (req) => {
 
     const db = base44.asServiceRole;
 
-    // 1. Get the booking (support both booking_id string and internal id)
+    console.log("📢 NOTIFY: Starting notification broadcast", { booking_id });
+
+    // 1. Get the booking (support both booking_id string field and DB id)
     let booking = null;
-    const byBookingId = await db.entities.Booking.filter({ booking_id }, "-created_date", 1);
-    booking = byBookingId?.[0];
-    if (!booking) return Response.json({ error: 'Booking not found' }, { status: 404 });
+    const byCustomId = await db.entities.Booking.filter({ booking_id }, "-created_date", 1);
+    if (byCustomId?.[0]) {
+      booking = byCustomId[0];
+    } else {
+      // Fallback: try as DB id
+      const byDbId = await db.entities.Booking.filter({ id: booking_id }, "-created_date", 1);
+      booking = byDbId?.[0];
+    }
+    
+    if (!booking) {
+      console.error("❌ NOTIFY FAILED: Booking not found", { booking_id });
+      return Response.json({ error: 'Booking not found' }, { status: 404 });
+    }
+    
+    console.log("✅ NOTIFY: Booking found", { db_id: booking.id, status: booking.status, zone: booking.zone });
 
     // Only notify for pending/searching bookings
     if (!["pending", "searching"].includes(booking.status)) {
+      console.warn("⚠️ NOTIFY SKIPPED: Booking not in notifiable state", { status: booking.status });
       return Response.json({ notified: 0, message: 'Booking not in notifiable state', status: booking.status });
     }
 
@@ -41,8 +56,11 @@ Deno.serve(async (req) => {
     }
 
     if (!riders || riders.length === 0) {
+      console.warn("⚠️ NOTIFY: No riders available", { zone: booking.zone });
       return Response.json({ notified: 0, message: 'No riders online' });
     }
+    
+    console.log("👥 NOTIFY: Found eligible riders", { count: riders.length, rider_ids: riders.map(r => r.id) });
 
     // 4. Clear old unread booking notifications for this booking to avoid duplicates
     const existingNotifs = await db.entities.Notification.filter({
@@ -64,7 +82,7 @@ Deno.serve(async (req) => {
           message: `${booking.customer_name} needs a ride from ${booking.pickup_address}`,
           type: "booking",
           read_status: false,
-          reference_id: booking.id,
+          reference_id: booking.id, // DB id for proper linking
           reference_type: "booking",
         }).then(() => ({ rider_id: rider.id, rider_name: rider.full_name }))
       )
@@ -73,10 +91,17 @@ Deno.serve(async (req) => {
       .filter(r => r.status === "fulfilled")
       .map(r => r.value);
 
+    console.log("✅ NOTIFY COMPLETE: Notifications sent", {
+      total_sent: notifications.length,
+      failed: results.filter(r => r.status === "rejected").length,
+      booking_db_id: booking.id,
+    });
+
     return Response.json({
       notified: notifications.length,
       riders: notifications,
-      booking_id,
+      booking_id: booking.id, // Return DB id
+      booking_custom_id: booking.booking_id,
     });
 
   } catch (error) {

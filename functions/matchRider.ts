@@ -32,16 +32,28 @@ Deno.serve(async (req) => {
 
     const db = base44.asServiceRole;
 
-    // 1. Fetch the booking — support both booking_id string and DB id
-    let bookingRows = await db.entities.Booking.filter({ booking_id }, "-created_date", 1);
-    if (!bookingRows?.length) {
-      bookingRows = await db.entities.Booking.filter({ id: booking_id }, "-created_date", 1);
+    console.log("🎯 MATCH: Starting rider match", { booking_id });
+
+    // 1. Fetch the booking — support both booking_id string field and DB id
+    let booking = null;
+    const byCustomId = await db.entities.Booking.filter({ booking_id }, "-created_date", 1);
+    if (byCustomId?.[0]) {
+      booking = byCustomId[0];
+    } else {
+      const byDbId = await db.entities.Booking.filter({ id: booking_id }, "-created_date", 1);
+      booking = byDbId?.[0];
     }
-    const booking = bookingRows?.[0];
-    if (!booking) return Response.json({ error: 'Booking not found' }, { status: 404 });
+    
+    if (!booking) {
+      console.error("❌ MATCH FAILED: Booking not found", { booking_id });
+      return Response.json({ error: 'Booking not found' }, { status: 404 });
+    }
+    
+    console.log("✅ MATCH: Booking found", { db_id: booking.id, status: booking.status, zone: booking.zone });
 
     // Only process pending or searching bookings
     if (!["pending", "searching"].includes(booking.status)) {
+      console.warn("⚠️ MATCH SKIPPED: Not in matchable state", { status: booking.status });
       return Response.json({ message: 'Booking not in matchable state', status: booking.status });
     }
 
@@ -53,14 +65,18 @@ Deno.serve(async (req) => {
     }, "-avg_rating", 50);
 
     if (!riders?.length) {
+      console.warn("⚠️ MATCH: No riders in zone, trying all zones", { zone: booking.zone });
       const allRiders = await db.entities.Rider.filter({ status: "active", online_status: "online" }, "-avg_rating", 50);
       if (!allRiders?.length) {
+        console.error("❌ MATCH FAILED: No riders online anywhere");
         // No riders available — keep booking as searching so it can be picked up later
         await db.entities.Booking.update(booking.id, { status: "searching" }).catch(() => {});
         return Response.json({ matched: false, reason: 'No available riders online' });
       }
       riders = allRiders;
     }
+    
+    console.log("👥 MATCH: Found candidate riders", { count: riders.length });
 
     // 3. Get GPS locations for all candidate riders
     const riderIds = riders.map(r => r.id);
@@ -106,8 +122,11 @@ Deno.serve(async (req) => {
     }
 
     if (!bestRider) {
+      console.error("❌ MATCH FAILED: No suitable rider after scoring");
       return Response.json({ matched: false, reason: 'No suitable rider found' });
     }
+    
+    console.log("🏆 MATCH: Best rider selected", { rider_id: bestRider.id, rider_name: bestRider.full_name, score: bestScore });
 
     // 6. Create a notification for the best rider — DO NOT assign yet.
     //    The rider must explicitly Accept from the popup.
@@ -123,16 +142,18 @@ Deno.serve(async (req) => {
       await db.entities.Notification.update(n.id, { read_status: true }).catch(() => {});
     }
 
-    await db.entities.Notification.create({
+    const notif = await db.entities.Notification.create({
       user_id: bestRider.id,
       user_type: "rider",
       title: "New Ride Request",
       message: `${booking.customer_name} needs a ride from ${booking.pickup_address}`,
       type: "booking",
       read_status: false,
-      reference_id: booking.id,
+      reference_id: booking.id, // DB id for proper linking
       reference_type: "booking",
     });
+
+    console.log("📨 MATCH: Notification created", { notification_id: notif.id, rider_id: bestRider.id });
 
     // Mark booking as searching (waiting for rider to accept)
     await db.entities.Booking.update(booking.id, { status: "searching" });
@@ -146,9 +167,16 @@ Deno.serve(async (req) => {
       timestamp: now,
     });
 
+    console.log("✅ MATCH COMPLETE: Booking dispatched successfully", {
+      booking_db_id: booking.id,
+      rider_id: bestRider.id,
+      notification_id: notif.id,
+    });
+
     return Response.json({
       matched: true,
       rider: { id: bestRider.id, name: bestRider.full_name, score: bestScore },
+      notification_id: notif.id,
       status: 'notification_sent',
     });
 
