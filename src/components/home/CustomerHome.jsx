@@ -968,8 +968,8 @@ export default function CustomerHome({ user }) {
                     { name: "Fort San Pedro", icon: "🏰", sub: "Historical Site", center: [122.5661, 10.7169] },
                     { name: "Iloilo City Hall", icon: "🏛", sub: "Government", center: [122.5662, 10.7286] },
                   ].map(place => (
-                    <button key={place.name} onClick={() => selectSuggestion({ place_name: place.name, center: place.center, place_type: "poi" })}
-                      className="w-full flex items-center gap-3 px-3 py-3 bg-white border border-gray-100 rounded-xl hover:bg-gray-50 hover:shadow-sm transition-all text-left">
+                    <div key={place.name} onClick={() => selectSuggestion({ place_name: place.name, center: place.center, place_type: "poi" })}
+                      className="w-full flex items-center gap-3 px-3 py-3 bg-white border border-gray-100 rounded-xl hover:bg-gray-50 hover:shadow-sm transition-all text-left cursor-pointer">
                       <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-lg" style={{ background: PRIMARY_BG }}>
                         {place.icon}
                       </div>
@@ -977,13 +977,13 @@ export default function CustomerHome({ user }) {
                         <div className="text-sm font-semibold text-gray-800">{place.name}</div>
                         <div className="text-xs text-gray-500">{place.sub}</div>
                       </div>
-                    </button>
+                    </div>
                   ))}
                 </div>
                 {/* Pin on map option */}
-                <button
+                <div
                   onClick={() => { setScreen("map"); setPinMode("dropoff"); }}
-                  className="w-full mt-3 flex items-center gap-3 px-3 py-3 border-2 border-dashed border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-left">
+                  className="w-full mt-3 flex items-center gap-3 px-3 py-3 border-2 border-dashed border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-left cursor-pointer">
                   <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-lg bg-gray-100">
                     📌
                   </div>
@@ -991,15 +991,15 @@ export default function CustomerHome({ user }) {
                     <div className="text-sm font-semibold text-gray-700">Place a pin on the map</div>
                     <div className="text-xs text-gray-400">Tap anywhere on the map to set destination</div>
                   </div>
-                </button>
+                </div>
               </div>
             )}
             {/* Pickup popular places */}
             {searchMode === "pickup" && !pickupInput && (
               <div className="pb-4">
-                <button
+                <div
                   onClick={() => { setScreen("map"); setPinMode("pickup"); }}
-                  className="w-full flex items-center gap-3 px-3 py-3 border-2 border-dashed border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-left">
+                  className="w-full flex items-center gap-3 px-3 py-3 border-2 border-dashed border-gray-200 rounded-xl hover:bg-gray-50 transition-all text-left cursor-pointer">
                   <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-lg bg-gray-100">
                     📌
                   </div>
@@ -1007,7 +1007,7 @@ export default function CustomerHome({ user }) {
                     <div className="text-sm font-semibold text-gray-700">Place a pin on the map</div>
                     <div className="text-xs text-gray-400">Tap anywhere on the map to set pickup</div>
                   </div>
-                </button>
+                </div>
               </div>
             )}
           </div>
