@@ -288,6 +288,9 @@ export default function Home() {
         currentRole={currentDemoRoleKey}
       />
 
+      {/* Dispatch Activity Feed - shown to all roles in demo mode */}
+      {DEMO_MODE && isDemoSession && <DispatchActivityFeed />}
+
       {/* Demo Mode UI - only shown when DEMO_MODE=true AND logged in as demo account */}
       {DEMO_MODE && isDemoSession && (
         <>
