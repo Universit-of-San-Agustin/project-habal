@@ -142,13 +142,15 @@ export default function CustomerHome({ user }) {
 
   useEffect(() => {
     if (!user) return;
-    base44.entities.Booking.filter({ customer_phone: user.email }, "-created_date", 20).then(setBookings).catch(() => {});
-    base44.entities.Booking.filter({ customer_phone: user.email }, "-created_date", 5).then(async rows => {
+    // Use email as consistent identifier for demo accounts
+    const customerIdentifier = user.email;
+    base44.entities.Booking.filter({ customer_phone: customerIdentifier }, "-created_date", 20).then(setBookings).catch(() => {});
+    base44.entities.Booking.filter({ customer_phone: customerIdentifier }, "-created_date", 5).then(async rows => {
       const active = rows?.find(b => ["pending", "searching", "assigned", "otw", "arrived", "in_progress"].includes(b.status));
       if (active) { setActiveRide(active); setScreen("active"); }
     });
     // Load saved locations from DB
-    base44.entities.SavedLocation.filter({ user_email: user.email }, "-created_date", 20)
+    base44.entities.SavedLocation.filter({ user_email: customerIdentifier }, "-created_date", 20)
       .then(locs => { if (locs?.length) setSavedLocations(locs); })
       .catch(() => {});
   }, [user]);

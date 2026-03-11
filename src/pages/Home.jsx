@@ -9,6 +9,7 @@ import DispatcherDashboard from "../components/home/DispatcherDashboard";
 import NetworkOwnerDashboard from "../components/home/NetworkOwnerDashboard";
 import AdminDashboard from "../components/home/AdminDashboard";
 import DemoRoleSwitcher from "../components/home/DemoRoleSwitcher";
+import DemoDataInitializer from "../components/demo/DemoDataInitializer";
 
 // Demo users for each role — mirrors the demo logins in LoginScreen
 const DEMO_USERS = {
@@ -78,6 +79,9 @@ export default function Home() {
 
   return (
     <>
+      {/* Auto-initialize demo data for demo accounts */}
+      <DemoDataInitializer user={activeUser} />
+
       {role === "rider"                              && <RiderDashboard user={activeUser} key={`rider-${activeUser?.id}`} />}
       {role === "dispatcher"                         && <DispatcherDashboard user={activeUser} key={`dispatcher-${activeUser?.id}`} />}
       {(role === "operator" || role === "network_owner") && <NetworkOwnerDashboard user={activeUser} key={`operator-${activeUser?.id}`} />}
