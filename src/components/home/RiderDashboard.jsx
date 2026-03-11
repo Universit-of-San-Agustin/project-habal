@@ -509,15 +509,15 @@ export default function RiderDashboard({ user }) {
     );
   }
 
+  // Fetch route geometry for navigation
+  const [routeCoordinates, setRouteCoordinates] = useState(null);
+  const [myLocation, setMyLocation] = useState(null);
+
   // ── PROFILE ──────────────────────────────────────────────────
   if (screen === "profile") {
     return <RiderProfileScreen user={user} riderData={riderData} setRiderData={setRiderData}
       screen={screen} setScreen={setScreen} activeBooking={activeBooking} IncomingPopup={IncomingPopup} />;
   }
-
-  // Fetch route geometry for navigation
-  const [routeCoordinates, setRouteCoordinates] = useState(null);
-  const [myLocation, setMyLocation] = useState(null);
 
   useEffect(() => {
     if (!activeBooking) { setRouteCoordinates(null); return; }
