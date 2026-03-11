@@ -28,10 +28,29 @@ import DemoModeIndicator from "../components/demo/DemoModeIndicator";
  * 
  * ═══════════════════════════════════════════════════════════════
  * 
- * 📊 DATA ARCHITECTURE:
- * All features use REAL persistent database records.
- * Demo accounts (demo.*@habal.app) use the same entities as production users.
- * No simulated/temporary data — everything is database-driven.
+ * 📊 PRODUCTION-INTEGRATED DEMO SYSTEM:
+ * 
+ * ✅ ALL DATA IS REAL - Demo accounts use the same production database
+ * ✅ NO SIMULATION - All bookings, trips, and events are real records
+ * ✅ CROSS-USER INTERACTION - Demo riders can accept real customer bookings
+ * ✅ REAL-TIME SYNC - GPS tracking, dispatch, and chat work normally
+ * ✅ TRUE WORKFLOWS - Every action follows production business logic
+ * 
+ * DEMO ROLE SWITCHER:
+ * - Allows instant role perspective changes for testing/presentations
+ * - Maintains real database session (no data reset on role switch)
+ * - Users can experience Customer → Rider → Operator → Admin flows
+ * - Perfect for investor demos and QA testing
+ * 
+ * EXAMPLE WORKFLOW:
+ * 1. Login as demo.customer@habal.app
+ * 2. Create a real booking (stored in Booking entity)
+ * 3. Switch to Rider role via demo switcher
+ * 4. Accept the booking (real dispatch system)
+ * 5. Switch to Operator role
+ * 6. Monitor the trip in real-time (live GPS tracking)
+ * 7. Switch to Admin role
+ * 8. View audit logs of all actions
  * 
  * 🎭 DEMO ACCOUNTS:
  * - demo.customer@habal.app   → Customer booking flow
@@ -40,7 +59,7 @@ import DemoModeIndicator from "../components/demo/DemoModeIndicator";
  * - demo.dispatcher@habal.app → Booking queue management
  * - demo.admin@habal.app      → Platform administration
  * 
- * Demo switcher (floating button) only appears when:
+ * Demo switcher (floating button + top indicator) only appears when:
  * 1. DEMO_MODE = true
  * 2. User is logged in as a demo account
  * 
