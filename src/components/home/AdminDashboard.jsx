@@ -13,6 +13,7 @@ import SupportTicketsPanel from "../admin/SupportTicketsPanel";
 import WalletPanel from "../admin/WalletPanel";
 import LiveMapMonitor from "../admin/LiveMapMonitor";
 import SystemHealthCheck from "../admin/SystemHealthCheck";
+import SystemValidationReport from "../admin/SystemValidationReport";
 import SensitiveLogsGate from "../admin/SensitiveLogsGate";
 
 const PRIMARY = "#4DC8F0";
