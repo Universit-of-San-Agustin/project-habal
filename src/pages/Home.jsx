@@ -152,12 +152,16 @@ export default function Home() {
   const effectiveRole = demoRole ? DEMO_USERS[demoRole]?.role : user?.role;
   const activeUser = demoRole ? { ...user, ...DEMO_USERS[demoRole] } : user;
 
-  // Current demo role key for the switcher highlight
-  const currentDemoRoleKey = demoRole ||
-    (user?.email === DEMO_USERS.rider.email       ? "rider"      :
-     user?.email === DEMO_USERS.dispatcher?.email ? "dispatcher" :
-     user?.email === DEMO_USERS.operator.email    ? "operator"   :
-     user?.email === DEMO_USERS.admin.email       ? "admin"      : "customer");
+  // Current demo role key for the switcher highlight - map user.role to switcher key
+  const roleToKeyMap = {
+    "user": "customer",
+    "rider": "rider",
+    "dispatcher": "dispatcher",
+    "operator": "operator",
+    "network_owner": "operator", // network_owner maps to operator UI
+    "admin": "admin",
+  };
+  const currentDemoRoleKey = demoRole || roleToKeyMap[user?.role] || "customer";
 
   return (
     <>
