@@ -1,9 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Play, Square, RotateCcw, TrendingUp, Minimize2, Maximize2, GripVertical, User, Bike, Building2, Shield } from "lucide-react";
+import { Play, Square, RotateCcw, TrendingUp, Minimize2, GripVertical, User, Bike, Building2, Shield } from "lucide-react";
 import { COLORS } from "../shared/AppleDesignTokens";
 
 const PRIMARY = COLORS.primary;
+const ROLE_CONFIG = {
+  customer: { icon: User, label: "Customer", color: "#3b82f6" },
+  rider: { icon: Bike, label: "Rider", color: "#10b981" },
+  operator: { icon: Building2, label: "Operator", color: "#8b5cf6" },
+  admin: { icon: Shield, label: "Admin", color: "#ef4444" },
+};
 
 // Iloilo Smart City - Realistic zones with landmarks and coordinates
 const ZONES = {
@@ -468,10 +474,10 @@ export default function InvestorDemoController({ user, onRoleSwitch, currentRole
         transition: isDragging ? 'none' : 'opacity 0.3s',
         cursor: isDragging ? 'grabbing' : 'default',
       }}>
-      <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[600px]">
         {/* Header - Draggable */}
         <div 
-          className="px-4 py-3 border-b border-gray-100 cursor-grab active:cursor-grabbing"
+          className="px-4 py-3 border-b border-gray-100 cursor-grab active:cursor-grabbing flex-shrink-0"
           style={{ background: PRIMARY + "10" }}
           onMouseDown={handleDragStart}>
           <div className="flex items-center gap-2">
@@ -480,7 +486,7 @@ export default function InvestorDemoController({ user, onRoleSwitch, currentRole
               <TrendingUp className="w-4 h-4" style={{ color: PRIMARY }} />
             </div>
             <div className="flex-1">
-              <div className="text-sm font-bold text-gray-900">Smart City Demo</div>
+              <div className="text-sm font-bold text-gray-900">Smart Demo</div>
               <div className="text-[10px] text-gray-400">Iloilo live simulation</div>
             </div>
             <button
@@ -491,32 +497,30 @@ export default function InvestorDemoController({ user, onRoleSwitch, currentRole
           </div>
         </div>
 
-        {/* Role Switcher */}
+        {/* Role Switcher Section */}
         {onRoleSwitch && (
-          <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Quick Role Switch</div>
-            <div className="grid grid-cols-4 gap-1">
-              {[
-                { key: "customer", label: "Customer", icon: User },
-                { key: "rider", label: "Rider", icon: Bike },
-                { key: "operator", label: "Operator", icon: Building2 },
-                { key: "admin", label: "Admin", icon: Shield },
-              ].map(({ key, label, icon: Icon }) => {
+          <div className="px-4 py-4 border-b border-gray-100 flex-shrink-0" style={{ background: "#fafbff" }}>
+            <div className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-3">Switch Role</div>
+            <div className="grid grid-cols-4 gap-2">
+              {Object.entries(ROLE_CONFIG).map(([key, config]) => {
+                const Icon = config.icon;
                 const isActive = currentRole === key;
                 return (
                   <button
                     key={key}
                     onClick={() => onRoleSwitch(key)}
-                    className="flex flex-col items-center gap-1 py-2 rounded-lg transition-all text-xs font-semibold"
+                    className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl transition-all text-xs font-semibold active:scale-95"
                     style={isActive ? { 
-                      background: PRIMARY + "20", 
-                      color: PRIMARY 
+                      background: config.color + "15", 
+                      color: config.color,
+                      border: `1.5px solid ${config.color}40`,
                     } : { 
                       background: "white", 
-                      color: "#6b7280" 
+                      color: "#6b7280",
+                      border: "1.5px solid #e5e7eb",
                     }}>
                     <Icon className="w-4 h-4" />
-                    <span className="text-[9px]">{label}</span>
+                    <span className="text-[9px] leading-tight">{config.label}</span>
                   </button>
                 );
               })}
@@ -524,8 +528,8 @@ export default function InvestorDemoController({ user, onRoleSwitch, currentRole
           </div>
         )}
 
-        {/* Stats */}
-        <div className="px-4 py-3 bg-gray-50 grid grid-cols-3 gap-2">
+        {/* Stats Section */}
+        <div className="px-4 py-3 bg-gray-50 grid grid-cols-3 gap-2 flex-shrink-0 border-b border-gray-100">
           <div className="text-center">
             <div className="text-lg font-black" style={{ color: PRIMARY }}>{stats.riders}</div>
             <div className="text-[10px] text-gray-400">Riders</div>
@@ -540,8 +544,8 @@ export default function InvestorDemoController({ user, onRoleSwitch, currentRole
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="p-4 space-y-2">
+        {/* Simulation Controls */}
+        <div className="px-4 py-4 space-y-2 flex-shrink-0">
           <button
             onClick={() => setIsActive(!isActive)}
             disabled={loading}
@@ -558,17 +562,15 @@ export default function InvestorDemoController({ user, onRoleSwitch, currentRole
             <RotateCcw className="w-4 h-4" />
             Reset Demo
           </button>
-        </div>
 
-        {/* Status */}
-        {isActive && (
-          <div className="px-4 pb-4">
+          {/* Status Indicator */}
+          {isActive && (
             <div className="flex items-center gap-2 px-3 py-2 bg-green-50 rounded-xl">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
               <span className="text-xs font-semibold text-green-700">Simulation Active</span>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
