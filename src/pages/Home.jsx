@@ -77,7 +77,7 @@ const DEMO_USERS = {
 };
 
 export default function Home() {
-  const [phase, setPhase] = useState("splash"); // splash | login | app | not_registered
+  const [phase, setPhase] = useState("splash"); // splash | login | app
   const [user, setUser] = useState(null);
   const [demoRole, setDemoRole] = useState(null); // null = use real role
   const [isDemoSession, setIsDemoSession] = useState(false);
@@ -104,16 +104,14 @@ export default function Home() {
           console.log("🧪 DEMO MODE ENABLED:", { email: me?.email, role: me?.role });
         }
       } catch (err) {
-        console.log("❌ AUTH ERROR:", {
+        console.log("❌ NO SESSION:", {
           message: err?.message,
           error: err,
         });
-        const msg = err?.message || "";
-        if (msg.includes("Authentication required to view users") || msg.includes("not registered")) {
-          setPhase("not_registered");
-        } else {
-          setPhase("login");
-        }
+        // No session or authentication failed → Always show login page
+        // The "not_registered" screen should ONLY appear when a user IS authenticated
+        // but lacks database registration (handled separately by dashboards)
+        setPhase("login");
       }
     }, 2800);
     return () => clearTimeout(timer);
@@ -144,10 +142,9 @@ export default function Home() {
     }
   };
 
-  // Authentication flow: splash → login/not_registered → app
+  // Authentication flow: splash → login → app
   if (phase === "splash") return <SplashScreen />;
   if (phase === "login") return <LoginScreen onLogin={handleLogin} />;
-  if (phase === "not_registered") return <UserNotRegisteredError onDemoLogin={handleLogin} />;
   if (phase === "loading") return <SplashScreen />; // Brief loading state during role switch
 
   // Determine effective role from actual user data (DB role takes precedence)
