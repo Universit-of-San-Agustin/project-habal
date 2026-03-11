@@ -43,13 +43,15 @@ export default function NetworkOwnerDashboard({ user }) {
   const [confirmAction, setConfirmAction] = useState(null);
 
   const load = async () => {
-    const nets = await base44.entities.Network.filter({ owner_email: user?.email }, "-created_date", 1).catch(() => []);
+    if (!user?.email) return;
+    // Use owner_email for persistent demo data lookup
+    const nets = await base44.entities.Network.filter({ owner_email: user.email }, "-created_date", 1).catch(() => []);
     const net = nets?.[0];
     setNetwork(net);
     if (net) {
       const [rdrs, bks, stks, zns] = await Promise.all([
         base44.entities.Rider.filter({ network_id: net.id }, "-created_date", 100).catch(() => []),
-        base44.entities.Booking.filter({ zone: net.zone }, "-created_date", 50).catch(() => []),
+        base44.entities.Booking.filter({ network_id: net.id }, "-created_date", 50).catch(() => []),
         base44.entities.Strike.filter({ target_id: net.id }, "-created_date", 20).catch(() => []),
         base44.entities.Zone.list("-created_date", 10).catch(() => []),
       ]);
