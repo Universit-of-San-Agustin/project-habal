@@ -287,24 +287,16 @@ export default function Home() {
         <CustomerHome user={activeUser} key={`customer-${activeUser?.id}`} />
       )}
 
-      {/* Investor Demo Mode Controller - shown to admins and operators */}
-      <InvestorDemoController 
-        user={activeUser} 
-        onRoleSwitch={DEMO_MODE && isDemoSession ? handleDemoSwitch : null}
-        currentRole={currentDemoRoleKey}
-      />
-
-      {/* Dispatch Activity Feed - shown to all roles in demo mode */}
-      {DEMO_MODE && isDemoSession && <DispatchActivityFeed />}
-
-      {/* Demo Mode UI - only shown when DEMO_MODE=true AND logged in as demo account */}
+      {/* Smart Demo Controller - shown only for demo sessions and admin/operator roles */}
       {DEMO_MODE && isDemoSession && (
         <>
-          <DemoModeIndicator currentRole={currentDemoRoleKey} />
-          <DemoRoleSwitcher
+          <InvestorDemoController 
+            user={activeUser} 
+            onRoleSwitch={handleDemoSwitch}
             currentRole={currentDemoRoleKey}
-            onSwitch={handleDemoSwitch}
           />
+          <DispatchActivityFeed />
+          <DemoModeIndicator currentRole={currentDemoRoleKey} />
         </>
       )}
     </>
