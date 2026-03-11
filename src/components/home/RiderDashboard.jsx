@@ -515,6 +515,45 @@ export default function RiderDashboard({ user }) {
       screen={screen} setScreen={setScreen} activeBooking={activeBooking} IncomingPopup={IncomingPopup} />;
   }
 
+  // Fetch route geometry for navigation
+  const [routeCoordinates, setRouteCoordinates] = useState(null);
+  const [myLocation, setMyLocation] = useState(null);
+
+  useEffect(() => {
+    if (!activeBooking) { setRouteCoordinates(null); return; }
+    
+    // Get rider's current location
+    const updateRoute = async () => {
+      if (!riderData?.id) return;
+      const locs = await base44.entities.RiderLocation.filter({ rider_id: riderData.id }, "-updated_date", 1).catch(() => []);
+      if (locs?.[0]) {
+        const myLoc = { lat: locs[0].lat, lng: locs[0].lng };
+        setMyLocation(myLoc);
+        
+        // Fetch route based on trip phase
+        const isEnRoute = ["assigned", "otw", "arrived"].includes(activeBooking.status);
+        const isInProgress = activeBooking.status === "in_progress";
+        
+        // Get route coordinates from backend
+        if (isEnRoute && pickupCoords) {
+          const res = await base44.functions.invoke("getRouteGeometry", {
+            coordinates: [myLoc, pickupCoords]
+          }).catch(() => null);
+          if (res?.data?.geometry) setRouteCoordinates(res.data.geometry);
+        } else if (isInProgress && dropoffCoords) {
+          const res = await base44.functions.invoke("getRouteGeometry", {
+            coordinates: [myLoc, dropoffCoords]
+          }).catch(() => null);
+          if (res?.data?.geometry) setRouteCoordinates(res.data.geometry);
+        }
+      }
+    };
+    
+    updateRoute();
+    const interval = setInterval(updateRoute, 5000); // Refresh route every 5s
+    return () => clearInterval(interval);
+  }, [activeBooking?.id, activeBooking?.status, riderData?.id, pickupCoords, dropoffCoords]);
+
   // ── MAP / ACTIVE TRIP ────────────────────────────────────────
   if (screen === "map") {
     return (
@@ -526,6 +565,9 @@ export default function RiderDashboard({ user }) {
             onGeolocate={() => {}}
             pickupMarker={pickupCoords}
             dropoffMarker={activeBooking?.status === "in_progress" ? dropoffCoords : null}
+            riderMarker={myLocation}
+            showRoute={!!activeBooking}
+            routeCoordinates={routeCoordinates}
           />
         </div>
         {/* Top bar */}

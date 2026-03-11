@@ -160,9 +160,10 @@ export default function MapboxMap({
   dropoffMarker,
   riderMarker,
   followRider = false,
-  // Pin placement mode: "pickup" | "dropoff" | null
   pinMode = null,
   onPinPlaced = null,
+  routeCoordinates = null,
+  showRoute = false,
 }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
@@ -365,6 +366,48 @@ export default function MapboxMap({
 
     prevRiderPos.current = lngLat;
   }, [riderMarker, followRider]);
+
+  // Route line rendering
+  useEffect(() => {
+    if (!mapRef.current) return;
+    
+    const map = mapRef.current;
+    
+    // Remove existing route if present
+    if (map.getSource('route')) {
+      if (map.getLayer('route')) map.removeLayer('route');
+      map.removeSource('route');
+    }
+    
+    if (!showRoute || !routeCoordinates || routeCoordinates.length < 2) return;
+    
+    map.addSource('route', {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'LineString',
+          coordinates: routeCoordinates
+        }
+      }
+    });
+    
+    map.addLayer({
+      id: 'route',
+      type: 'line',
+      source: 'route',
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round'
+      },
+      paint: {
+        'line-color': '#4DC8F0',
+        'line-width': 5,
+        'line-opacity': 0.85
+      }
+    });
+  }, [showRoute, routeCoordinates]);
 
   return (
     <>

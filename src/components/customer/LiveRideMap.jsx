@@ -20,6 +20,7 @@ const STATUS_CONFIG = {
 export default function LiveRideMap({ activeRide, user, pickupCoords, dropoffCoords, onClose, onCancel }) {
   const [riderLocation, setRiderLocation] = useState(null);
   const [eta, setEta] = useState(null);
+  const [routeCoordinates, setRouteCoordinates] = useState(null);
   const [showChat, setShowChat] = useState(false);
   const [followRider, setFollowRider] = useState(true);
   const [statusChanged, setStatusChanged] = useState(false);
