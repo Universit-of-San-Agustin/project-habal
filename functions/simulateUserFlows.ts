@@ -1,15 +1,12 @@
-import { createClient } from 'npm:@base44/sdk@0.8.20';
-
-const base44 = createClient(
-  Deno.env.get("BASE44_APP_ID"),
-  Deno.env.get("BASE44_SERVICE_ROLE_KEY")
-);
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 /**
  * Comprehensive user flow simulation
  * Tests customer, rider, and operator workflows with real database operations
  */
 Deno.serve(async (req) => {
+  const base44 = createClientFromRequest(req);
+  
   const results = {
     timestamp: new Date().toISOString(),
     total_tests: 0,
