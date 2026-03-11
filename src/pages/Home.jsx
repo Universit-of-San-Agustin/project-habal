@@ -11,6 +11,7 @@ import AdminDashboard from "../components/home/AdminDashboard";
 import DemoRoleSwitcher from "../components/home/DemoRoleSwitcher";
 import DemoDataInitializer from "../components/demo/DemoDataInitializer";
 import DemoModeIndicator from "../components/demo/DemoModeIndicator";
+import InvestorDemoController from "../components/demo/InvestorDemoController";
 
 /**
  * ═══════════════════════════════════════════════════════════════
@@ -279,6 +280,9 @@ export default function Home() {
       {(effectiveRole === "user" || !["rider", "dispatcher", "operator", "network_owner", "admin"].includes(effectiveRole)) && (
         <CustomerHome user={activeUser} key={`customer-${activeUser?.id}`} />
       )}
+
+      {/* Investor Demo Mode Controller - shown to admins and operators */}
+      <InvestorDemoController user={activeUser} />
 
       {/* Demo Mode UI - only shown when DEMO_MODE=true AND logged in as demo account */}
       {DEMO_MODE && isDemoSession && (
