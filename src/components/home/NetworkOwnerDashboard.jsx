@@ -10,7 +10,7 @@ import {
 import ChatPanel from "../chat/ChatPanel";
 import LiveRiderMap from "./LiveRiderMap";
 import { useToast, ToastContainer } from "./ToastNotification";
-import LiveMapMonitor from "../admin/LiveMapMonitor";
+import LiveMapMonitor from "../network/LiveMapMonitor";
 
 const PRIMARY = "#4DC8F0";
 const PRIMARY_DARK = "#1a9ecb";
