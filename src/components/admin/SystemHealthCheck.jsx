@@ -42,12 +42,37 @@ export default function SystemHealthCheck() {
       checks.booking_system = { status: "fail", message: `✗ ${err.message}` };
     }
 
-    // Check 3: Dispatch functions
+    // Check 3: Dispatch functions (with temporary test booking)
     try {
-      const testResponse = await base44.functions.invoke("matchRider", { booking_id: "health-check-test" }).catch(e => e);
+      // Create a temporary test booking for dispatch validation
+      const testBooking = await base44.entities.Booking.create({
+        booking_id: `health-check-${Date.now()}`,
+        customer_name: "Health Check Test",
+        customer_phone: "+63-900-000-0000",
+        pickup_address: "Iloilo City Hall, Iloilo City, Iloilo",
+        dropoff_address: "SM City Iloilo, Iloilo City",
+        zone: "City Proper",
+        status: "pending",
+        payment_method: "cash",
+      });
+
+      // Test matchRider function
+      const matchResponse = await base44.functions.invoke("matchRider", { booking_id: testBooking.id });
+      
+      // Test notifyRidersOfBooking function
+      const notifyResponse = await base44.functions.invoke("notifyRidersOfBooking", { booking_id: testBooking.id });
+
+      // Cleanup: Delete test booking
+      await base44.entities.Booking.delete(testBooking.id).catch(() => {});
+
+      const matchSuccess = matchResponse?.data?.matched !== undefined || matchResponse?.data?.error?.includes("not found") === false;
+      const notifySuccess = notifyResponse?.data?.notified !== undefined || notifyResponse?.data?.error?.includes("not found") === false;
+
       checks.dispatch_system = {
-        status: "pass",
-        message: "✓ Dispatch functions accessible"
+        status: matchSuccess && notifySuccess ? "pass" : "warning",
+        message: matchSuccess && notifySuccess 
+          ? "✓ Dispatch functions validated with test booking"
+          : "⚠ Dispatch functions accessible but may need active riders"
       };
     } catch (err) {
       checks.dispatch_system = { status: "fail", message: `✗ ${err.message}` };
