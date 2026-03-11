@@ -123,11 +123,25 @@ export default function Home() {
     base44.auth.redirectToLogin(window.location.href);
   };
 
-  const handleDemoSwitch = (roleKey) => {
+  const handleDemoSwitch = async (roleKey) => {
     if (!DEMO_MODE) return;
-    // Switch role context while maintaining the real user session
-    // This allows testing different role perspectives with the same database
-    setDemoRole(roleKey);
+    console.log("🔄 SWITCHING ROLE:", { from: user?.role, to: DEMO_USERS[roleKey]?.role });
+    // Update the user's role in the database for persistent demo switching
+    try {
+      const newRole = DEMO_USERS[roleKey]?.role;
+      await base44.auth.updateMe({ role: newRole });
+      const updatedUser = await base44.auth.me();
+      console.log("✅ ROLE SWITCHED:", { email: updatedUser?.email, role: updatedUser?.role });
+      setUser(updatedUser);
+      setDemoRole(null); // Clear demo role override since real user now has the role
+      // Force re-render
+      setPhase("loading");
+      setTimeout(() => setPhase("app"), 100);
+    } catch (err) {
+      console.error("❌ ROLE SWITCH FAILED:", err);
+      // Fallback to local role switching if DB update fails
+      setDemoRole(roleKey);
+    }
   };
 
   if (phase === "splash") return <SplashScreen />;
