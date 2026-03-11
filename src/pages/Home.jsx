@@ -114,21 +114,15 @@ export default function Home() {
     // Switch role context while maintaining the real user session
     // This allows testing different role perspectives with the same database
     setDemoRole(roleKey);
-    const switchedUser = {
-      ...user, // Keep real user data (id, timestamps, etc.)
-      ...DEMO_USERS[roleKey], // Override display name and role
-      _originalUser: user, // Store original for reference
-    };
-    setUser(switchedUser);
   };
 
   if (phase === "splash") return <SplashScreen />;
   if (phase === "login") return <LoginScreen onLogin={handleLogin} />;
   if (phase === "not_registered") return <UserNotRegisteredError onDemoLogin={handleLogin} />;
 
-  // Determine effective role
-  const activeUser = demoRole ? DEMO_USERS[demoRole] : user;
-  const role = activeUser?.role;
+  // Determine effective role: if demo role is set, use that; otherwise use real user role
+  const effectiveRole = demoRole ? DEMO_USERS[demoRole]?.role : user?.role;
+  const activeUser = demoRole ? { ...user, ...DEMO_USERS[demoRole] } : user;
 
   // Current demo role key for the switcher highlight
   const currentDemoRoleKey = demoRole ||
@@ -142,12 +136,12 @@ export default function Home() {
       {/* Auto-initialize demo data ONLY for demo accounts on first login */}
       {DEMO_MODE && <DemoDataInitializer user={activeUser} />}
 
-      {role === "rider"                              && <RiderDashboard user={activeUser} key={`rider-${activeUser?.id}`} />}
-      {role === "dispatcher"                         && <DispatcherDashboard user={activeUser} key={`dispatcher-${activeUser?.id}`} />}
-      {(role === "operator" || role === "network_owner") && <NetworkOwnerDashboard user={activeUser} key={`operator-${activeUser?.id}`} />}
-      {role === "admin"                              && <AdminDashboard user={activeUser} key={`admin-${activeUser?.id}`} />}
-      {role !== "rider" && role !== "dispatcher" && role !== "operator" && role !== "network_owner" && role !== "admin"
-        && <CustomerHome user={activeUser} key={`customer-${activeUser?.id}`} />}
+      {effectiveRole === "rider"                              && <RiderDashboard user={activeUser} key={`rider-${demoRole || activeUser?.id}`} />}
+      {effectiveRole === "dispatcher"                         && <DispatcherDashboard user={activeUser} key={`dispatcher-${demoRole || activeUser?.id}`} />}
+      {(effectiveRole === "operator" || effectiveRole === "network_owner") && <NetworkOwnerDashboard user={activeUser} key={`operator-${demoRole || activeUser?.id}`} />}
+      {effectiveRole === "admin"                              && <AdminDashboard user={activeUser} key={`admin-${demoRole || activeUser?.id}`} />}
+      {effectiveRole !== "rider" && effectiveRole !== "dispatcher" && effectiveRole !== "operator" && effectiveRole !== "network_owner" && effectiveRole !== "admin"
+        && <CustomerHome user={activeUser} key={`customer-${demoRole || activeUser?.id}`} />}
 
       {/* Demo Mode UI - only shown when DEMO_MODE=true AND logged in as demo account */}
       {DEMO_MODE && isDemoSession && (
