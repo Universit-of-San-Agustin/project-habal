@@ -30,6 +30,20 @@ export default function LoginScreen({ onLogin }) {
     base44.auth.redirectToLogin(window.location.href);
   };
 
+  const handleDemoLogin = async () => {
+    setLoading(true);
+    try {
+      // Simulate demo session by updating auth context
+      // In a real system, this would create a temporary demo session
+      localStorage.setItem("demo_session", "true");
+      localStorage.setItem("demo_login_time", new Date().toISOString());
+      window.location.href = window.location.href; // Refresh to trigger auth check
+    } catch (err) {
+      setError("Demo login failed. Please try again.");
+      setLoading(false);
+    }
+  };
+
   const handleLogin = () => {
     if (!form.phone && !form.email) { setError("Please enter your phone number or email."); return; }
     if (!form.password) { setError("Please enter your password."); return; }
@@ -243,19 +257,30 @@ export default function LoginScreen({ onLogin }) {
       </div>
 
       {/* Social */}
-      <div className="flex justify-center gap-4 mb-5">
-        <button onClick={handleRealAuth}
-          className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center transition-shadow hover:shadow-md"
-          title="Sign in with Google"
-          style={{ border: "1.5px solid #e8f0f5", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
-          <span className="text-base font-bold" style={{ color: "#4285F4" }}>G</span>
-        </button>
-      </div>
+      <div className="flex justify-center gap-4 mb-6">
+         <button onClick={handleRealAuth}
+           className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center transition-shadow hover:shadow-md"
+           title="Sign in with Google"
+           style={{ border: "1.5px solid #e8f0f5", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+           <span className="text-base font-bold" style={{ color: "#4285F4" }}>G</span>
+         </button>
+       </div>
 
-      <p className="text-center text-gray-400 text-sm mb-6">
-        Don't have an account?{" "}
-        <button onClick={() => setScreen("register")} className="font-semibold" style={{ color: PRIMARY }}>Register Now</button>
-      </p>
+       {/* Demo Button */}
+       <button onClick={handleDemoLogin} disabled={loading}
+         className="w-full py-3 rounded-full font-bold text-sm transition-all disabled:opacity-50 mb-6"
+         style={{
+           background: "#f3f4f6",
+           color: "#4b5563",
+           border: "1.5px solid #e5e7eb",
+         }}>
+         {loading ? "Loading..." : "Try Demo"}
+       </button>
+
+       <p className="text-center text-gray-400 text-sm">
+         Don't have an account?{" "}
+         <button onClick={() => setScreen("register")} className="font-semibold" style={{ color: PRIMARY }}>Register Now</button>
+       </p>
 
 
     </Shell>
