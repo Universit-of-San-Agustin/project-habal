@@ -12,14 +12,38 @@ import DemoRoleSwitcher from "../components/home/DemoRoleSwitcher";
 import DemoDataInitializer from "../components/demo/DemoDataInitializer";
 
 /**
+ * ═══════════════════════════════════════════════════════════════
  * HABAL Platform - Production Entry Point
+ * ═══════════════════════════════════════════════════════════════
  * 
- * DEMO_MODE Configuration:
- * - Set to TRUE: Enables dashboard-based demo role switcher for testing/investor demos
- * - Set to FALSE: Production mode - all demo features hidden
+ * 🔧 PRODUCTION CONFIGURATION
  * 
- * Demo accounts use REAL database records (not simulated data).
- * The switcher allows instant role changes for presentation purposes.
+ * DEMO_MODE: Controls demo testing features
+ * ├─ TRUE:  Dashboard demo switcher enabled (for testing/demos)
+ * └─ FALSE: Production mode - all demo UI hidden
+ * 
+ * ⚠️ IMPORTANT FOR DEPLOYMENT:
+ * Set DEMO_MODE = false before production launch.
+ * 
+ * ═══════════════════════════════════════════════════════════════
+ * 
+ * 📊 DATA ARCHITECTURE:
+ * All features use REAL persistent database records.
+ * Demo accounts (demo.*@habal.app) use the same entities as production users.
+ * No simulated/temporary data — everything is database-driven.
+ * 
+ * 🎭 DEMO ACCOUNTS:
+ * - demo.customer@habal.app   → Customer booking flow
+ * - demo.rider@habal.app      → Rider trip management  
+ * - demo.operator@habal.app   → Network dispatch operations
+ * - demo.dispatcher@habal.app → Booking queue management
+ * - demo.admin@habal.app      → Platform administration
+ * 
+ * Demo switcher (floating button) only appears when:
+ * 1. DEMO_MODE = true
+ * 2. User is logged in as a demo account
+ * 
+ * ═══════════════════════════════════════════════════════════════
  */
 const DEMO_MODE = true;
 
@@ -88,8 +112,8 @@ export default function Home() {
 
   return (
     <>
-      {/* Auto-initialize demo data for demo accounts */}
-      <DemoDataInitializer user={activeUser} />
+      {/* Auto-initialize demo data ONLY for demo accounts on first login */}
+      {DEMO_MODE && <DemoDataInitializer user={activeUser} />}
 
       {role === "rider"                              && <RiderDashboard user={activeUser} key={`rider-${activeUser?.id}`} />}
       {role === "dispatcher"                         && <DispatcherDashboard user={activeUser} key={`dispatcher-${activeUser?.id}`} />}
