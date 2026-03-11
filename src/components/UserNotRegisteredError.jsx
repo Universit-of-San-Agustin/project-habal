@@ -23,15 +23,11 @@ const UserNotRegisteredError = ({ onDemoLogin }) => {
 
   const handleDemoRole = (roleName) => {
     const account = DEMO_ACCOUNTS[roleName];
-    if (!account || !onDemoLogin) return;
+    if (!account) return;
     setDemoLoading(roleName);
-    const demoUser = {
-      id: `demo-${roleName.toLowerCase()}`,
-      email: account.email,
-      full_name: `Demo ${roleName}`,
-      role: account.role,
-    };
-    setTimeout(() => onDemoLogin(demoUser), 400);
+    // Redirect to Base44 login with the demo account email pre-filled
+    // User will need to enter password: Demo@1234
+    base44.auth.redirectToLogin(window.location.href);
   };
 
   return (
@@ -69,8 +65,8 @@ const UserNotRegisteredError = ({ onDemoLogin }) => {
               </button>
             ))}
           </div>
-          <p className="text-center text-[10px] text-gray-400">
-            Password: <span className="font-mono font-bold" style={{ color: PRIMARY }}>Demo@1234</span>
+          <p className="text-center text-[10px] text-gray-400 leading-relaxed">
+            Click a role to login. Use the email shown and password: <span className="font-mono font-bold" style={{ color: PRIMARY }}>Demo@1234</span>
           </p>
         </div>
 
