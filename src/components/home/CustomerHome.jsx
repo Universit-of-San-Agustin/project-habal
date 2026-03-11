@@ -21,10 +21,12 @@ import RideDetailModal from "../customer/RideDetailModal";
 // Mapbox token is stored server-side. MapboxMap component reads from env.
 // For client-side geocoding we use the public token only for display (MapboxMap handles it).
 // Fare calculation and ETA now go through the secure backend function.
+import { COLORS, SHADOWS, RADIUS } from "../shared/AppleDesignTokens";
+
 const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/fe9d5d17d_habal.png";
-const PRIMARY = "#4DC8F0";
-const PRIMARY_DARK = "#1a9ecb";
-const PRIMARY_BG = "#EBF9FE";
+const PRIMARY = COLORS.primary;
+const PRIMARY_DARK = COLORS.primaryDark;
+const PRIMARY_BG = COLORS.primaryBg;
 // Public Mapbox token used ONLY for client-side map display (MapboxMap component)
 const MAPBOX_PUBLIC = "pk.eyJ1IjoieWlrMzQzMDAiLCJhIjoiY21seWd1ZnlpMHl6MTNnc2dkbjcwZ2NmZCJ9.RRkFfU-zgGip8mt8af3MWg";
 

@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { COLORS, SHADOWS, RADIUS } from "../shared/AppleDesignTokens";
 
-const PRIMARY = "#4DC8F0";
-const PRIMARY_DARK = "#1a9ecb";
-const PRIMARY_BG = "#EBF9FE";
+const PRIMARY = COLORS.primary;
+const PRIMARY_DARK = COLORS.primaryDark;
+const PRIMARY_BG = COLORS.primaryBg;
 
 const DEMO_ROLES = [
   { key: "customer", label: "Customer", emoji: "👤", color: "#4DC8F0", role: "user" },

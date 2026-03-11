@@ -1,5 +1,7 @@
-const PRIMARY = "#4DC8F0";
-const PRIMARY_DARK = "#1a9ecb";
+import { COLORS } from "../shared/AppleDesignTokens";
+
+const PRIMARY = COLORS.primary;
+const PRIMARY_DARK = COLORS.primaryDark;
 
 /**
  * Visual indicator that demo mode is active

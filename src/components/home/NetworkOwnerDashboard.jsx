@@ -12,12 +12,14 @@ import LiveRiderMap from "./LiveRiderMap";
 import { useToast, ToastContainer } from "./ToastNotification";
 import LiveMapMonitor from "../network/LiveMapMonitor";
 
-const PRIMARY = "#4DC8F0";
-const PRIMARY_DARK = "#1a9ecb";
-const PRIMARY_BG = "#EBF9FE";
-const GREEN = "#10b981";
-const RED = "#ef4444";
-const AMBER = "#f59e0b";
+import { COLORS, SHADOWS, RADIUS } from "../shared/AppleDesignTokens";
+
+const PRIMARY = COLORS.primary;
+const PRIMARY_DARK = COLORS.primaryDark;
+const PRIMARY_BG = COLORS.primaryBg;
+const GREEN = COLORS.success;
+const RED = COLORS.error;
+const AMBER = COLORS.warning;
 const PURPLE = "#8b5cf6";
 const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/fe9d5d17d_habal.png";
 

@@ -2,10 +2,12 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Eye, EyeOff } from "lucide-react";
 
+import { COLORS, SHADOWS, RADIUS } from "../shared/AppleDesignTokens";
+
 const HABAL_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8713560c1bb2be40e7e5e/fe9d5d17d_habal.png";
-const PRIMARY      = "#4DC8F0";
-const PRIMARY_DARK = "#1a9ecb";
-const PRIMARY_BG   = "#EBF9FE";
+const PRIMARY = COLORS.primary;
+const PRIMARY_DARK = COLORS.primaryDark;
+const PRIMARY_BG = COLORS.primaryBg;
 
 const PHONE_RE = /^(\+63|0)9\d{9}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
