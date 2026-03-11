@@ -68,12 +68,12 @@ import DemoModeIndicator from "../components/demo/DemoModeIndicator";
 const DEMO_MODE = true;
 
 // Demo users for testing — only active when DEMO_MODE = true
+// Note: dispatcher and operator roles are merged into "operator"
 const DEMO_USERS = {
   customer: { id: "demo-customer", full_name: "Demo Customer", email: "demo.customer@habal.app", role: "user" },
   rider:    { id: "demo-rider",    full_name: "Demo Rider",    email: "demo.rider@habal.app",    role: "rider" },
   operator: { id: "demo-operator", full_name: "Demo Operator", email: "demo.operator@habal.app", role: "operator" },
-  admin:      { id: "demo-admin",      full_name: "Demo Admin",      email: "demo.admin@habal.app",      role: "admin" },
-  dispatcher: { id: "demo-dispatcher", full_name: "Demo Dispatcher", email: "demo.dispatcher@habal.app", role: "dispatcher" },
+  admin:    { id: "demo-admin",    full_name: "Demo Admin",    email: "demo.admin@habal.app",    role: "admin" },
 };
 
 export default function Home() {
@@ -144,36 +144,41 @@ export default function Home() {
     }
   };
 
+  // Authentication flow: splash → login/not_registered → app
   if (phase === "splash") return <SplashScreen />;
   if (phase === "login") return <LoginScreen onLogin={handleLogin} />;
   if (phase === "not_registered") return <UserNotRegisteredError onDemoLogin={handleLogin} />;
+  if (phase === "loading") return <SplashScreen />; // Brief loading state during role switch
 
-  // Determine effective role: if demo role is set, use that; otherwise use real user role
-  const effectiveRole = demoRole ? DEMO_USERS[demoRole]?.role : user?.role;
-  const activeUser = demoRole ? { ...user, ...DEMO_USERS[demoRole] } : user;
+  // Determine effective role from actual user data (DB role takes precedence)
+  const effectiveRole = user?.role || "user";
+  const activeUser = user;
 
-  // Current demo role key for the switcher highlight - map user.role to switcher key
+  // Map database role to demo switcher key
   const roleToKeyMap = {
     "user": "customer",
     "rider": "rider",
-    "dispatcher": "dispatcher",
     "operator": "operator",
-    "network_owner": "operator", // network_owner maps to operator UI
+    "dispatcher": "operator", // legacy dispatcher role maps to operator
+    "network_owner": "operator", // legacy network_owner maps to operator
     "admin": "admin",
   };
-  const currentDemoRoleKey = demoRole || roleToKeyMap[user?.role] || "customer";
+  const currentDemoRoleKey = roleToKeyMap[user?.role] || "customer";
 
   return (
     <>
       {/* Auto-initialize demo data ONLY for demo accounts on first login */}
       {DEMO_MODE && <DemoDataInitializer user={activeUser} />}
 
-      {effectiveRole === "rider"                              && <RiderDashboard user={activeUser} key={`rider-${demoRole || activeUser?.id}`} />}
-      {effectiveRole === "dispatcher"                         && <DispatcherDashboard user={activeUser} key={`dispatcher-${demoRole || activeUser?.id}`} />}
-      {(effectiveRole === "operator" || effectiveRole === "network_owner") && <NetworkOwnerDashboard user={activeUser} key={`operator-${demoRole || activeUser?.id}`} />}
-      {effectiveRole === "admin"                              && <AdminDashboard user={activeUser} key={`admin-${demoRole || activeUser?.id}`} />}
-      {effectiveRole !== "rider" && effectiveRole !== "dispatcher" && effectiveRole !== "operator" && effectiveRole !== "network_owner" && effectiveRole !== "admin"
-        && <CustomerHome user={activeUser} key={`customer-${demoRole || activeUser?.id}`} />}
+      {/* Role-based dashboard routing with strict role enforcement */}
+      {effectiveRole === "rider" && <RiderDashboard user={activeUser} key={`rider-${activeUser?.id}`} />}
+      {(effectiveRole === "dispatcher" || effectiveRole === "operator" || effectiveRole === "network_owner") && (
+        <NetworkOwnerDashboard user={activeUser} key={`operator-${activeUser?.id}`} />
+      )}
+      {effectiveRole === "admin" && <AdminDashboard user={activeUser} key={`admin-${activeUser?.id}`} />}
+      {(effectiveRole === "user" || !["rider", "dispatcher", "operator", "network_owner", "admin"].includes(effectiveRole)) && (
+        <CustomerHome user={activeUser} key={`customer-${activeUser?.id}`} />
+      )}
 
       {/* Demo Mode UI - only shown when DEMO_MODE=true AND logged in as demo account */}
       {DEMO_MODE && isDemoSession && (
