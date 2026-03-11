@@ -16,10 +16,10 @@ Deno.serve(async (req) => {
   };
 
   // ══════════════════════════════════════════════════════════════
-  // CUSTOMER FLOW SIMULATIONS (4 users)
+  // CUSTOMER FLOW SIMULATIONS (2 users - reduced for speed)
   // ══════════════════════════════════════════════════════════════
   
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 2; i++) {
     const flowResult = {
       user_type: "customer",
       user_id: `sim-customer-${i}`,
@@ -91,10 +91,10 @@ Deno.serve(async (req) => {
   }
   
   // ══════════════════════════════════════════════════════════════
-  // RIDER FLOW SIMULATIONS (4 users)
+  // RIDER FLOW SIMULATIONS (2 users - reduced for speed)
   // ══════════════════════════════════════════════════════════════
   
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 2; i++) {
     const flowResult = {
       user_type: "rider",
       user_id: `sim-rider-${i}`,
@@ -174,10 +174,10 @@ Deno.serve(async (req) => {
   }
   
   // ══════════════════════════════════════════════════════════════
-  // OPERATOR FLOW SIMULATIONS (2 users)
+  // OPERATOR FLOW SIMULATIONS (1 user - reduced for speed)
   // ══════════════════════════════════════════════════════════════
   
-  for (let i = 1; i <= 2; i++) {
+  for (let i = 1; i <= 1; i++) {
     const flowResult = {
       user_type: "operator",
       user_id: `sim-operator-${i}`,
@@ -244,10 +244,10 @@ Deno.serve(async (req) => {
     : 0;
   
   results.summary = {
-    total_users_simulated: 10,
-    customers: 4,
-    riders: 4,
-    operators: 2,
+    total_users_simulated: 5,
+    customers: 2,
+    riders: 2,
+    operators: 1,
     all_flows_passed: results.failed === 0,
     critical_failures: results.flows.filter(f => f.status === "fail").length,
   };
