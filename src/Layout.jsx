@@ -1,12 +1,13 @@
 export default function Layout({ children, currentPageName }) {
-  // All pages are full-screen mobile apps — no wrapping chrome needed
+  // Apple-style premium layout with system font stack
   return (
     <>
       <style>{`
         html, body, #root {
-          background: #ffffff;
-          font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+          background: #F5F5F7;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
           height: 100%;
+          overflow: hidden;
         }
       `}</style>
       {children}
