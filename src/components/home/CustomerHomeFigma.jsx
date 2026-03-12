@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { MapPin, X, ChevronLeft, Star, Download, Search, Plus, Check } from "lucide-react";
+import { MapPin, X, ChevronLeft, Star, Download, Search, Plus, Check, Navigation } from "lucide-react";
 
 // Exact Figma Design System
 const COLORS = {
@@ -22,7 +22,7 @@ export default function CustomerHomeFigma({ user }) {
   const [screen, setScreen] = useState("map");
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
-  const [fareEstimate] = useState(72);
+  const [fareEstimate, setFareEstimate] = useState(72);
   const [booking, setBooking] = useState(false);
   const [activeRide, setActiveRide] = useState(null);
   const [rating, setRating] = useState(0);
@@ -33,6 +33,26 @@ export default function CustomerHomeFigma({ user }) {
   const [profileTab, setProfileTab] = useState("profile");
   const [locationSearch, setLocationSearch] = useState("");
   const [showLocationSearch, setShowLocationSearch] = useState(null);
+  
+  // Booking location state
+  const [bookingDraft, setBookingDraft] = useState({
+    pickup_address: "",
+    pickup_lat: null,
+    pickup_lng: null,
+    destination_address: "",
+    destination_lat: null,
+    destination_lng: null,
+    distance_km: null,
+    estimated_duration: null,
+    fare_estimate: 72
+  });
+  
+  const [pickupSuggestions, setPickupSuggestions] = useState([]);
+  const [destinationSuggestions, setDestinationSuggestions] = useState([]);
+  const [mapPinMode, setMapPinMode] = useState(null); // "pickup" or "destination"
+  const [validationError, setValidationError] = useState("");
+  
+  const MAPBOX_TOKEN = "pk.eyJ1IjoibWFudWVsLWthdHoiLCJhIjoiY200aHF1bmk4MGkyNTJrcXlzcTlxNzVvZSJ9.B_8pMOeRдецай8zoCtGK7A";
 
   useEffect(() => {
     if (!user) return;
@@ -40,19 +60,138 @@ export default function CustomerHomeFigma({ user }) {
       .then(setBookings)
       .catch(() => {});
   }, [user]);
+  
+  // Sync pickup/dropoff with bookingDraft
+  useEffect(() => {
+    setPickup(bookingDraft.pickup_address);
+    setDropoff(bookingDraft.destination_address);
+  }, [bookingDraft.pickup_address, bookingDraft.destination_address]);
+  
+  // Calculate route when both locations set
+  useEffect(() => {
+    if (bookingDraft.pickup_lat && bookingDraft.pickup_lng && 
+        bookingDraft.destination_lat && bookingDraft.destination_lng) {
+      calculateRoute();
+    }
+  }, [bookingDraft.pickup_lat, bookingDraft.pickup_lng, 
+      bookingDraft.destination_lat, bookingDraft.destination_lng]);
+  
+  // Mapbox forward geocoding (autocomplete)
+  const geocodeForward = async (query, field) => {
+    if (!query || query.length < 3) {
+      if (field === "pickup") setPickupSuggestions([]);
+      else setDestinationSuggestions([]);
+      return;
+    }
+    
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&country=PH&limit=5`
+      );
+      const data = await response.json();
+      const suggestions = data.features.map(f => ({
+        address: f.place_name,
+        lat: f.center[1],
+        lng: f.center[0]
+      }));
+      
+      if (field === "pickup") setPickupSuggestions(suggestions);
+      else setDestinationSuggestions(suggestions);
+    } catch (err) {
+      console.error("Geocoding error:", err);
+    }
+  };
+  
+  // Mapbox reverse geocoding
+  const geocodeReverse = async (lat, lng, field) => {
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}`
+      );
+      const data = await response.json();
+      const address = data.features[0]?.place_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      
+      if (field === "pickup") {
+        setBookingDraft(prev => ({ ...prev, pickup_address: address, pickup_lat: lat, pickup_lng: lng }));
+      } else {
+        setBookingDraft(prev => ({ ...prev, destination_address: address, destination_lat: lat, destination_lng: lng }));
+      }
+    } catch (err) {
+      console.error("Reverse geocoding error:", err);
+      setValidationError("Unable to locate address. Please try again.");
+    }
+  };
+  
+  // Get current GPS location
+  const useCurrentLocation = (field) => {
+    if (!navigator.geolocation) {
+      setValidationError("Geolocation not supported by your browser.");
+      return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        geocodeReverse(lat, lng, field);
+      },
+      (error) => {
+        console.error("GPS error:", error);
+        setValidationError("Enable location access to use current GPS.");
+      }
+    );
+  };
+  
+  // Calculate route using Mapbox Directions API
+  const calculateRoute = async () => {
+    const { pickup_lng, pickup_lat, destination_lng, destination_lat } = bookingDraft;
+    
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/directions/v5/mapbox/driving/${pickup_lng},${pickup_lat};${destination_lng},${destination_lat}?access_token=${MAPBOX_TOKEN}&geometries=geojson`
+      );
+      const data = await response.json();
+      
+      if (data.routes && data.routes.length > 0) {
+        const route = data.routes[0];
+        const distance_km = (route.distance / 1000).toFixed(2);
+        const duration_min = Math.round(route.duration / 60);
+        const fare = Math.round(40 + (distance_km * 15)); // Base fare + per km rate
+        
+        setBookingDraft(prev => ({
+          ...prev,
+          distance_km: parseFloat(distance_km),
+          estimated_duration: duration_min,
+          fare_estimate: fare
+        }));
+        setFareEstimate(fare);
+      }
+    } catch (err) {
+      console.error("Route calculation error:", err);
+    }
+  };
 
   const handleBook = async () => {
+    // Validate locations
+    if (!bookingDraft.pickup_lat || !bookingDraft.pickup_lng || 
+        !bookingDraft.destination_lat || !bookingDraft.destination_lng) {
+      setValidationError("Please select both pickup and destination.");
+      return;
+    }
+    
+    setValidationError("");
     setBooking(true);
+    
     const b = await base44.entities.Booking.create({
       booking_id: "BK-" + Date.now().toString(36).toUpperCase(),
       customer_name: user?.full_name || "Customer",
       customer_phone: user?.email || "",
-      pickup_address: pickup || "Current Location",
-      dropoff_address: dropoff,
+      pickup_address: bookingDraft.pickup_address,
+      dropoff_address: bookingDraft.destination_address,
       zone: "City Proper",
       status: "pending",
       payment_method: "cash",
-      fare_estimate: fareEstimate,
+      fare_estimate: bookingDraft.fare_estimate,
     });
     setActiveRide(b);
     setBooking(false);
@@ -123,34 +262,101 @@ export default function CustomerHomeFigma({ user }) {
             </div>
             
             <div className="space-y-3">
-              <div 
-                className="flex items-center gap-3 px-4 py-3.5 rounded-2xl"
-                style={{ background: "#E0F2F7" }}>
-                <div className="w-4 h-4 rounded-full" style={{ background: COLORS.primary }}>
-                  <div className="w-2 h-2 rounded-full bg-white m-1" />
+              {/* Pickup Field */}
+              <div className="relative">
+                <div 
+                  className="flex items-center gap-3 px-4 py-3.5 rounded-2xl"
+                  style={{ background: "#E0F2F7" }}>
+                  <div className="w-4 h-4 rounded-full" style={{ background: COLORS.primary }}>
+                    <div className="w-2 h-2 rounded-full bg-white m-1" />
+                  </div>
+                  <input
+                    value={pickup}
+                    onChange={(e) => {
+                      setPickup(e.target.value);
+                      geocodeForward(e.target.value, "pickup");
+                    }}
+                    placeholder="PICK UP"
+                    className="flex-1 bg-transparent text-xs font-medium outline-none placeholder-gray-500"
+                    style={{ color: COLORS.black }}
+                  />
+                  <button onClick={() => useCurrentLocation("pickup")} className="p-1">
+                    <Navigation className="w-4 h-4" style={{ color: COLORS.primary }} />
+                  </button>
                 </div>
-                <input
-                  value={pickup}
-                  onChange={(e) => setPickup(e.target.value)}
-                  placeholder="PICK UP"
-                  className="flex-1 bg-transparent text-xs font-medium outline-none placeholder-gray-500"
-                  style={{ color: COLORS.black }}
-                />
+                
+                {/* Pickup Suggestions */}
+                {pickupSuggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg max-h-40 overflow-y-auto z-10">
+                    {pickupSuggestions.map((s, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setBookingDraft(prev => ({
+                            ...prev,
+                            pickup_address: s.address,
+                            pickup_lat: s.lat,
+                            pickup_lng: s.lng
+                          }));
+                          setPickupSuggestions([]);
+                        }}
+                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 border-b border-gray-100 last:border-0">
+                        {s.address}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div 
-                className="flex items-center gap-3 px-4 py-3.5 rounded-2xl"
-                style={{ background: "#E0F2F7" }}>
-                <MapPin className="w-4 h-4" style={{ color: COLORS.primary }} />
-                <input
-                  value={dropoff}
-                  onChange={(e) => setDropoff(e.target.value)}
-                  placeholder="DESTINATION"
-                  className="flex-1 bg-transparent text-xs font-medium outline-none placeholder-gray-500"
-                  style={{ color: COLORS.black }}
-                />
+              {/* Destination Field */}
+              <div className="relative">
+                <div 
+                  className="flex items-center gap-3 px-4 py-3.5 rounded-2xl"
+                  style={{ background: "#E0F2F7" }}>
+                  <MapPin className="w-4 h-4" style={{ color: COLORS.primary }} />
+                  <input
+                    value={dropoff}
+                    onChange={(e) => {
+                      setDropoff(e.target.value);
+                      geocodeForward(e.target.value, "destination");
+                    }}
+                    placeholder="DESTINATION"
+                    className="flex-1 bg-transparent text-xs font-medium outline-none placeholder-gray-500"
+                    style={{ color: COLORS.black }}
+                  />
+                  <button onClick={() => useCurrentLocation("destination")} className="p-1">
+                    <Navigation className="w-4 h-4" style={{ color: COLORS.primary }} />
+                  </button>
+                </div>
+                
+                {/* Destination Suggestions */}
+                {destinationSuggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg max-h-40 overflow-y-auto z-10">
+                    {destinationSuggestions.map((s, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setBookingDraft(prev => ({
+                            ...prev,
+                            destination_address: s.address,
+                            destination_lat: s.lat,
+                            destination_lng: s.lng
+                          }));
+                          setDestinationSuggestions([]);
+                        }}
+                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 border-b border-gray-100 last:border-0">
+                        {s.address}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
+            
+            {/* Validation Error */}
+            {validationError && (
+              <p className="text-xs text-red-600 mt-2 font-medium">{validationError}</p>
+            )}
           </div>
 
           {/* Bottom Booking Section */}
@@ -189,10 +395,10 @@ export default function CustomerHomeFigma({ user }) {
             {/* Order Button */}
             <button
               onClick={handleBook}
-              disabled={!dropoff || booking}
+              disabled={booking}
               className="w-full py-4 rounded-2xl font-bold text-white shadow-lg flex items-center justify-center gap-3 disabled:opacity-50"
               style={{ background: COLORS.primary }}>
-              <span className="text-lg">₱ {fareEstimate}</span>
+              <span className="text-lg">₱ {bookingDraft.fare_estimate}</span>
               <span className="text-base">{booking ? "Booking..." : "Order"}</span>
             </button>
           </div>
