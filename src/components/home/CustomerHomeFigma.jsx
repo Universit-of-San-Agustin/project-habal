@@ -158,11 +158,16 @@ export default function CustomerHomeFigma({ user }) {
             {/* Payment & Time Row */}
             <div className="flex gap-3">
               <button className="flex-1 flex items-center justify-center gap-2 bg-white rounded-xl py-3 shadow-md">
-                <span className="text-lg">💵</span>
+                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
+                </svg>
                 <span className="text-sm font-medium">Cash</span>
               </button>
               <button className="flex-1 flex items-center justify-center gap-2 bg-white rounded-xl py-3 shadow-md">
-                <span className="text-lg">🕐</span>
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 6v6l4 2"/>
+                </svg>
                 <span className="text-sm font-medium">Now</span>
               </button>
             </div>
@@ -172,7 +177,9 @@ export default function CustomerHomeFigma({ user }) {
               className="bg-white rounded-2xl p-4 shadow-lg border-2"
               style={{ borderColor: COLORS.primary }}>
               <div className="flex items-center justify-center gap-2">
-                <span className="text-3xl">🏍️</span>
+                <svg className="w-8 h-8" style={{ color: COLORS.primary }} fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19.44 9.03L15.41 5H11v2h3.59l2 2H5c-2.8 0-5 2.2-5 5s2.2 5 5 5c2.46 0 4.45-1.69 4.9-4h1.65l2.77-2.77c-.21.54-.32 1.14-.32 1.77 0 2.8 2.2 5 5 5s5-2.2 5-5c0-2.65-1.97-4.77-4.56-4.97zM7.82 15C7.4 16.15 6.28 17 5 17c-1.63 0-3-1.37-3-3s1.37-3 3-3c1.28 0 2.4.85 2.82 2H5v2h2.82zM19 17c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>
+                </svg>
                 <span className="font-semibold text-base" style={{ color: COLORS.primary }}>
                   Motorcycle
                 </span>
@@ -325,9 +332,12 @@ export default function CustomerHomeFigma({ user }) {
                 <span className="text-xs text-gray-400">(1250 rides)</span>
               </div>
               <div 
-                className="text-xs px-2.5 py-1 rounded-md inline-block font-semibold"
+                className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-md inline-block font-semibold"
                 style={{ background: "#E3F2FD", color: COLORS.secondary }}>
-                ⭐ Top Rated
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                </svg>
+                Top Rated
               </div>
             </div>
           </div>
