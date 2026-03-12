@@ -4,6 +4,7 @@ import SplashScreen from "../components/home/SplashScreen";
 import LoginScreen from "../components/home/LoginScreen";
 // Removed unused UserNotRegisteredError import
 import CustomerHome from "../components/home/CustomerHome";
+import CustomerHomeFigma from "../components/home/CustomerHomeFigma";
 import RiderDashboard from "../components/home/RiderDashboard";
 import DispatcherDashboard from "../components/home/DispatcherDashboard";
 import NetworkOwnerDashboard from "../components/home/NetworkOwnerDashboard";
@@ -282,7 +283,7 @@ export default function Home() {
       )}
       {effectiveRole === "admin" && <AdminDashboard user={activeUser} key={`admin-${activeUser?.id}`} />}
       {(effectiveRole === "user" || !["rider", "dispatcher", "operator", "network_owner", "admin"].includes(effectiveRole)) && (
-        <CustomerHome user={activeUser} key={`customer-${activeUser?.id}`} />
+        <CustomerHomeFigma user={activeUser} key={`customer-${activeUser?.id}`} />
       )}
 
       {/* Smart Demo Controller - shown only for demo sessions and admin/operator roles */}
