@@ -311,10 +311,21 @@ Deno.serve(async (req) => {
     // Log dispatch event with detailed scoring
     await db.entities.BookingEvent.create({
       booking_id: booking.id,
-      event_type: "RIDER_MATCHING",
+      event_type: "RIDER_MATCH_STARTED",
       actor_role: "system",
       actor_name: "Dispatch Engine",
       details: `Matched to ${bestRider.full_name} (${bestRider.zone}) - Score: ${bestMatch.score.toFixed(3)}${bestMatch.distanceKm ? `, Distance: ${bestMatch.distanceKm.toFixed(2)}km` : ''} - Sequential dispatch initiated`,
+      timestamp: now,
+    });
+
+    // Log rider notification event
+    await db.entities.BookingEvent.create({
+      booking_id: booking.id,
+      event_type: "RIDER_NOTIFIED",
+      actor_role: "system",
+      actor_name: "Dispatch Engine",
+      actor_id: bestRider.id,
+      details: `Notification sent to ${bestRider.full_name} - Awaiting acceptance (10s timeout)`,
       timestamp: now,
     });
 
