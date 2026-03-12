@@ -80,7 +80,8 @@ export default function CustomerHomeFigma({ user }) {
       container: mapContainerRef.current,
       style: "mapbox://styles/mapbox/streets-v12",
       center: [122.5621, 10.7202], // Iloilo City
-      zoom: 14
+      zoom: 15,
+      attributionControl: false
     });
     
     map.on("load", () => {
@@ -89,20 +90,43 @@ export default function CustomerHomeFigma({ user }) {
     
     map.on("error", (e) => {
       console.error("❌ Mapbox error:", e);
+      setValidationError("Map failed to load. Please refresh.");
     });
     
-    // Add click handler for map pin mode
-    map.on("click", (e) => {
-      if (mapPinMode) {
-        const { lng, lat } = e.lngLat;
-        geocodeReverse(lat, lng, mapPinMode);
-        setMapPinMode(null);
-      }
-    });
+    // Add navigation controls
+    map.addControl(new mapboxgl.NavigationControl(), "top-right");
     
     mapRef.current = map;
     
     return () => map.remove();
+  }, []);
+  
+  // Map click handler
+  useEffect(() => {
+    if (!mapRef.current) return;
+    
+    const handleMapClick = (e) => {
+      if (mapPinMode) {
+        const { lng, lat } = e.lngLat;
+        geocodeReverse(lat, lng, mapPinMode);
+        setMapPinMode(null);
+        
+        // Animate camera to pin location
+        mapRef.current.flyTo({
+          center: [lng, lat],
+          zoom: 16,
+          duration: 1000
+        });
+      }
+    };
+    
+    mapRef.current.on("click", handleMapClick);
+    
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.off("click", handleMapClick);
+      }
+    };
   }, [mapPinMode]);
   
   // Update pickup marker
@@ -113,20 +137,28 @@ export default function CustomerHomeFigma({ user }) {
       pickupMarkerRef.current.remove();
     }
     
+    // Blue SVG pickup marker
     const el = document.createElement("div");
-    el.className = "w-8 h-8 rounded-full flex items-center justify-center";
-    el.style.backgroundColor = "#007AFF";
-    el.innerHTML = '<div class="w-4 h-4 rounded-full bg-white"></div>';
+    el.innerHTML = `
+      <svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 0C7.163 0 0 7.163 0 16C0 28 16 40 16 40C16 40 32 28 32 16C32 7.163 24.837 0 16 0Z" fill="#007AFF"/>
+        <circle cx="16" cy="16" r="6" fill="white"/>
+      </svg>
+    `;
+    el.style.cursor = "pointer";
     
-    pickupMarkerRef.current = new mapboxgl.Marker({ element: el })
+    pickupMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "bottom" })
       .setLngLat([bookingDraft.pickup_lng, bookingDraft.pickup_lat])
       .addTo(mapRef.current);
       
-    // Center map on pickup
-    mapRef.current.flyTo({
-      center: [bookingDraft.pickup_lng, bookingDraft.pickup_lat],
-      zoom: 14
-    });
+    // Only center if no destination yet
+    if (!bookingDraft.destination_lat || !bookingDraft.destination_lng) {
+      mapRef.current.flyTo({
+        center: [bookingDraft.pickup_lng, bookingDraft.pickup_lat],
+        zoom: 15,
+        duration: 1000
+      });
+    }
   }, [bookingDraft.pickup_lat, bookingDraft.pickup_lng]);
   
   // Update destination marker
@@ -137,12 +169,17 @@ export default function CustomerHomeFigma({ user }) {
       destinationMarkerRef.current.remove();
     }
     
+    // Red SVG destination marker
     const el = document.createElement("div");
-    el.className = "w-8 h-8 rounded-full flex items-center justify-center";
-    el.style.backgroundColor = "#FF3B30";
-    el.innerHTML = `<svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`;
+    el.innerHTML = `
+      <svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 0C7.163 0 0 7.163 0 16C0 28 16 40 16 40C16 40 32 28 32 16C32 7.163 24.837 0 16 0Z" fill="#FF3B30"/>
+        <circle cx="16" cy="16" r="5" fill="white"/>
+      </svg>
+    `;
+    el.style.cursor = "pointer";
     
-    destinationMarkerRef.current = new mapboxgl.Marker({ element: el })
+    destinationMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "bottom" })
       .setLngLat([bookingDraft.destination_lng, bookingDraft.destination_lat])
       .addTo(mapRef.current);
   }, [bookingDraft.destination_lat, bookingDraft.destination_lng]);
@@ -172,9 +209,17 @@ export default function CustomerHomeFigma({ user }) {
     
     try {
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&country=PH&limit=5`
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&country=PH&proximity=122.5621,10.7202&limit=5`
       );
       const data = await response.json();
+      
+      if (!data.features || data.features.length === 0) {
+        setValidationError("Location not found. Try another address.");
+        if (field === "pickup") setPickupSuggestions([]);
+        else setDestinationSuggestions([]);
+        return;
+      }
+      
       const suggestions = data.features.map(f => ({
         address: f.place_name,
         lat: f.center[1],
@@ -183,8 +228,10 @@ export default function CustomerHomeFigma({ user }) {
       
       if (field === "pickup") setPickupSuggestions(suggestions);
       else setDestinationSuggestions(suggestions);
+      setValidationError("");
     } catch (err) {
       console.error("Geocoding error:", err);
+      setValidationError("Location not found. Try another address.");
     }
   };
   
@@ -202,6 +249,7 @@ export default function CustomerHomeFigma({ user }) {
       } else {
         setBookingDraft(prev => ({ ...prev, destination_address: address, destination_lat: lat, destination_lng: lng }));
       }
+      setValidationError("");
     } catch (err) {
       console.error("Reverse geocoding error:", err);
       setValidationError("Unable to locate address. Please try again.");
@@ -215,6 +263,8 @@ export default function CustomerHomeFigma({ user }) {
       return;
     }
     
+    setValidationError(""); // Clear previous errors
+    
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const lat = position.coords.latitude;
@@ -223,7 +273,12 @@ export default function CustomerHomeFigma({ user }) {
       },
       (error) => {
         console.error("GPS error:", error);
-        setValidationError("Enable location access to use current GPS.");
+        setValidationError("Enable location access to use your current location.");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
       }
     );
   };
@@ -234,7 +289,7 @@ export default function CustomerHomeFigma({ user }) {
     
     try {
       const response = await fetch(
-        `https://api.mapbox.com/directions/v5/mapbox/driving/${pickup_lng},${pickup_lat};${destination_lng},${destination_lat}?access_token=${MAPBOX_TOKEN}&geometries=geojson`
+        `https://api.mapbox.com/directions/v5/mapbox/driving/${pickup_lng},${pickup_lat};${destination_lng},${destination_lat}?access_token=${MAPBOX_TOKEN}&geometries=geojson&overview=full`
       );
       const data = await response.json();
       
@@ -242,7 +297,9 @@ export default function CustomerHomeFigma({ user }) {
         const route = data.routes[0];
         const distance_km = (route.distance / 1000).toFixed(2);
         const duration_min = Math.round(route.duration / 60);
-        const fare = Math.round(40 + (distance_km * 15)); // Base fare + per km rate
+        const base_fare = 40;
+        const rate_per_km = 15;
+        const fare = Math.round(base_fare + (parseFloat(distance_km) * rate_per_km));
         
         setBookingDraft(prev => ({
           ...prev,
@@ -280,23 +337,29 @@ export default function CustomerHomeFigma({ user }) {
             },
             paint: {
               "line-color": "#3FA0C9",
-              "line-width": 4
+              "line-width": 5,
+              "line-opacity": 0.8
             }
           });
           
           routeLayerRef.current = true;
           
-          // Fit map to show entire route
+          // Fit map to show entire route with smooth animation
           const coordinates = route.geometry.coordinates;
           const bounds = coordinates.reduce((bounds, coord) => {
             return bounds.extend(coord);
           }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
           
-          map.fitBounds(bounds, { padding: 100 });
+          map.fitBounds(bounds, { 
+            padding: { top: 200, bottom: 350, left: 50, right: 50 },
+            duration: 1500,
+            maxZoom: 15
+          });
         }
       }
     } catch (err) {
       console.error("Route calculation error:", err);
+      setValidationError("Unable to calculate route. Please try again.");
     }
   };
 
@@ -384,15 +447,22 @@ export default function CustomerHomeFigma({ user }) {
           
           {/* Map Pin Mode Indicator */}
           {mapPinMode && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white px-4 py-2 rounded-full shadow-lg text-sm font-semibold z-10">
-              {mapPinMode === "pickup" ? "📍 Tap map to set pickup location" : "📍 Tap map to set destination"}
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-full shadow-xl text-sm font-bold z-20 animate-pulse">
+              {mapPinMode === "pickup" ? "📍 Tap map to set PICKUP location" : "🎯 Tap map to set DESTINATION"}
             </div>
           )}
 
           {/* Where to? Card */}
           <div className="absolute top-4 left-4 right-4 bg-white rounded-3xl shadow-xl p-5 z-10">
-            <div className="text-sm font-semibold mb-4" style={{ color: COLORS.black }}>
-              Where to?
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-sm font-semibold" style={{ color: COLORS.black }}>
+                Where to?
+              </div>
+              {bookingDraft.distance_km && (
+                <div className="text-xs text-gray-500">
+                  {bookingDraft.distance_km}km • {bookingDraft.estimated_duration}min
+                </div>
+              )}
             </div>
             
             <div className="space-y-3">
@@ -424,7 +494,7 @@ export default function CustomerHomeFigma({ user }) {
                 
                 {/* Pickup Suggestions */}
                 {pickupSuggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg max-h-40 overflow-y-auto z-10">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg max-h-48 overflow-y-auto z-20">
                     {pickupSuggestions.map((s, i) => (
                       <button
                         key={i}
@@ -436,9 +506,11 @@ export default function CustomerHomeFigma({ user }) {
                             pickup_lng: s.lng
                           }));
                           setPickupSuggestions([]);
+                          setValidationError("");
                         }}
-                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 border-b border-gray-100 last:border-0">
-                        {s.address}
+                        className="w-full text-left px-4 py-3 text-xs hover:bg-blue-50 border-b border-gray-100 last:border-0 flex items-start gap-2">
+                        <MapPin className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <span className="flex-1">{s.address}</span>
                       </button>
                     ))}
                   </div>
@@ -471,7 +543,7 @@ export default function CustomerHomeFigma({ user }) {
                 
                 {/* Destination Suggestions */}
                 {destinationSuggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg max-h-40 overflow-y-auto z-10">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg max-h-48 overflow-y-auto z-20">
                     {destinationSuggestions.map((s, i) => (
                       <button
                         key={i}
@@ -483,9 +555,11 @@ export default function CustomerHomeFigma({ user }) {
                             destination_lng: s.lng
                           }));
                           setDestinationSuggestions([]);
+                          setValidationError("");
                         }}
-                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 border-b border-gray-100 last:border-0">
-                        {s.address}
+                        className="w-full text-left px-4 py-3 text-xs hover:bg-red-50 border-b border-gray-100 last:border-0 flex items-start gap-2">
+                        <MapPin className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                        <span className="flex-1">{s.address}</span>
                       </button>
                     ))}
                   </div>
