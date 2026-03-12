@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { MapPin, X, ChevronLeft, Star, Download, Search, Plus, Check, Navigation } from "lucide-react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 // Exact Figma Design System
 const COLORS = {
@@ -53,6 +55,13 @@ export default function CustomerHomeFigma({ user }) {
   const [validationError, setValidationError] = useState("");
   
   const MAPBOX_TOKEN = "pk.eyJ1IjoibWFudWVsLWthdHoiLCJhIjoiY200aHF1bmk4MGkyNTJrcXlzcTlxNzVvZSJ9.B_8pMOeRдецай8zoCtGK7A";
+  
+  // Map refs
+  const mapContainerRef = useRef(null);
+  const mapRef = useRef(null);
+  const pickupMarkerRef = useRef(null);
+  const destinationMarkerRef = useRef(null);
+  const routeLayerRef = useRef(false);
 
   useEffect(() => {
     if (!user) return;
@@ -60,6 +69,83 @@ export default function CustomerHomeFigma({ user }) {
       .then(setBookings)
       .catch(() => {});
   }, [user]);
+  
+  // Initialize Mapbox
+  useEffect(() => {
+    if (!mapContainerRef.current || mapRef.current) return;
+    
+    mapboxgl.accessToken = MAPBOX_TOKEN;
+    
+    const map = new mapboxgl.Map({
+      container: mapContainerRef.current,
+      style: "mapbox://styles/mapbox/streets-v12",
+      center: [122.5621, 10.7202], // Iloilo City
+      zoom: 14
+    });
+    
+    map.on("load", () => {
+      console.log("✅ Mapbox map loaded successfully");
+    });
+    
+    map.on("error", (e) => {
+      console.error("❌ Mapbox error:", e);
+    });
+    
+    // Add click handler for map pin mode
+    map.on("click", (e) => {
+      if (mapPinMode) {
+        const { lng, lat } = e.lngLat;
+        geocodeReverse(lat, lng, mapPinMode);
+        setMapPinMode(null);
+      }
+    });
+    
+    mapRef.current = map;
+    
+    return () => map.remove();
+  }, [mapPinMode]);
+  
+  // Update pickup marker
+  useEffect(() => {
+    if (!mapRef.current || !bookingDraft.pickup_lat || !bookingDraft.pickup_lng) return;
+    
+    if (pickupMarkerRef.current) {
+      pickupMarkerRef.current.remove();
+    }
+    
+    const el = document.createElement("div");
+    el.className = "w-8 h-8 rounded-full flex items-center justify-center";
+    el.style.backgroundColor = "#007AFF";
+    el.innerHTML = '<div class="w-4 h-4 rounded-full bg-white"></div>';
+    
+    pickupMarkerRef.current = new mapboxgl.Marker({ element: el })
+      .setLngLat([bookingDraft.pickup_lng, bookingDraft.pickup_lat])
+      .addTo(mapRef.current);
+      
+    // Center map on pickup
+    mapRef.current.flyTo({
+      center: [bookingDraft.pickup_lng, bookingDraft.pickup_lat],
+      zoom: 14
+    });
+  }, [bookingDraft.pickup_lat, bookingDraft.pickup_lng]);
+  
+  // Update destination marker
+  useEffect(() => {
+    if (!mapRef.current || !bookingDraft.destination_lat || !bookingDraft.destination_lng) return;
+    
+    if (destinationMarkerRef.current) {
+      destinationMarkerRef.current.remove();
+    }
+    
+    const el = document.createElement("div");
+    el.className = "w-8 h-8 rounded-full flex items-center justify-center";
+    el.style.backgroundColor = "#FF3B30";
+    el.innerHTML = `<svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`;
+    
+    destinationMarkerRef.current = new mapboxgl.Marker({ element: el })
+      .setLngLat([bookingDraft.destination_lng, bookingDraft.destination_lat])
+      .addTo(mapRef.current);
+  }, [bookingDraft.destination_lat, bookingDraft.destination_lng]);
   
   // Sync pickup/dropoff with bookingDraft
   useEffect(() => {
@@ -165,6 +251,49 @@ export default function CustomerHomeFigma({ user }) {
           fare_estimate: fare
         }));
         setFareEstimate(fare);
+        
+        // Draw route on map
+        if (mapRef.current) {
+          const map = mapRef.current;
+          
+          if (routeLayerRef.current) {
+            if (map.getLayer("route")) map.removeLayer("route");
+            if (map.getSource("route")) map.removeSource("route");
+          }
+          
+          map.addSource("route", {
+            type: "geojson",
+            data: {
+              type: "Feature",
+              properties: {},
+              geometry: route.geometry
+            }
+          });
+          
+          map.addLayer({
+            id: "route",
+            type: "line",
+            source: "route",
+            layout: {
+              "line-join": "round",
+              "line-cap": "round"
+            },
+            paint: {
+              "line-color": "#3FA0C9",
+              "line-width": 4
+            }
+          });
+          
+          routeLayerRef.current = true;
+          
+          // Fit map to show entire route
+          const coordinates = route.geometry.coordinates;
+          const bounds = coordinates.reduce((bounds, coord) => {
+            return bounds.extend(coord);
+          }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+          
+          map.fitBounds(bounds, { padding: 100 });
+        }
       }
     } catch (err) {
       console.error("Route calculation error:", err);
@@ -232,31 +361,36 @@ export default function CustomerHomeFigma({ user }) {
 
         {/* Map Background */}
         <div className="flex-1 relative bg-gray-200">
-          {/* Map placeholder with street pattern */}
-          <svg className="absolute inset-0 w-full h-full opacity-20" preserveAspectRatio="none">
-            <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="white" strokeWidth="1"/>
-            </pattern>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-          </svg>
-          
-          {/* Current location marker */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <div className="w-14 h-14 rounded-2xl opacity-70" style={{ background: COLORS.green }} />
-          </div>
+          {/* Mapbox Container */}
+          <div 
+            ref={mapContainerRef} 
+            className="absolute inset-0 w-full h-full"
+            style={{ cursor: mapPinMode ? "crosshair" : "grab" }}
+          />
 
           {/* Zoom controls */}
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2">
-            <button className="w-10 h-10 rounded-xl bg-white shadow-lg flex items-center justify-center font-bold text-xl">
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-10">
+            <button 
+              onClick={() => mapRef.current?.zoomIn()}
+              className="w-10 h-10 rounded-xl bg-white shadow-lg flex items-center justify-center font-bold text-xl">
               +
             </button>
-            <button className="w-10 h-10 rounded-xl bg-white shadow-lg flex items-center justify-center font-bold text-xl">
+            <button 
+              onClick={() => mapRef.current?.zoomOut()}
+              className="w-10 h-10 rounded-xl bg-white shadow-lg flex items-center justify-center font-bold text-xl">
               −
             </button>
           </div>
+          
+          {/* Map Pin Mode Indicator */}
+          {mapPinMode && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white px-4 py-2 rounded-full shadow-lg text-sm font-semibold z-10">
+              {mapPinMode === "pickup" ? "📍 Tap map to set pickup location" : "📍 Tap map to set destination"}
+            </div>
+          )}
 
           {/* Where to? Card */}
-          <div className="absolute top-4 left-4 right-4 bg-white rounded-3xl shadow-xl p-5">
+          <div className="absolute top-4 left-4 right-4 bg-white rounded-3xl shadow-xl p-5 z-10">
             <div className="text-sm font-semibold mb-4" style={{ color: COLORS.black }}>
               Where to?
             </div>
@@ -280,8 +414,11 @@ export default function CustomerHomeFigma({ user }) {
                     className="flex-1 bg-transparent text-xs font-medium outline-none placeholder-gray-500"
                     style={{ color: COLORS.black }}
                   />
-                  <button onClick={() => useCurrentLocation("pickup")} className="p-1">
+                  <button onClick={() => useCurrentLocation("pickup")} className="p-1" title="Use current location">
                     <Navigation className="w-4 h-4" style={{ color: COLORS.primary }} />
+                  </button>
+                  <button onClick={() => setMapPinMode("pickup")} className="p-1" title="Pin on map">
+                    <MapPin className="w-4 h-4" style={{ color: COLORS.primary }} />
                   </button>
                 </div>
                 
@@ -324,8 +461,11 @@ export default function CustomerHomeFigma({ user }) {
                     className="flex-1 bg-transparent text-xs font-medium outline-none placeholder-gray-500"
                     style={{ color: COLORS.black }}
                   />
-                  <button onClick={() => useCurrentLocation("destination")} className="p-1">
+                  <button onClick={() => useCurrentLocation("destination")} className="p-1" title="Use current location">
                     <Navigation className="w-4 h-4" style={{ color: COLORS.primary }} />
+                  </button>
+                  <button onClick={() => setMapPinMode("destination")} className="p-1" title="Pin on map">
+                    <MapPin className="w-4 h-4" style={{ color: COLORS.primary }} />
                   </button>
                 </div>
                 
@@ -360,7 +500,7 @@ export default function CustomerHomeFigma({ user }) {
           </div>
 
           {/* Bottom Booking Section */}
-          <div className="absolute bottom-20 left-4 right-4 space-y-3">
+          <div className="absolute bottom-20 left-4 right-4 space-y-3 z-10">
             {/* Payment & Time Row */}
             <div className="flex gap-3">
               <button className="flex-1 flex items-center justify-center gap-2 bg-white rounded-xl py-3 shadow-md">
