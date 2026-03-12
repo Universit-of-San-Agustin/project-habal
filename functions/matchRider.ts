@@ -4,8 +4,8 @@ const MAPBOX_TOKEN = Deno.env.get("MAPBOX_TOKEN");
 
 /**
  * ═══════════════════════════════════════════════════════════════
- * UBER-STYLE DISPATCH ALGORITHM
- * Production-grade rider matching system
+ * SIMPLIFIED MVP DISPATCH
+ * Customer → Nearest Available Rider (No network routing)
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
       return Response.json({ matched: false, message: 'Booking not in matchable state', status: booking.status });
     }
 
-    console.log("🎯 DISPATCH ENGINE: Starting Uber-style matching algorithm");
+    console.log("🎯 DISPATCH ENGINE: Starting simple nearest-rider matching");
     const startTime = Date.now();
 
     // STEP 1: Geocode pickup location
@@ -158,39 +158,28 @@ Deno.serve(async (req) => {
       }
     }
 
-    // STEP 2: Zone-based rider filtering (Uber strategy)
-    console.log(`🌍 ZONE FILTER: Searching in zone "${booking.zone || 'City Proper'}"`);
+    // STEP 2: Simple dispatch - fetch ALL active, online riders (no zone filtering)
+    console.log(`🌍 SIMPLE DISPATCH: Searching for nearest available rider (ignoring zones)`);
     
     let riders = await db.entities.Rider.filter({
       status: "active",
-      online_status: "online",
-      ...(booking.zone ? { zone: booking.zone } : {}),
+      online_status: "online"
     }, "-avg_rating", 100);
 
-    console.log(`✓ ZONE FILTER: Found ${riders?.length || 0} riders in primary zone`);
+    console.log(`✓ RIDER POOL: Found ${riders?.length || 0} active online riders`);
 
-    // STEP 3: Fallback to nearby zones if no riders found
     if (!riders?.length) {
-      console.warn("⚠️ EXPANDING SEARCH: No riders in primary zone, searching all zones");
-      riders = await db.entities.Rider.filter({ 
-        status: "active", 
-        online_status: "online" 
-      }, "-avg_rating", 100);
-      
-      if (!riders?.length) {
-        console.error("❌ MATCH FAILED: No riders online in any zone");
-        await db.entities.Booking.update(booking.id, { status: "searching" }).catch(() => {});
-        await db.entities.BookingEvent.create({
-          booking_id: booking.id,
-          event_type: "RIDER_MATCHING",
-          actor_role: "system",
-          actor_name: "Dispatch Engine",
-          details: "No riders available - booking marked as searching",
-          timestamp: new Date().toISOString(),
-        }).catch(() => {});
-        return Response.json({ matched: false, reason: 'No available riders online' });
-      }
-      console.log(`✓ EXPANDED SEARCH: Found ${riders.length} riders across all zones`);
+      console.error("❌ MATCH FAILED: No riders online");
+      await db.entities.Booking.update(booking.id, { status: "searching" }).catch(() => {});
+      await db.entities.BookingEvent.create({
+        booking_id: booking.id,
+        event_type: "RIDER_MATCHING",
+        actor_role: "system",
+        actor_name: "Dispatch Engine",
+        details: "No riders available - booking marked as searching",
+        timestamp: new Date().toISOString(),
+      }).catch(() => {});
+      return Response.json({ matched: false, reason: 'No available riders online' });
     }
 
     // STEP 4: Get GPS locations for all riders
@@ -258,9 +247,7 @@ Deno.serve(async (req) => {
       rider_name: bestRider.full_name,
       score: bestMatch.score.toFixed(3),
       distance: bestMatch.distanceKm ? `${bestMatch.distanceKm.toFixed(2)} km` : "N/A",
-      zone: bestRider.zone,
       rating: bestRider.avg_rating || "N/A",
-      acceptance_rate: `${bestRider.acceptance_rate || 80}%`,
       match_time: `${matchTime}ms`,
       total_candidates: riders.length,
       eligible_candidates: eligibleRiders.length,
@@ -314,7 +301,7 @@ Deno.serve(async (req) => {
       event_type: "RIDER_MATCH_STARTED",
       actor_role: "system",
       actor_name: "Dispatch Engine",
-      details: `Matched to ${bestRider.full_name} (${bestRider.zone}) - Score: ${bestMatch.score.toFixed(3)}${bestMatch.distanceKm ? `, Distance: ${bestMatch.distanceKm.toFixed(2)}km` : ''} - Sequential dispatch initiated`,
+      details: `Matched to ${bestRider.full_name} - Score: ${bestMatch.score.toFixed(3)}${bestMatch.distanceKm ? `, Distance: ${bestMatch.distanceKm.toFixed(2)}km` : ''} - Simple nearest-rider dispatch`,
       timestamp: now,
     });
 
@@ -337,8 +324,7 @@ Deno.serve(async (req) => {
       dispatch_strategy: "sequential",
       rider: { 
         id: bestRider.id, 
-        name: bestRider.full_name, 
-        zone: bestRider.zone,
+        name: bestRider.full_name,
         score: bestMatch.score,
         distance_km: bestMatch.distanceKm,
       },
