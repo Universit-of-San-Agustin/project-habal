@@ -27,6 +27,7 @@ export default function CustomerHomeFigma({ user }) {
   const [fareEstimate, setFareEstimate] = useState(72);
   const [booking, setBooking] = useState(false);
   const [activeRide, setActiveRide] = useState(null);
+  const [rideStatus, setRideStatus] = useState(null); // searching, assigned, otw, arrived, in_progress, completed
   const [rating, setRating] = useState(0);
   const [selectedTags, setSelectedTags] = useState([]);
   const [feedbackText, setFeedbackText] = useState("");
@@ -381,17 +382,41 @@ export default function CustomerHomeFigma({ user }) {
       pickup_address: bookingDraft.pickup_address,
       dropoff_address: bookingDraft.destination_address,
       zone: "City Proper",
-      status: "pending",
+      status: "searching",
       payment_method: "cash",
       fare_estimate: bookingDraft.fare_estimate,
     });
     setActiveRide(b);
     setBooking(false);
-    setScreen("searching");
+    setRideStatus("searching");
+    setScreen("rideTracking");
+    
+    // Simulate ride lifecycle
     setTimeout(() => {
-      setActiveRide({ ...b, status: "assigned", rider_name: "Juan Dela Cruz" });
-      setScreen("riderFound");
+      setRideStatus("assigned");
+      setActiveRide(prev => ({ ...prev, status: "assigned", rider_name: "Juan Dela Cruz", rider_phone: "+639123456789" }));
     }, 3000);
+    
+    setTimeout(() => {
+      setRideStatus("otw");
+      setActiveRide(prev => ({ ...prev, status: "otw" }));
+    }, 6000);
+    
+    setTimeout(() => {
+      setRideStatus("arrived");
+      setActiveRide(prev => ({ ...prev, status: "arrived" }));
+    }, 12000);
+    
+    setTimeout(() => {
+      setRideStatus("in_progress");
+      setActiveRide(prev => ({ ...prev, status: "in_progress" }));
+    }, 18000);
+    
+    setTimeout(() => {
+      setRideStatus("completed");
+      setActiveRide(prev => ({ ...prev, status: "completed" }));
+      setScreen("tripCompleted");
+    }, 28000);
   };
 
   const getRatingText = () => {
@@ -623,7 +648,154 @@ export default function CustomerHomeFigma({ user }) {
     );
   }
 
-  // SCREEN 2: FINDING RIDER
+  // SCREEN 2: RIDE TRACKING (All statuses)
+  if (screen === "rideTracking") {
+    return (
+      <div className="h-screen flex flex-col" style={{ fontFamily: "Poppins, sans-serif", background: COLORS.white }}>
+        {/* Map Background */}
+        <div className="flex-1 relative bg-gray-200">
+          <div 
+            ref={mapContainerRef} 
+            className="absolute inset-0 w-full h-full"
+          />
+        </div>
+
+        {/* Status Overlay */}
+        <div className="absolute inset-x-0 top-0 p-4 z-10">
+          {rideStatus === "searching" && (
+            <div className="bg-white rounded-3xl shadow-2xl p-6 text-center">
+              <div className="relative mb-6 flex justify-center">
+                <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: "#E3F2FD" }}>
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: COLORS.secondary }}>
+                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
+                    </svg>
+                  </div>
+                </div>
+                <div className="absolute inset-0 rounded-full animate-ping" style={{ background: "rgba(63, 121, 201, 0.2)" }} />
+              </div>
+              <h2 className="text-xl font-bold mb-2">Finding you a rider...</h2>
+              <p className="text-sm text-gray-500">Matching with nearby riders</p>
+            </div>
+          )}
+
+          {rideStatus === "assigned" && (
+            <div className="bg-white rounded-3xl shadow-2xl p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                  <Check className="w-8 h-8 text-green-600" strokeWidth={3} />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-lg font-bold">Rider Assigned!</h2>
+                  <p className="text-sm text-gray-500">Getting ready to pick you up</p>
+                </div>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Rider</span>
+                  <span className="font-semibold">{activeRide?.rider_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Vehicle</span>
+                  <span className="font-semibold">Honda TMX 155</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Plate</span>
+                  <span className="font-semibold">ABC 1234</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {rideStatus === "otw" && (
+            <div className="bg-white rounded-3xl shadow-2xl p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19.44 9.03L15.41 5H11v2h3.59l2 2H5c-2.8 0-5 2.2-5 5s2.2 5 5 5c2.46 0 4.45-1.69 4.9-4h1.65l2.77-2.77c-.21.54-.32 1.14-.32 1.77 0 2.8 2.2 5 5 5s5-2.2 5-5c0-2.65-1.97-4.77-4.56-4.97z"/>
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-lg font-bold">Rider On The Way</h2>
+                  <p className="text-sm font-bold text-blue-600">ETA: 3 minutes</p>
+                </div>
+              </div>
+              <div className="text-sm text-gray-600">
+                {activeRide?.rider_name} is heading to your pickup location
+              </div>
+            </div>
+          )}
+
+          {rideStatus === "arrived" && (
+            <div className="bg-white rounded-3xl shadow-2xl p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                  <MapPin className="w-8 h-8 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-lg font-bold">Rider Arrived!</h2>
+                  <p className="text-sm text-gray-500">Your rider is waiting for you</p>
+                </div>
+              </div>
+              <div className="text-sm bg-green-50 p-3 rounded-xl text-green-700 font-semibold">
+                📍 Your rider has arrived at the pickup point
+              </div>
+            </div>
+          )}
+
+          {rideStatus === "in_progress" && (
+            <div className="bg-white rounded-3xl shadow-2xl p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-lg font-bold">Trip In Progress</h2>
+                  <p className="text-sm text-gray-500">On the way to destination</p>
+                </div>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Distance</span>
+                  <span className="font-semibold">{bookingDraft.distance_km} km</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">ETA</span>
+                  <span className="font-bold text-purple-600">{bookingDraft.estimated_duration} min</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Cancel Button (only during searching/assigned) */}
+        {(rideStatus === "searching" || rideStatus === "assigned") && (
+          <div className="absolute inset-x-0 bottom-20 p-4 z-10">
+            <button
+              onClick={() => {
+                setScreen("map");
+                setRideStatus(null);
+                setActiveRide(null);
+              }}
+              className="w-full px-6 py-4 rounded-2xl border-2 font-semibold text-base bg-white shadow-lg"
+              style={{ borderColor: COLORS.secondary, color: COLORS.secondary }}>
+              Cancel Ride
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // SCREEN 2B: LEGACY SEARCHING SCREEN
+  if (screen === "searchingLegacy") {
+      </div>
+    );
+  }
+
+  // SCREEN 2: FINDING RIDER (LEGACY - Remove if not used)
   if (screen === "searching") {
     return (
       <div className="h-screen flex flex-col items-center justify-center px-6" style={{ fontFamily: "Poppins, sans-serif", background: COLORS.white }}>
@@ -1611,7 +1783,7 @@ function BottomNav({ screen, setScreen }) {
       className="fixed bottom-0 left-0 right-0 max-w-md mx-auto border-t flex bg-white"
       style={{ height: "72px" }}>
       {tabs.map((tab) => {
-        const isActive = screen === tab.id || (tab.id === "map" && ["searching", "riderFound", "tripCompleted", "rating", "feedback", "tip"].includes(screen));
+        const isActive = screen === tab.id || (tab.id === "map" && ["searching", "searchingLegacy", "riderFound", "rideTracking", "tripCompleted", "rating", "feedback", "tip"].includes(screen));
         return (
           <button
             key={tab.id}
