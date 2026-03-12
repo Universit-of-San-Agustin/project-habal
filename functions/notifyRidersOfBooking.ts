@@ -6,6 +6,7 @@ Deno.serve(async (req) => {
     const { booking_id } = await req.json();
 
     if (!booking_id) {
+      console.error("❌ NOTIFY FAILED: No booking_id provided");
       return Response.json({ error: 'booking_id required' }, { status: 400 });
     }
 
@@ -28,8 +29,23 @@ Deno.serve(async (req) => {
       console.error("❌ NOTIFY FAILED: Booking not found", { booking_id });
       return Response.json({ error: 'Booking not found' }, { status: 404 });
     }
+
+    // CRITICAL: Validate booking has required fields
+    const requiredFields = ['id', 'pickup_address', 'customer_name', 'status'];
+    const missingFields = requiredFields.filter(field => !booking[field]);
     
-    console.log("✅ NOTIFY: Booking found", { db_id: booking.id, status: booking.status, zone: booking.zone });
+    if (missingFields.length > 0) {
+      console.error("❌ NOTIFY FAILED: Invalid booking - missing required fields", { 
+        booking_id: booking.id,
+        missing: missingFields 
+      });
+      return Response.json({ 
+        error: 'Invalid booking object', 
+        missing_fields: missingFields 
+      }, { status: 400 });
+    }
+    
+    console.log("✅ NOTIFY: Booking validated", { db_id: booking.id, status: booking.status, zone: booking.zone });
 
     // Only notify for pending/searching bookings
     if (!["pending", "searching"].includes(booking.status)) {
