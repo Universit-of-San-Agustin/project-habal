@@ -286,17 +286,13 @@ export default function Home() {
         <CustomerHomeFigma user={activeUser} key={`customer-${activeUser?.id}`} />
       )}
 
-      {/* Smart Demo Controller - shown only for demo sessions and admin/operator roles */}
+      {/* Role Switcher - shown only for demo sessions */}
       {DEMO_MODE && isDemoSession && (
-        <>
-          <InvestorDemoController 
-            user={activeUser} 
-            onRoleSwitch={handleDemoSwitch}
-            currentRole={currentDemoRoleKey}
-          />
-          <DispatchActivityFeed />
-          <DemoModeIndicator currentRole={currentDemoRoleKey} />
-        </>
+        <InvestorDemoController 
+          user={activeUser} 
+          onRoleSwitch={handleDemoSwitch}
+          currentRole={currentDemoRoleKey}
+        />
       )}
     </>
   );
