@@ -339,19 +339,41 @@ export default function CustomerHome({ user }) {
       setScreen("map");
       return;
     }
+    // CRITICAL VALIDATION: Ensure booking object is complete before dispatch
+    if (!b || !b.id || !b.pickup_address || !b.dropoff_address || !b.customer_name || !b.status) {
+      console.error("❌ DISPATCH ABORTED: Invalid booking object", { booking: b });
+      setBooking(false);
+      addToast({ type: "alert", title: "Booking Error", message: "Unable to create booking. Please try again." });
+      return;
+    }
+    
+    console.log("✅ BOOKING VALIDATED:", {
+      db_id: b.id,
+      booking_id: bookingId,
+      zone: detectedZone,
+      pickup: b.pickup_address,
+      dropoff: b.dropoff_address,
+      customer: b.customer_name,
+      status: b.status
+    });
+    
     setActiveRide(b);
     if (pickupCoords) etaTargetRef.current = pickupCoords;
     setScreen("searching");
-    // CRITICAL: Use the DB id (b.id) for notifications to ensure proper reference linking
-    console.log("🚀 DISPATCH: Created booking", { db_id: b.id, booking_id: bookingId, zone: detectedZone });
-    // Notify eligible riders of the new booking
+    
+    // DISPATCH ENGINE: Trigger rider matching with validated booking
+    console.log("🚀 DISPATCH: Starting rider matching engine", { db_id: b.id, booking_id: bookingId, zone: detectedZone });
+    
+    // Step 1: Notify eligible riders
     base44.functions.invoke("notifyRidersOfBooking", { booking_id: b.id }).catch(err => {
       console.error("❌ DISPATCH FAILED: notifyRidersOfBooking", err);
     });
-    // Then match to best rider
+    
+    // Step 2: Match to best rider using Uber-style algorithm
     base44.functions.invoke("matchRider", { booking_id: b.id }).catch(err => {
       console.error("❌ DISPATCH FAILED: matchRider", err);
     });
+    
     setTimeout(() => setScreen(prev => prev === "searching" ? "active" : prev), 5000);
   };
 
