@@ -789,11 +789,7 @@ export default function CustomerHomeFigma({ user }) {
     );
   }
 
-  // SCREEN 2B: LEGACY SEARCHING SCREEN
-  if (screen === "searchingLegacy") {
-      </div>
-    );
-  }
+
 
   // SCREEN 2: FINDING RIDER (LEGACY - Remove if not used)
   if (screen === "searching") {
