@@ -626,7 +626,9 @@ export default function CustomerHomeFigma({ user }) {
           <div 
             className="w-24 h-24 rounded-full flex items-center justify-center mb-6"
             style={{ background: "#FFE5E5" }}>
-            <span className="text-5xl">❤️</span>
+            <svg className="w-14 h-14" style={{ color: "#FF3B30" }} fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
           </div>
 
           <h3 className="text-2xl font-bold mb-3">Show Your Appreciation</h3>
@@ -824,9 +826,9 @@ export default function CustomerHomeFigma({ user }) {
             // Saved Locations Tab
             <div className="space-y-4 pt-4">
               {[
-                { icon: "🏠", label: "Add Home", type: "home" },
-                { icon: "🏢", label: "Add Work", type: "work" },
-                { icon: "📍", label: "Add Custom", type: "custom" }
+                { label: "Add Home", type: "home" },
+                { label: "Add Work", type: "work" },
+                { label: "Add Custom", type: "custom" }
               ].map((item) => (
                 <div key={item.type}>
                   <button
@@ -835,7 +837,19 @@ export default function CustomerHomeFigma({ user }) {
                     <div 
                       className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
                       style={{ background: COLORS.primary }}>
-                      <span className="text-2xl">{item.icon}</span>
+                      {item.type === "home" ? (
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                          <path d="M9 22V12h6v10"/>
+                        </svg>
+                      ) : item.type === "work" ? (
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <rect x="2" y="7" width="20" height="14" rx="2"/>
+                          <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+                        </svg>
+                      ) : (
+                        <MapPin className="w-6 h-6 text-white" />
+                      )}
                     </div>
                     <span className="flex-1 text-left font-semibold">{item.label}</span>
                     <button style={{ color: COLORS.primary }}>
@@ -1091,7 +1105,9 @@ export default function CustomerHomeFigma({ user }) {
                   <div 
                     className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
                     style={{ background: COLORS.primary }}>
-                    <span className="text-2xl">📢</span>
+                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                     <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+                    </svg>
                   </div>
                   <div className="flex-1">
                     <div className="font-bold text-sm">{notif.title}</div>
@@ -1119,10 +1135,45 @@ export default function CustomerHomeFigma({ user }) {
 // Bottom Navigation Component
 function BottomNav({ screen, setScreen }) {
   const tabs = [
-    { id: "map", label: "Book", icon: "📍" },
-    { id: "rides", label: "Rides", icon: "🕐" },
-    { id: "wallet", label: "Wallet", icon: "💳" },
-    { id: "messages", label: "Messages", icon: "💬" }
+    { 
+      id: "map", 
+      label: "Book", 
+      icon: (isActive) => (
+        <svg className="w-6 h-6" fill={isActive ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+      )
+    },
+    { 
+      id: "rides", 
+      label: "Rides", 
+      icon: (isActive) => (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+      )
+    },
+    { 
+      id: "wallet", 
+      label: "Wallet", 
+      icon: (isActive) => (
+        <svg className="w-6 h-6" fill={isActive ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="M2 10h20"/>
+        </svg>
+      )
+    },
+    { 
+      id: "messages", 
+      label: "Messages", 
+      icon: (isActive) => (
+        <svg className="w-6 h-6" fill={isActive ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+      )
+    }
   ];
 
   return (
@@ -1137,7 +1188,7 @@ function BottomNav({ screen, setScreen }) {
             onClick={() => setScreen(tab.id)}
             className="flex-1 flex flex-col items-center justify-center gap-1"
             style={{ color: isActive ? COLORS.primary : "#9CA3AF" }}>
-            <span className="text-2xl">{tab.icon}</span>
+            {tab.icon(isActive)}
             <span className="text-xs font-semibold">{tab.label}</span>
           </button>
         );
